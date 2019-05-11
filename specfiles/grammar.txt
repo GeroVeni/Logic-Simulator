@@ -1,0 +1,12 @@
+specfile = device_list, connection_list, monitor_list ;
+device_list = "DEVICES", device_definition, { device_definition }, "END" ;
+connection_list = "CONNECTIONS", connection_definition, { connection_definition }, "END" ;
+monitor_list = "MONITORS", signal, { "," , signal }, "END" ;
+device_definition = identifier, { "," , identifier }, ":=", device_type, [ "(" , number , ")" ], ";" ;
+connection_definition = signal, { "," , signal }, "=", signal, { "," , signal }, ";" ;
+signal = identifier, { "." , port } ;
+identifier = letter, { letter | digit } ;
+number = digit, { "," , digit } ;
+device_type = "NAND" | "AND" | "NOR" | "OR" | "XOR" | "DTYPE" | "CLOCK" | "SWITCH" ;
+port = "Q" | "QBAR" | "DATA" | "CLK" | "SET" | "CLEAR" | ("I", number) ;
+

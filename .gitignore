@@ -107,3 +107,6 @@ venv.bak/
 *~
 *.swp
 *.swo
+
+#macOS files
+.DS_Store
