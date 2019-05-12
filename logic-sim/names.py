@@ -56,6 +56,11 @@ class Names:
 
         If the name string is not present in the names list, return None.
         """
+        if not isinstance(name_string, str):
+            raise TypeError('name_string must be a string')
+        if name_string == '':
+            raise ValueError('name_string cannot be an empty string')
+
         for i in range(len(self.names_list)):
             if self.names_list[i] == name_string:
                 return i
@@ -66,6 +71,22 @@ class Names:
 
         If the name string is not present in the names list, add it.
         """
+        if not isinstance(name_string_list, list):
+            raise TypeError('name_string_list must be a list of strings')
+
+        ret = []
+        for name_string in name_string_list:
+            if not isinstance(name_string, str):
+                raise TypeError('name_string_list must be a list of strings')
+            if name_string == '':
+                raise ValueError('name_string_list cannot contain empty strings')
+
+            name_id = self.query(name_string)
+            if name_id is None:
+                self.names_list.append(name_string)
+                name_id = len(self.names_list) - 1
+            ret.append(name_id)
+        return ret
 
     def get_name_string(self, name_id):
         """Return the corresponding name string for name_id.
