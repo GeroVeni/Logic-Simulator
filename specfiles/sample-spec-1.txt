@@ -1,20 +1,21 @@
-DEVICES
-	A_1, A2, Ax, A3z4q_3r5 := NAND(2);
+DEVICES:
+	A_1,A2, Ax, A3z4q_3r5 := NAND(2);
 	B := NAND(3); C := NOR(4);
 	D := XOR;
 	E := CLOCK(50);
 	F := SWITCH(0);
 	G := DTYPE;
-END
-CONNECTIONS
-	A_1 = B.I1;
-	A2 = B.I2;
-	G.QBAR = D.I1;
-	F = D.I2;
-	F = G.SET;
-	E = G.CLK, B.I3, C.I1;
-END
-MONITORS
-	G.QBAR, E, F, A_1
-END
+END;
+
+CONNECTIONS:
+	A_1, A2 => B.I1, B.I2;
+	G.QBAR => D.I1;
+	F => D.I2;
+	F => G.SET;
+	E => G.CLK, B.I3, C.I1;
+END;
+
+MONITORS:
+	G.QBAR, E, F, A_1;
+END;
 

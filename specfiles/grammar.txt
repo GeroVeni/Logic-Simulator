@@ -1,12 +1,14 @@
-specfile = device_list, connection_list, monitor_list ;
-device_list = "DEVICES", device_definition, { device_definition }, "END" ;
-connection_list = "CONNECTIONS", connection_definition, { connection_definition }, "END" ;
-monitor_list = "MONITORS", signal, { "," , signal }, "END" ;
+specfile = device_list, connection_list, [ monitor_list ] ;
+device_list = "DEVICES", ":", device_definition, { device_definition }, "END", ";" ;
+connection_list = "CONNECTIONS", ":", connection_definition, { connection_definition }, "END", ";" ;
+monitor_list = "MONITORS", ":", signal, { "," , signal }, ";", "END", ";" ;
 device_definition = identifier, { "," , identifier }, ":=", device_type, [ "(" , number , ")" ], ";" ;
-connection_definition = signal, { "," , signal }, "=", signal, { "," , signal }, ";" ;
-signal = identifier, { "." , port } ;
-identifier = letter, { letter | digit } ;
-number = digit, { "," , digit } ;
+connection_definition = signal, { "," , signal }, "=>", signal, { "," , signal }, ";" ;
+signal = identifier, [ "." , port ] ;
+identifier = letter, { letter | digit | "_" } ;
 device_type = "NAND" | "AND" | "NOR" | "OR" | "XOR" | "DTYPE" | "CLOCK" | "SWITCH" ;
 port = "Q" | "QBAR" | "DATA" | "CLK" | "SET" | "CLEAR" | ("I", number) ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+number = digit, { digit } ;
+letter = ? all alphabetic characters ?
 
