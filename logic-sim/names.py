@@ -62,6 +62,8 @@ class Names:
             raise TypeError('name_string must be a string')
         if name_string == '':
             raise ValueError('name_string cannot be an empty string')
+        if not name_string[0].isalpha():
+            raise ValueError('name_string must start with a letter')
 
         for i in range(len(self.names_list)):
             if self.names_list[i] == name_string:
@@ -82,6 +84,8 @@ class Names:
                 raise TypeError('name_string_list must be a list of strings')
             if name_string == '':
                 raise ValueError('name_string_list cannot contain empty strings')
+            if not name_string[0].isalpha():
+                raise ValueError('name_string_list items must start with a letter')
 
             name_id = self.query(name_string)
             if name_id is None:
