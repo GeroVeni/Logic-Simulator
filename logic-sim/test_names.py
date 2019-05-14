@@ -56,6 +56,8 @@ def test_query_raises_exceptions(filled_names):
         filled_names.query(['hello'])
     with pytest.raises(ValueError):
         filled_names.query('')
+    with pytest.raises(ValueError):
+        filled_names.query('2hello') # identifiers should start with a letter
 
 
 def test_lookup_raises_exceptions(filled_names):
@@ -74,12 +76,16 @@ def test_lookup_raises_exceptions(filled_names):
         filled_names.lookup([''])
     with pytest.raises(ValueError):
         filled_names.lookup(['hello', ''])
+    with pytest.raises(ValueError):
+        filled_names.lookup(['2hello', 'hello'])
 
 
 def test_get_name_string_raises_exceptions(filled_names):
     """Test if get_name_string raises expected exceptions."""
     with pytest.raises(TypeError):
         filled_names.get_name_string(1.4)
+    with pytest.raises(TypeError):
+        filled_names.get_name_string(['hello'])
     with pytest.raises(TypeError):
         filled_names.get_name_string('hello')
     with pytest.raises(ValueError):
@@ -92,10 +98,12 @@ def test_get_name_string_raises_exceptions(filled_names):
 
 def test_unique_error_codes(new_names):
     """Test if unique_error_codes correctly generates error codes."""
+    res = new_names.unique_error_codes(1)
+    assert res == range(0, 1)
     res = new_names.unique_error_codes(2)
-    assert res == range(0, 2)
-    res = new_names.unique_error_codes(2)
-    assert res == range(2, 4)
+    assert res == range(1, 3)
+    res = new_names.unique_error_codes(3)
+    assert res == range(3, 6)
 
 
 ##############
@@ -131,6 +139,13 @@ def test_lookup_filled_names(filled_names, sample_names_list):
     """Test that existing names are not added and the correct IDs are returned."""
     assert filled_names.lookup(sample_names_list) == [0, 1, 2]
     assert filled_names.lookup(sample_names_list[::-1]) == [2, 1, 0]
+    assert filled_names.lookup(["george", "george"]) == [0, 0]
+    # test case for only a subset of input name strings already in list
+    assert filled_names.lookup(["george", "andreas"]) == [0, 3]
+
+def test_lookup_empty_names_list(filled_names):
+    """Test that an empty input list returns an empty output list."""
+    assert filled_names.lookup([]) == []
 
 
 ########################
