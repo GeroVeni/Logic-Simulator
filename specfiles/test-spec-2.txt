@@ -1,0 +1,23 @@
+DEVICES:
+    //Multiple device instantiation
+    SW1, SW2, SW3, SW4 := SWITCH;
+    //Specified and unspecified parameter
+    A, B := NAND(3); C := NAND;
+    common_clock := CLOCK; D := DTYPE;
+END;
+
+CONNECTIONS:
+    SW1 => A.I1;
+    common_clock => A.I2;
+    B => A.I3;
+    //Simultaneous definition of all inputs
+    SW2, common_clock, A => B;
+    //Multiple definition of connections
+    SW3, SW4, common_clock => D.SET, D.CLEAR, D.CLK;
+    A => D.DATA;
+    D.QBAR, B => C;
+END;
+
+MONITORS:
+    A, B, D.Q, C;
+END;

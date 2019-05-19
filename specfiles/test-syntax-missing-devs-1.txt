@@ -1,0 +1,4 @@
+sw := SWITCH;
+END;
+CONNECTIONS:
+END;

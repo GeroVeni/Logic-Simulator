@@ -1,0 +1,25 @@
+DEVICES:
+    SW1, SW2 := SWITCH(1);
+    //Equivalent switch definition at 0
+    SW3, SW4 := SWITCH; SW5, SW6 := SWTICH(0);
+    //Equivalent definitions for XOR
+    A := XOR(2); B := XOR;
+    C := AND(4);
+    D := OR;
+    E := NOR(3);
+END;
+
+CONNECTIONS:
+    //Simultaneous definitions of all inputs
+    SW1, SW2 => A;
+    SW3, D => B;
+    //Single output to various inputs
+    A => C.I1, D.I1 E.I1;
+    //Single input to single output
+    SW4 => D.I2;
+    //Multiple definition of connections
+    D, SW5 => E.I2, E.I3;
+    B, E, SW6, => C.I2, C.I3, C.I4;
+END;
+
+//No monitors specified use the gui to select
