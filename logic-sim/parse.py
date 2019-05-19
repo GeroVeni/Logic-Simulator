@@ -36,9 +36,26 @@ class Parser:
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
 
+        #List of error codes used in get_error_codes
+        self.error_codes = []
+
     def parse_network(self):
         """Parse the circuit definition file."""
         # For now just return True, so that userint and gui can run in the
         # skeleton code. When complete, should return False when there are
         # errors in the circuit definition file.
         return True
+
+    def get_error_codes(self):
+        """Return the error codes list generated while running
+        parse_network().
+
+        This method is used during unit testing to check
+        that parse_network correctly identifies all errors
+        in a definition file.
+
+        Returns
+        -------
+        A list of int, corresponding to the error codes.
+        """
+        return self.error_codes
