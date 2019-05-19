@@ -1,21 +1,23 @@
 DEVICES:
-	A_1,A2, Ax, A3z4q_3r5 := NAND(2);
-	B := NAND(3); C := NOR(4);
-	D := XOR;
-	E := CLOCK(50);
-	F := SWITCH(0);
-	G := DTYPE;
+    //Multiple device instantiation
+    SW1, SW2, SW3, SW4 := SWITCH;
+    //Specified and unspecified parameter
+    A, B := NAND(3); C := NAND;
+    common_clock := CLOCK; D := DTYPE;
 END;
 
 CONNECTIONS:
-	A_1, A2 => B.I1, B.I2;
-	G.QBAR => D.I1;
-	F => D.I2;
-	F => G.SET;
-	E => G.CLK, B.I3, C.I1;
+    SW1 => A.I1;
+    common_clock => A.I2;
+    B => A.I3;
+    //Simultaneous definition of all inputs
+	SW2, common_clock, A => B;
+    //Multiple definition of connections
+	SW3, SW4, common_clock => D.SET, D.CLEAR, D.CLK;
+    A => D.DATA;
+    D.QBAR, B => C;
 END;
 
 MONITORS:
-	G.QBAR, E, F, A_1;
+	A, B, D.Q, C;
 END;
-
