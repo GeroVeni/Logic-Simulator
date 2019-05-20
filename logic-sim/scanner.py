@@ -61,8 +61,13 @@ class Scanner:
         self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF, self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF, self.DOT, self.UNDERSCORE, self.EOF, self.INVALID_SYMBOL] = range(16)
         # (DEVICE_DEF: ":="), (CONNECTION_DEF: "=>"), (INVALID_SYMBOL: anything not in the symbol_type_list)
 
-        self.keywords_list = ["DEVICES", "CONNECTIONS", "MONITORS", "END", "NAND", "AND", "NOR", "OR", "XOR", "DTYPE", "CLOCK", "SWITCH", "Q", "QBAR", "DATA", "CLK", "SET", "CLEAR", "I"]
-        [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID, self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID, self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.keywords_list)
+        # split syntax reserved words into keywords, devices and ports
+        self.keywords_list = ["DEVICES", "CONNECTIONS", "MONITORS", "END"]
+        self.devices_list = ["NAND", "AND", "NOR", "OR", "XOR", "DTYPE", "CLOCK", "SWITCH"]
+        self.ports_list = ["Q", "QBAR", "DATA", "CLK", "SET", "CLEAR", "I"]
+        [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] = self.names.lookup(self.keywords_list)
+        [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] = self.names.lookup(self.devices_list)
+        [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
         self.current_character = ""
 
 
@@ -111,3 +116,42 @@ class Scanner:
             advance()
 
         return int(numList)
+
+    def get_symbol(self):
+        """Translate the next sequence of characters into a symbol."""
+
+        symbol = Symbol()
+        self.skip_spaces() # current character now not whitespace
+
+        if self.current_character.isalpha(): # name
+            name_string = self.get_name()
+            if name_string in self.keywords_list:
+                symbol.type = self.KEYWORD
+            elif name_string in self.devices_list:
+                symbol.type = self.DEVICE
+            elif name_string in self.ports_list:
+                symbol.type = in self.PORT
+            else:
+                symbol.type = self.NAME
+            [symbol.id] = self.names.lookup([name_string])
+        elif self.current_character.isdigit(): # number
+            # NOTE that here the symbol.id is the number itself
+            symbol.id = self.get_number()
+            symbol.type = self.NUMBER
+
+        # TODO: deal with all our punctuation symbols and comments
+        elif self.current_character == "=": # punctuation
+            symbol.type = self.EQUALS
+            self.advance()
+
+        elif self.current_character == ",":
+        # etc for other punctuation
+
+        elif self.current_character == "": # end of file
+            symbol.type = self.EOF
+
+        else: # not a valid character
+            self.advance()
+        # TODO: update symbol.line, symbol.column
+
+        return symbol
