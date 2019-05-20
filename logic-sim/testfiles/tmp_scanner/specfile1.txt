@@ -1,9 +1,19 @@
-DEVICES: //comment
-a_3 := 2; //comm // /
-/you guessed it, it's a comment /
-/
-/
-// hello
-hello
-//
-NAND;
+ name2     another12 //hoho
+       col8  col14      /  ola27
+   ola4
+
+
+
+   // wiiiiiiii /
+   /
+   //
+   /
+
+
+
+
+
+99   8486
+
+
+                                                letussee49

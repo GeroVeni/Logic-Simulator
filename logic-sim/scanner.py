@@ -72,7 +72,7 @@ class Scanner:
         [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
         # keep track of the beginning of the current line in self.fileIn
-        self.current_line_pos = self.fileIn.tell()
+        self.current_line_pos = 1
         self.current_line = 1
         self.current_character = None
         self.advance() # place first character in current_character
@@ -89,6 +89,7 @@ class Scanner:
 
     def advance(self):
         """Update current_character with next character in self.fileIn, and also check for new line."""
+        # print("current_line_pos: {}".format(self.current_line_pos)) # TODO remove
         if self.current_character == "\n":
             self.current_character = self.fileIn.read(1)
             self.current_line += 1
@@ -144,7 +145,7 @@ class Scanner:
         self.skip_spaces() # current character now not whitespace
 
         symbol.line = self.current_line
-        symbol.column = self.fileIn.tell() - self.current_line_pos
+        symbol.column = self.fileIn.tell() - self.current_line_pos + 1
 
         # handle names, keywords, devices, ports
         if self.current_character.isalpha():
@@ -197,7 +198,7 @@ class Scanner:
             if (self.look_ahead() == "/"):
                 self.advance()
                 self.skip_line()
-                # return next symbol right after the comment or any following comments
+                # return next symbol right after the comment or any immediately following comments
                 symbol = self.get_symbol()
             else:
                 symbol.type = self.INVALID_SYMBOL
@@ -214,6 +215,5 @@ if __name__ == "__main__":
     names = Names()
     path = 'testfiles/tmp_scanner/specfile1.txt'
     scanner = Scanner(path, names)
-    # print("current_line: {}, current_line_pos: {}".format(scanner.current_line, scanner.current_line_pos))
     while (scanner.current_character != ''):
         print(scanner.get_symbol())
