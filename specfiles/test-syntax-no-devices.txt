@@ -1,0 +1,5 @@
+DEVICES:
+END;
+CONNECTIONS:
+sw1, sw1 => and1;
+END;

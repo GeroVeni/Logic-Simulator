@@ -1,0 +1,7 @@
+DEVICES:
+s1, s2, s3 := SWITCH(0);
+and1 := AND(3i);
+END;
+CONNECTIONS:
+s1, s2, s3 => and1;
+END;
