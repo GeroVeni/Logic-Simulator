@@ -68,6 +68,9 @@ class Scanner:
         [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] = self.names.lookup(self.keywords_list)
         [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
+        # keep track of the beginning of the current line in self.fileIn
+        self.current_line_pos = self.fileIn.tell()
+        self.current_line = 1
         self.current_character = ""
 
 
@@ -82,8 +85,13 @@ class Scanner:
         return file
 
     def advance():
-        """Update current_character with next character in self.fileIn."""
-        self.current_character = self.fileIn.read(1)
+        """Update current_character with next character in self.fileIn, and also check for new line."""
+        if self.current_character == "\n":
+            self.current_character = self.fileIn.read(1)
+            self.current_line += 1
+            self.current_line_pos = self.fileIn.tell()
+        else:
+            self.current_character = self.fileIn.read(1)
 
     def look_ahead():
         """Return the next character in the definition file, without updating current_character and without incrementing the current position within the file"""
@@ -98,7 +106,7 @@ class Scanner:
             self.advance()
 
     def skip_line():
-        """"Skips the rest of the current line in self.fileIn"""
+        """"Skips the rest of the current line but not the new line character in self.fileIn"""
         self.advance()
         while self.current_character != '' and self.current_character != "\n":
             self.advance()
@@ -134,6 +142,9 @@ class Scanner:
 
         symbol = Symbol()
         self.skip_spaces() # current character now not whitespace
+
+        symbol.line = self.current_line
+        symbol.column = self.fileIn.tell() - self.current_line_pos
 
         # handle names, keywords, devices, ports
         if self.current_character.isalpha():
