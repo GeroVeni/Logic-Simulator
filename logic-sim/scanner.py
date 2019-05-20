@@ -72,7 +72,7 @@ class Scanner:
         [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
         # keep track of the beginning of the current line in self.fileIn
-        self.current_line_pos = 1
+        self.current_line_pos = 0
         self.current_line = 1
         self.current_character = None
         self.advance() # place first character in current_character
@@ -89,11 +89,10 @@ class Scanner:
 
     def advance(self):
         """Update current_character with next character in self.fileIn, and also check for new line."""
-        # print("current_line_pos: {}".format(self.current_line_pos)) # TODO remove
         if self.current_character == "\n":
             self.current_character = self.fileIn.read(1)
             self.current_line += 1
-            self.current_line_pos = self.fileIn.tell()
+            self.current_line_pos = self.fileIn.tell() - 1
         else:
             self.current_character = self.fileIn.read(1)
 
@@ -145,7 +144,7 @@ class Scanner:
         self.skip_spaces() # current character now not whitespace
 
         symbol.line = self.current_line
-        symbol.column = self.fileIn.tell() - self.current_line_pos + 1
+        symbol.column = self.fileIn.tell() - self.current_line_pos
 
         # handle names, keywords, devices, ports
         if self.current_character.isalpha():
@@ -211,9 +210,43 @@ class Scanner:
 
         return symbol
 
+    def get_error_line(self, symbol):
+        """Prints a string that contains the line where the symbol passed as an argument appears in the circuit definition file, and also a new line with the symbol '^' at the location of the symbol"""
+        if not isinstance(symbol, Symbol):
+            raise TypeError('symbol must be an instance of the class Symbol')
+        if symbol.type != self.INVALID_SYMBOL:
+            raise ValueError('symbol passed to method get_error_line() should have type INVALID_SYMBOL')
+        if symbol.line != self.current_line:
+            raise RuntimeError('The symbol passed as an argument is at a different line than the current state of the scanner')
+
+        # save current state of the scanner
+        current_pos = self.fileIn.tell()
+        current_ch = self.current_character
+        current_line_pos = self.current_line_pos
+        current_line = self.current_line
+
+        # count line length
+        self.skip_line()
+        line_length = self.fileIn.tell() - current_line_pos - 1
+        # get contents of line in the circuit definition file
+        self.fileIn.seek(current_line_pos, 0)
+        print(self.fileIn.read(line_length))
+        print(" "*(symbol.column - 1) + "^")
+
+        # restore state of the scanner
+        self.fileIn.seek(current_pos,0)
+        self.current_line = current_line
+        self.current_character = current_ch
+        self.current_line_pos = current_line_pos
+
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile1.txt'
+    path = 'testfiles/tmp_scanner/specfile3.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
-        print(scanner.get_symbol())
+        current_symbol = scanner.get_symbol()
+        print(current_symbol)
+        if current_symbol.type == scanner.INVALID_SYMBOL:
+            err_symbol = current_symbol
+            print("Now, test get_error_line()")
+            scanner.get_error_line(err_symbol)

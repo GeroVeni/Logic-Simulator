@@ -1,0 +1,6 @@
+hello1 mate8 := _ error19
+// comments
+// another comment
+try1 Again6 _ error15
+                          ola27  > >
+ another2
