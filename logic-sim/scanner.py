@@ -58,7 +58,7 @@ class Scanner:
 
         # initialize symbol types
         self.names = names
-        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF, self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF, self.DOT, self.UNDERSCORE, self.EOF, self.INVALID_SYMBOL] = range(16)
+        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF, self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF, self.DOT, self.INVALID_SYMBOL, self.EOF] = range(15)
         # (DEVICE_DEF: ":="), (CONNECTION_DEF: "=>"), (INVALID_SYMBOL: anything not in the symbol_type_list)
 
         # split syntax reserved words into keywords, devices and ports
@@ -93,9 +93,15 @@ class Scanner:
 
     def skip_spaces():
         """Advances in self.fileIn until it finds the first non whitespace character"""
-        advance()
+        self.advance()
         while self.current_character != '' and self.current_character.isspace():
-            advance()
+            self.advance()
+
+    def skip_line():
+        """"Skips the rest of the current line in self.fileIn"""
+        self.advance()
+        while self.current_character != '' and self.current_character != "\n":
+            self.advance()
 
     def get_name():
         """Return the name string that starts at the current_character in self.fileIn, and advance to the next character after the name string.
@@ -129,7 +135,8 @@ class Scanner:
         symbol = Symbol()
         self.skip_spaces() # current character now not whitespace
 
-        if self.current_character.isalpha(): # name
+        # handle names, keywords, devices, ports
+        if self.current_character.isalpha():
             name_string = self.get_name()
             if name_string in self.keywords_list:
                 symbol.type = self.KEYWORD
@@ -140,20 +147,49 @@ class Scanner:
             else:
                 symbol.type = self.NAME
             [symbol.id] = self.names.lookup([name_string])
-        elif self.current_character.isdigit(): # number
+        # handle numbers
+        elif self.current_character.isdigit():
             # NOTE that here the symbol.id is the number itself
             symbol.id = self.get_number()
             symbol.type = self.NUMBER
-
-        elif self.current_character == ":": # punctuation
+        # handle punctuation
+        elif self.current_character == ":": # handle ":", ":="
+            if (self.look_ahead() == "="):
+                symbol.type = self.DEVICE_DEF
+                self.advance()
+            else:
+                symbol.type = self.COLON
             self.advance()
-
+        elif self.current_character == ";":
+            symbol.type = self.SEMICOLON
+            self.advance()
         elif self.current_character == ",":
-        # etc for other punctuation
-
+            symbol.type = self.COMMA
+            self.advance()
+        elif self.current_character == "(":
+            symbol.type = self.BRACKET_LEFT
+            self.advance()
+        elif self.current_character == ")":
+            symbol.type = self.BRACKET_RIGHT
+            self.advance()
+        elif self.current_character == "=": # handle special case "=>"
+            if (self.look_ahead() == ">"):
+                symbol.type = self.CONNECTION_DEF
+                self.advance()
+            else:
+                symbol.type = self.INVALID_SYMBOL
+            self.advance()
+        elif self.current_character == ".":
+            symbol.type = self.DOT
+            self.advance()
+        elif self.current_character == "/": # handle comments
+            if (self.look_ahead() == "/"):
+                self.advance()
+            else:
+                symbol.type = self.INVALID_SYMBOL
+            self.skip_line()
         elif self.current_character == "": # end of file
             symbol.type = self.EOF
-
         else: # not a valid character
             symbol.type = self.INVALID_SYMBOL
             self.advance()
