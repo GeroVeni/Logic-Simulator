@@ -85,6 +85,12 @@ class Scanner:
         """Update current_character with next character in self.fileIn."""
         self.current_character = self.fileIn.read(1)
 
+    def look_ahead():
+        """Return the next character in the definition file, without updating current_character and without incrementing the current position within the file"""
+        ch = self.fileIn.read(1)
+        self.fileIn.seek(self.fileIn.tell()-1, 0)
+        return ch
+
     def skip_spaces():
         """Advances in self.fileIn until it finds the first non whitespace character"""
         advance()
@@ -139,9 +145,7 @@ class Scanner:
             symbol.id = self.get_number()
             symbol.type = self.NUMBER
 
-        # TODO: deal with all our punctuation symbols and comments
-        elif self.current_character == "=": # punctuation
-            symbol.type = self.EQUALS
+        elif self.current_character == ":": # punctuation
             self.advance()
 
         elif self.current_character == ",":
@@ -151,6 +155,7 @@ class Scanner:
             symbol.type = self.EOF
 
         else: # not a valid character
+            symbol.type = self.INVALID_SYMBOL
             self.advance()
         # TODO: update symbol.line, symbol.column
 
