@@ -1,2 +1,9 @@
 DEVICES: //comment
- a_3 := 2;
+a_3 := 2; //comm // /
+/you guessed it, it's a comment /
+/
+/
+// hello
+hello
+//
+NAND;

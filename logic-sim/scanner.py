@@ -196,9 +196,12 @@ class Scanner:
         elif self.current_character == "/": # handle comments
             if (self.look_ahead() == "/"):
                 self.advance()
+                self.skip_line()
+                # return next symbol right after the comment or any following comments
+                symbol = self.get_symbol()
             else:
                 symbol.type = self.INVALID_SYMBOL
-            self.skip_line()
+                self.skip_line()
         elif self.current_character == "": # end of file
             symbol.type = self.EOF
         else: # not a valid character
