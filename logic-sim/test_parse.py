@@ -27,8 +27,37 @@ def new_parser(filename):
     return Parser(names, devices, network, monitors, scanner)
 
 @pytest.mark.parametrize("filename, success, error_list", [
-    ("test-syntax-missing-cons-1.txt", True, []),
-    ("spec2.txt", True, []),
+    ("test-spec-1.txt", True, []),
+    ("test-spec-2.txt", True, []),
+    ("test-syntax-dev-def-missing-comma.txt", False, [
+        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-dev-def-missing-parenthesis.txt", False, [
+        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_BAD_DEVICE,
+        Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-dev-def-missing-semicolon.txt", False, [
+        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-invalid-argument.txt", False, [
+        Parser.ERROR_INVALID_ARGUMENT, Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-invalid-device.txt", False, [
+        Parser.ERROR_BAD_DEVICE, Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-invalid-names.txt", False, [
+        Parser.ERROR_BAD_NAME, Parser.ERROR_BAD_NAME]),
+    ("test-syntax-invalid-symbol.txt", False, [
+        Parser.ERROR_BAD_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-missing-cons-1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-cons-2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-cons-3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-devs-1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-devs-2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-devs-3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-mons-1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-mons-2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-missing-mons-3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-mon-def-missing-comma.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-mon-def-missing-semicolon.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
+    ("test-syntax-no-devices.txt", False, [Parser.ERROR_UNDEFINED_DEVICE]),
+    ("test-syntax-wrong-symbol.txt", False, [
+        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
 ])
 def test_parse(new_parser, success, error_list):
     """Test that Parser.parse_network() returns the correct
