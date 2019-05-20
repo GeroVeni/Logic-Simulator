@@ -8,7 +8,7 @@ Classes
 Scanner - reads definition file and translates characters into symbols.
 Symbol - encapsulates a symbol and stores its properties.
 """
-
+from names import Names
 
 class Symbol:
 
@@ -29,6 +29,9 @@ class Symbol:
         self.id = None
         self.line = None
         self.column = None # position on line
+
+    def __repr__(self):
+        return "type: {}, id: {}, line: {}, column: {}".format(self.type, self.id, self.line, self.column)
 
 
 class Scanner:
@@ -54,7 +57,7 @@ class Scanner:
     def __init__(self, path, names):
         """Open specified file and initialise reserved words and IDs."""
         # open file
-        self.fileIn = open_file(path)
+        self.fileIn = self.open_file(path)
 
         # initialize symbol types
         self.names = names
@@ -71,20 +74,20 @@ class Scanner:
         # keep track of the beginning of the current line in self.fileIn
         self.current_line_pos = self.fileIn.tell()
         self.current_line = 1
-        self.current_character = ""
+        self.current_character = None
+        self.advance() # place first character in current_character
 
 
-    def open_file(path):
+    def open_file(self, path):
         """Open and return the file specified by path."""
         try:
             file = open(path)
         except IOError as err:
             print("\nError occured when opening file for reading\n", err)
             sys.exit()
-
         return file
 
-    def advance():
+    def advance(self):
         """Update current_character with next character in self.fileIn, and also check for new line."""
         if self.current_character == "\n":
             self.current_character = self.fileIn.read(1)
@@ -93,53 +96,50 @@ class Scanner:
         else:
             self.current_character = self.fileIn.read(1)
 
-    def look_ahead():
+    def look_ahead(self):
         """Return the next character in the definition file, without updating current_character and without incrementing the current position within the file"""
         ch = self.fileIn.read(1)
         self.fileIn.seek(self.fileIn.tell()-1, 0)
         return ch
 
-    def skip_spaces():
-        """Advances in self.fileIn until it finds the first non whitespace character"""
-        self.advance()
+    def skip_spaces(self):
+        """advances in self.fileIn until it finds the first non whitespace character"""
         while self.current_character != '' and self.current_character.isspace():
             self.advance()
 
-    def skip_line():
+    def skip_line(self):
         """"Skips the rest of the current line but not the new line character in self.fileIn"""
         self.advance()
         while self.current_character != '' and self.current_character != "\n":
             self.advance()
 
-    def get_name():
+    def get_name(self):
         """Return the name string that starts at the current_character in self.fileIn, and advance to the next character after the name string.
 
         This method assumes that the current_character is already a letter.
         """
         name = self.current_character
-        advance()
+        self.advance()
         while self.current_character != '' and (self.current_character.isalnum() or self.current_character == "_"):
             name += self.current_character
-            advance()
-
+            self.advance()
         return name
 
-    def get_number():
+    def get_number(self):
         """Return the number that starts at the current_character in self.fileIn, and advance to the next character after the number.
 
         This method assumes that the current_character is already a digit.
         """
         numList = self.current_character
-        advance()
+        self.advance()
         while self.current_character != '' and self.current_character.isdigit():
-            name += self.current_character
-            advance()
+            numList += self.current_character
+            self.advance()
 
         return int(numList)
 
     def get_symbol(self):
         """Translate the next sequence of characters into a symbol."""
-
         symbol = Symbol()
         self.skip_spaces() # current character now not whitespace
 
@@ -154,7 +154,7 @@ class Scanner:
             elif name_string in self.devices_list:
                 symbol.type = self.DEVICE
             elif name_string in self.ports_list:
-                symbol.type = in self.PORT
+                symbol.type = self.PORT
             else:
                 symbol.type = self.NAME
             [symbol.id] = self.names.lookup([name_string])
@@ -204,6 +204,13 @@ class Scanner:
         else: # not a valid character
             symbol.type = self.INVALID_SYMBOL
             self.advance()
-        # TODO: update symbol.line, symbol.column
 
         return symbol
+
+if __name__ == "__main__":
+    names = Names()
+    path = 'testfiles/tmp_scanner/specfile1.txt'
+    scanner = Scanner(path, names)
+    # print("current_line: {}, current_line_pos: {}".format(scanner.current_line, scanner.current_line_pos))
+    while (scanner.current_character != ''):
+        print(scanner.get_symbol())

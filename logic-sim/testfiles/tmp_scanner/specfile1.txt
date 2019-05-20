@@ -1,0 +1,2 @@
+DEVICES: //comment
+ a_3 := 2;
