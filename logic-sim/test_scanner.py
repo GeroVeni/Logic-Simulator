@@ -117,6 +117,8 @@ def test_get_symbol_no_spaces(new_Scanner, new_file, example_string, number_symb
         current_symbol = scanner.get_symbol()
     assert len(symbol_list) == number_symbols
 
+#TODO also test for the types expected in the files instead of only number
+
 def test_get_symbol_ignore_white_spaces(new_Scanner):
     scanner = new_Scanner("testfiles/scanner/test_ignore_white_spaces.txt")
     symbol_list = []
@@ -126,7 +128,16 @@ def test_get_symbol_ignore_white_spaces(new_Scanner):
         current_symbol = scanner.get_symbol()
     assert len(symbol_list) == 7
 
-#file with one symbol per line
+#TODO as above
+
+def test_get_symbol_one_per_line(new_Scanner):
+    scanner = new_Scanner("testfiles/scanner/test_one_symbol_per_line.txt")
+    symbol_list = []
+    current_symbol = scanner.get_symbol()
+    while current_symbol.type != scanner.EOF:
+        symbol_list.append(current_symbol)
+        current_symbol = scanner.get_symbol()
+    assert len(symbol_list) == 8
 
 @pytest.mark.parametrize("invalid_symbol", [
     ("&"),
@@ -134,7 +145,6 @@ def test_get_symbol_ignore_white_spaces(new_Scanner):
     ("$"),
     ("|"),
     ("@"),
-    ("ª"),
     ("["),
     ("}"),
 ])
@@ -209,3 +219,42 @@ def test_get_symbol_correct_name_id(new_Scanner, new_names, new_file):
         assert current_symbol.id == i
         current_symbol = scanner.get_symbol()
         i += 1
+
+@pytest.mark.parametrize("lines, actual_lines", [
+    ("1\n2\n3\n4\n5", [1,2,3,4,5]),
+    ("1\n2\n\n4\n\n\n7", [1,2,4,7]),
+    ("\n\n3\n4\n5\n\n\n8", [3,4,5,8]),
+])
+
+def test_get_symbol_correct_line(new_Scanner, new_file, lines, actual_lines):
+    lines_file = new_file(lines)
+    scanner = new_Scanner(lines_file)
+    for line in actual_lines:
+        assert scanner.get_symbol().line == line
+
+@pytest.mark.parametrize("column_data, actual_columns", [
+    (",,,,,", [1,2,3,4,5]),
+    (",, ,  ,       ,", [1,2,4,7,15]),
+    ("  ,,  ,  ,   ,", [3,4,7,10,14]),
+])
+
+def test_get_symbol_correct_column(new_Scanner, new_file, column_data, actual_columns):
+    columns = new_file(column_data)
+    scanner = new_Scanner(columns)
+    for column in actual_columns:
+        assert scanner.get_symbol().column == column
+
+@pytest.mark.parametrize("data, lines_columns", [
+    (",,,,,", [(1,1),(1,2),(1,3),(1,4),(1,5)]),
+    (",\n,\n,\n,\n,", [(1,1),(2,1),(3,1),(4,1),(5,1)]),
+    (",\n ,\n  ,\n   ,\n    ,", [(1,1),(2,2),(3,3),(4,4),(5,5)]),
+    ("\n\n   ,   ,\n,   ,   ,\n\n\n  ,", [(3,4),(3,8),(4,1),(4,5),(4,9),(7,3)]),
+])
+
+def test_get_symbol_correct_line_and_column(new_Scanner, new_file, data, lines_columns):
+    data_file = new_file(data)
+    scanner = new_Scanner(data_file)
+    for line, column in lines_columns:
+        current_symbol = scanner.get_symbol()
+        assert current_symbol.column == column
+        assert current_symbol.line == line
