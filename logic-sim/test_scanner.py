@@ -2,7 +2,7 @@
 import pytest
 from tempfile import NamedTemporaryFile
 
-from scanner import Scanner
+from scanner import Scanner, Symbol
 from names import Names
 
 ############
@@ -24,6 +24,11 @@ def new_file():
         return f.name
     return _file
 
+@pytest.fixture()
+def new_symbol():
+    """Return a new instance of the symbol class."""
+    return Symbol()
+
 @pytest.fixture
 def new_Scanner():
     """Return a new instance of the Scanner class with the path specificed and empty names object"""
@@ -35,10 +40,24 @@ def new_Scanner():
 # TEST EXCEPCTIONS #
 ####################
 
-#I0Error File
-#Names object not given
-#Give it not a string
-#File path is .txt
+def test_constructor_raises_exception(new_Scanner):
+    with pytest.raises(IOError):
+       new_Scanner("inexistant_file.txt")
+    with pytest.raises(TypeError):
+       new_Scanner(7)
+    with pytest.raises(TypeError):
+       new_Scanner("scanner.py")
+
+def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
+    empty_file = new_file("")
+    with pytest.raises(TypeError):
+        new_Scanner(empty_file).get_error_line("not symbol")
+    with pytest.raises(ValueError):
+        new_Scanner(empty_file).get_error_line(new_symbol)
+    with pytest.raises(RuntimeError):
+        scanner = new_Scanner(empty_file)
+        new_symbol.type = scanner.INVALID_SYMBOL
+        scanner.get_error_line(new_symbol)
 
 ###################
 # TEST get_symbol #
