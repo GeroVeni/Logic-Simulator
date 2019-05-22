@@ -200,6 +200,43 @@ class Parser:
             self.error("EXPECTED CONNECTIONS")
             self.recovered_from_error = True
 
+    def monitor_list(self):
+        if (self.symbol.type == self.scanner.KEYWORD and \
+            self.symbol.id == self.scanner.MONITORS_ID):
+            self.symbol = self.scanner.get_symbol()
+            if(self.symbol.type == self.scanner.COLON):
+                self.symbol = self.scanner.get_symbol()
+                self.signal()
+                while (self.symbol.type == self.scanner.COMMA and\
+                       self.recovered_from_error):
+                    self.symbol = self.scanner.get_symbol()
+                    self.signal()
+                if (self.symbol.type == self.scanner.SEMICOLON):
+                    self.symbol = self.scanner.get_symbol()
+                    if (self.symbol.id == self.scanner.END_ID):
+                        self.symbol = self.scanner.get_symbol()
+                        if (self.symbol.type == self.scanner.SEMICOLON):
+                            self.symbol = self.scanner.get_symbol()
+                            if(self.symbol.type == self.scanner.EOF):
+                                pass
+                            else:
+                                self.error("EXECTED EOF")
+                        else:
+                            self.error("EXPECTED SEMICOLON")
+                            self.recovered_from_error = True
+                    else:
+                        self.error("EXPECTED END (MONITORS)")
+                        self.recovered_from_error = True
+                else:
+                    self.error("EXPECTED SEMICOLON")
+            else:
+                self.error("EXPECTED COLON (MONITORS)")
+                self.recovered_from_error = True
+        elif(self.symbol.type == self.scanner.EOF):
+            pass
+        else:
+            self.error("EXPECTED MONITORS OR END OF FILE")
+            self.recovered_from_error = True
 
     def parse_network(self):
         """Parse the circuit definition file."""
@@ -210,10 +247,8 @@ class Parser:
         self.symbol = self.scanner.get_symbol()
         self.device_list()
         self.connection_list()
-        if (self.symbol.type == self.scanner.KEYWORD and \
-            self.symbol.id == self.scanner.MONITORS_ID):
-            self.monitor_list()
-        elif(self.symbol.type == self.scanner.EOF and self.error_count == 0):
+        self.monitor_list()
+        if (self.error_count == 0):
             return True
         else:
         #Error message
