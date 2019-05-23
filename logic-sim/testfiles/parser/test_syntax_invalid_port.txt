@@ -1,0 +1,9 @@
+DEVICES:
+s1, s2 := SWITCH;
+and1 := AND;
+END;
+CONNECTIONS:
+s1 => and1.II;
+s2 => and1.QBA;
+END;
+

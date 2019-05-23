@@ -37,6 +37,8 @@ class Parser:
     parse_network(self): Parses the circuit definition file.
     """
 
+    [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, VALUE_ERROR] = range(6)
+
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
         self.symbol = None

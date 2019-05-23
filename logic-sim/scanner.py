@@ -63,15 +63,20 @@ class Scanner:
 
         # initialize symbol types
         self.names = names
-        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF, self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF, self.DOT, self.INVALID_SYMBOL, self.EOF] = range(15)
-        # (DEVICE_DEF: ":="), (CONNECTION_DEF: "=>"), (INVALID_SYMBOL: anything not in the symbol_type_list)
+        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, 
+                                 self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF,
+                                 self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF,
+                                 self.DOT, self.INVALID_SYMBOL, self.EOF] = range(15)
+        # (DEVICE_DEF: ":="), (CONNECTION_DEF: "=>"),
+        # (INVALID_SYMBOL: anything not in the symbol_type_list)
 
         # split syntax reserved words into keywords, devices and ports
         self.keywords_list = ["DEVICES", "CONNECTIONS", "MONITORS", "END"]
         self.devices_list = ["NAND", "AND", "NOR", "OR", "XOR", "DTYPE", "CLOCK", "SWITCH"]
         self.ports_list = ["Q", "QBAR", "DATA", "CLK", "SET", "CLEAR", "I"]
         [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] = self.names.lookup(self.keywords_list)
-        [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] = self.names.lookup(self.devices_list)
+        [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID,
+         self.SWITCH_ID] = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
         # keep track of the beginning of the current line in self.fileIn
         self.current_line_pos = 0
@@ -99,7 +104,9 @@ class Scanner:
             self.current_character = self.fileIn.read(1)
 
     def look_ahead(self):
-        """Return the next character in the definition file, without updating current_character and without incrementing the current position within the file"""
+        """Return the next character in the definition file, without updating current_character and without
+        incrementing the current position within the file.
+        """
         ch = self.fileIn.read(1)
         self.fileIn.seek(self.fileIn.tell()-1, 0)
         return ch
@@ -116,7 +123,8 @@ class Scanner:
             self.advance()
 
     def get_name(self):
-        """Return the name string that starts at the current_character in self.fileIn, and advance to the next character after the name string.
+        """Return the name string that starts at the current_character in self.fileIn, and advance to the
+        next character after the name string.
 
         This method assumes that the current_character is already a letter.
         """
@@ -128,7 +136,8 @@ class Scanner:
         return name
 
     def get_number(self):
-        """Return the number that starts at the current_character in self.fileIn, and advance to the next character after the number.
+        """Return the number that starts at the current_character in self.fileIn, and advance to the
+        next character after the number.
 
         This method assumes that the current_character is already a digit.
         """
@@ -156,6 +165,16 @@ class Scanner:
             elif name_string in self.devices_list:
                 symbol.type = self.DEVICE
             elif name_string in self.ports_list:
+                symbol.type = self.PORT
+            # handle input names for AND, NAND, OR, NOR (e.g. I2)
+            elif name_string[0] == "I" and name_string[1:].isdigit():
+                # in this case we have "I" followed by a number. So, the parser
+                # expects two symbols: first a symbol of type PORT for "I", and
+                # next a symbol of type NUMBER. The number will be returned the
+                # next time the method get_symbol() is called
+                self.fileIn.seek(self.fileIn.tell()-len(name_string[1:]), 0)
+                self.current_character = name_string[1]
+                name_string = name_string[0]
                 symbol.type = self.PORT
             else:
                 symbol.type = self.NAME
@@ -213,11 +232,12 @@ class Scanner:
         return symbol
 
     def get_error_line(self, symbol):
-        """Prints a string that contains the line where the symbol passed as an argument appears in the circuit definition file, and also a new line with the symbol '^' at the location of the symbol"""
+        """Prints a string that contains the line where the symbol passed as an argument appears in
+        the circuit definition file, and also a new line with the symbol '^' at the location of the
+        symbol
+        """
         if not isinstance(symbol, Symbol):
             raise TypeError('symbol must be an instance of the class Symbol')
-        if symbol.type != self.INVALID_SYMBOL:
-            raise ValueError('symbol passed to method get_error_line() should have type INVALID_SYMBOL')
         if symbol.line != self.current_line:
             raise RuntimeError('The symbol passed as an argument is at a different line than the current state of the scanner')
 
@@ -243,7 +263,7 @@ class Scanner:
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile3.txt'
+    path = 'testfiles/tmp_scanner/specfile4.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()
