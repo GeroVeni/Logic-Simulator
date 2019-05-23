@@ -58,12 +58,21 @@ class Scanner:
 
     def __init__(self, path, names):
         """Open specified file and initialise reserved words and IDs."""
+        # Check validity of arguments
+        if not isinstance(path, str):
+            raise TypeError('path argument must be a string')
+        if len(path) < 4: # path has length at least 4 due to the extension ".txt"
+            raise TypeError('File should have the extension .txt')
+        if path[-4:] != '.txt':
+            raise TypeError('File should have the extension .txt')
+        if not isinstance(names, Names):
+            raise TypeError('names argument must be an instance of Names class')
         # open file
         self.fileIn = self.open_file(path)
 
         # initialize symbol types
         self.names = names
-        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER, 
+        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER,
                                  self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF,
                                  self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF,
                                  self.DOT, self.INVALID_SYMBOL, self.EOF] = range(15)
@@ -239,7 +248,7 @@ class Scanner:
         if not isinstance(symbol, Symbol):
             raise TypeError('symbol must be an instance of the class Symbol')
         if symbol.line != self.current_line:
-            raise RuntimeError('The symbol passed as an argument is at a different line than the current state of the scanner')
+            raise ValueError('The symbol passed as an argument is at a different line than the current state of the scanner')
 
         # save current state of the scanner
         current_pos = self.fileIn.tell()
@@ -263,7 +272,7 @@ class Scanner:
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile4.txt'
+    path = 'testfiles/tmp_scanner/specfile1.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()
