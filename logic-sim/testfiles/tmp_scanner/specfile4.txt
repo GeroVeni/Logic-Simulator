@@ -1,0 +1,6 @@
+//CONNECTIONS:
+//  Ital_y => A.I1000;another_con=>B.Q,C.I9; //comment
+  //comment
+//END;
+   I /comment
+   25
