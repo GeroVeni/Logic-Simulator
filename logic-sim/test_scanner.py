@@ -239,6 +239,7 @@ def test_get_symbol_correct_name_id(new_Scanner, new_names, new_file):
         current_symbol = scanner.get_symbol()
         i += 1
 
+
 @pytest.mark.parametrize("lines, actual_lines", [
     ("1\n2\n3\n4\n5", [1,2,3,4,5]),
     ("1\n2\n\n4\n\n\n7", [1,2,4,7]),
@@ -277,3 +278,20 @@ def test_get_symbol_correct_line_and_column(new_Scanner, new_file, data, lines_c
         current_symbol = scanner.get_symbol()
         assert current_symbol.column == column
         assert current_symbol.line == line
+
+############
+# Demetris #
+############
+def test_get_symbol_port_inputs(new_Scanner, new_file):
+    port_inputs = new_file("I14 I 3 I_3 hello I3hello")
+    scanner = new_Scanner(port_inputs)
+    expected_output = [scanner.PORT, scanner.NUMBER, scanner.PORT, scanner.NUMBER,
+    scanner.NAME, scanner.NAME, scanner.NAME, scanner.EOF]
+    for output in expected_output:
+        assert scanner.get_symbol().type == output
+
+    inputs_and_comments = new_file("I //comment \n 5")
+    scanner = new_Scanner(inputs_and_comments)
+    expected_output = [scanner.PORT, scanner.NUMBER, scanner.EOF]
+    for output in expected_output:
+        assert scanner.get_symbol().type == output
