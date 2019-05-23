@@ -54,10 +54,6 @@ def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
         new_Scanner(empty_file).get_error_line("not symbol")
     with pytest.raises(ValueError):
         new_Scanner(empty_file).get_error_line(new_symbol)
-    # with pytest.raises(RuntimeError):
-    #     scanner = new_Scanner(empty_file)
-    #     new_symbol.type = scanner.INVALID_SYMBOL
-    #     scanner.get_error_line(new_symbol)
 
 ###################
 # TEST get_symbol #
