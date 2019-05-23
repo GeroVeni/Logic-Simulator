@@ -45,33 +45,58 @@ class Parser:
         self.error_count = 0
         #List of error codes used in get_error_codes
         self.error_codes = []
-        self.recovered_from_error = True
+        self.recovered_from_definition_error = True
 
-    def error(self, message):
-        #TODO make this skipping more efficient
-        if (self.recovered_from_error):
+    def error(self, message, skip_to_symbol="KEYWORD or ;" ):
+        if (self.recovered_from_definition_error):
             self.error_count +=1
             print("ERROR", message,  self.symbol)
-            while (self.symbol.type != self.scanner.SEMICOLON and
-                   self.symbol.type != self.scanner.EOF):
-                self.symbol = self.scanner.get_symbol()
-            self.symbol = self.scanner.get_symbol()
-            self.recovered_from_error = False
+            if (skip_to_symbol == "KEYWORD or ;"):
+                self.recovered_from_definition_error = False
+                while (self.symbol.type != self.scanner.SEMICOLON and
+                       self.symbol.type != self.scanner.KEYWORD and
+                       self.symbol.type != self.scanner.EOF):
+                    self.symbol = self.scanner.get_symbol()
+                if self.symbol.type == self.scanner.SEMICOLON:
+                    self.symbol = self.scanner.get_symbol()
+            elif (skip_to_symbol == "KEYWORD"):
+                while (self.symbol.type != self.scanner.KEYWORD and
+                       self.symbol.type != self.scanner.EOF):
+                    self.symbol = self.scanner.get_symbol()
+            elif (skip_to_symbol == "END"):
+                while ((self.symbol.type != self.scanner.KEYWORD or
+                       self.symbol.id != self.scanner.END_ID) and
+                       self.symbol.type != self.scanner.EOF):
+                    self.symbol = self.scanner.get_symbol()
+                if (self.symbol.type == self.scanner.EOF):
+                    self.error("EXPECTED END")
+                else:
+                    self.symbol = self.scanner.get_symbol()
+                    if (self.symbol.type == self.scanner.SEMICOLON):
+                        self.symbol = self.scanner.get_symbol()
+                    else:
+                        self.error("EXPECTED SEMICOLON")
+            elif (skip_to_symbol == "EOF"):
+                while (self.symbol.type != self.scanner.EOF):
+                    self.symbol = self.scanner.get_symbol()
 
     def identifier(self):
-        if (self.symbol.type == self.scanner.NAME):
+        if (self.symbol.type == self.scanner.NAME and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
         else:
             self.error("EXPECTED NAME (IDENTIFIER)")
 
     def device_type(self):
-        if (self.symbol.type == self.scanner.DEVICE):
+        if (self.symbol.type == self.scanner.DEVICE and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
         else:
             self.error("EXPECTED DEVICE")
 
     def number(self):
-        if (self.symbol.type == self.scanner.NUMBER):
+        if (self.symbol.type == self.scanner.NUMBER and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
         else:
             self.error("EXPECTED NUMBER")
@@ -79,23 +104,27 @@ class Parser:
     def device_definition(self):
         self.identifier()
         while (self.symbol.type == self.scanner.COMMA and \
-               self.recovered_from_error):
+               self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.identifier()
-        if (self.symbol.type == self.scanner.DEVICE_DEF):
+        if (self.symbol.type == self.scanner.DEVICE_DEF and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.device_type()
-            if (self.symbol.type == self.scanner.BRACKET_LEFT):
+            if (self.symbol.type == self.scanner.BRACKET_LEFT and \
+                self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
                 self.number()
-                if(self.symbol.type == self.scanner.BRACKET_RIGHT):
+                if(self.symbol.type == self.scanner.BRACKET_RIGHT and \
+                    self.recovered_from_definition_error):
                     self.symbol = self.scanner.get_symbol()
                 else:
                     self.error("EXPECTED RIGHT BRACKET")
-#TODO how to identify when they wanted left bracket but wasnt there imagine there is number
-            elif (self.symbol.type == self.scanner.NUMBER):
+            elif (self.symbol.type == self.scanner.NUMBER and \
+                    self.recovered_from_definition_error):
                 self.error("EXPECTED LEFT BRACKET")
-            if (self.symbol.type == self.scanner.SEMICOLON):
+            if (self.symbol.type == self.scanner.SEMICOLON and \
+                    self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error("EXPECTED SEMICOLON")
@@ -111,37 +140,40 @@ class Parser:
                 self.device_definition()
                 while (self.symbol.type != self.scanner.KEYWORD and \
                        self.symbol.type != self.scanner.EOF):
+                    self.recovered_from_definition_error = True
                     self.device_definition()
-                    self.recovered_from_error = True
-                if (self.symbol.id == self.scanner.END_ID):
+                self.recovered_from_definition_error = True
+                if (self.symbol.id == self.scanner.END_ID and \
+                    self.symbol.type == self.scanner.KEYWORD):
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
                         self.symbol = self.scanner.get_symbol()
                     else:
-                        self.error("EXPECTED SEMICOLON")
-                        self.recovered_from_error = True
+                        self.error("EXPECTED SEMICOLON",
+                                   skip_to_symbol = "KEYWORD")
                 else:
-                    self.error("EXPECTED END (DEVICES)")
-                    self.recovered_from_error = True
+                    self.error("EXPECTED END (DEVICES)",
+                               skip_to_symbol = "KEYWORD")
             else:
-                self.error("EXPECTED COLON (DEVICES)")
-                self.recovered_from_error = True
+                self.error("EXPECTED COLON (DEVICES)",
+                           skip_to_symbol = "END")
         else:
-            self.error("EXPECTED DEVICES")
-            self.recovered_from_error = True
+            self.error("EXPECTED DEVICES", skip_to_symbol = "END")
 
     def port(self):
-        if (self.symbol.id == self.scanner.I_ID):
+        if (self.symbol.id == self.scanner.I_ID and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
-            if(self.symbol.type == self.scanner.NUMBER):
-                self.symbol = self.scanner.get_symbol()
-        elif (self.symbol.type == self.scanner.PORT):
+            self.number()
+        elif (self.symbol.type == self.scanner.PORT and \
+              self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
         else:
             self.error("EXPECTED PORT")
 
     def signal(self):
-        if (self.symbol.type == self.scanner.NAME):
+        if (self.symbol.type == self.scanner.NAME and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.DOT):
                 self.symbol = self.scanner.get_symbol()
@@ -149,28 +181,27 @@ class Parser:
         else:
             self.error("EXPECTED NAME (SIGNAL)")
 
-
     def connection_definition(self):
         self.signal()
         while (self.symbol.type == self.scanner.COMMA and \
-               self.recovered_from_error):
+               self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.signal()
-        if (self.symbol.type == self.scanner.CONNECTION_DEF):
+        if (self.symbol.type == self.scanner.CONNECTION_DEF and \
+            self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.signal()
             while (self.symbol.type == self.scanner.COMMA and\
-                   self.recovered_from_error):
+                   self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
                 self.signal()
-            if (self.symbol.type == self.scanner.SEMICOLON):
+            if (self.symbol.type == self.scanner.SEMICOLON and\
+                self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error("EXPECTED SEMICOLON")
-                self.recovered_from_error = True
         else:
             self.error("EXPECTED CONNECTION DEFINTION")
-            self.recovered_from_error = True
 
     def connection_list(self):
         if (self.symbol.type == self.scanner.KEYWORD and \
@@ -181,24 +212,25 @@ class Parser:
                 self.connection_definition()
                 while (self.symbol.type != self.scanner.KEYWORD and \
                        self.symbol.type != self.scanner.EOF):
-#TODO not convinced of this not_semicolon here or in device_list
+                    self.recovered_from_definition_error = True
                     self.connection_definition()
-                if (self.symbol.id == self.scanner.END_ID):
+                self.recovered_from_definition_error = True
+                if (self.symbol.id == self.scanner.END_ID and \
+                    self.symbol.type == self.scanner.KEYWORD):
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
                         self.symbol = self.scanner.get_symbol()
                     else:
-                        self.error("EXPECTED SEMICOLON")
-                        self.recovered_from_error = True
+                        self.error("EXPECTED SEMICOLON",
+                                   skip_to_symbol = "KEYWORD")
                 else:
-                    self.error("EXPECTED END (CONNECTIONS)")
-                    self.recovered_from_error = True
+                    self.error("EXPECTED END (CONNECTIONS)",
+                               skip_to_symbol = "KEYWORD")
             else:
-                self.error("EXPECTED COLON (CONNECTIONS)")
-                self.recovered_from_error = True
+                self.error("EXPECTED COLON (CONNECTIONS)",
+                           skip_to_symbol = "END")
         else:
-            self.error("EXPECTED CONNECTIONS")
-            self.recovered_from_error = True
+            self.error("EXPECTED DEVICES", skip_to_symbol = "END")
 
     def monitor_list(self):
         if (self.symbol.type == self.scanner.KEYWORD and \
@@ -208,35 +240,57 @@ class Parser:
                 self.symbol = self.scanner.get_symbol()
                 self.signal()
                 while (self.symbol.type == self.scanner.COMMA and\
-                       self.recovered_from_error):
+                       self.recovered_from_definition_error):
                     self.symbol = self.scanner.get_symbol()
                     self.signal()
                 if (self.symbol.type == self.scanner.SEMICOLON):
                     self.symbol = self.scanner.get_symbol()
-                    if (self.symbol.id == self.scanner.END_ID):
+                    if (self.symbol.id == self.scanner.END_ID and \
+                        self.symbol.type == self.scanner.KEYWORD):
                         self.symbol = self.scanner.get_symbol()
                         if (self.symbol.type == self.scanner.SEMICOLON):
                             self.symbol = self.scanner.get_symbol()
                             if(self.symbol.type == self.scanner.EOF):
                                 pass
                             else:
-                                self.error("EXECTED EOF")
+                                self.error("EXPECTED EOF",
+                                           skipt_to_symbol = "EOF")
                         else:
-                            self.error("EXPECTED SEMICOLON")
-                            self.recovered_from_error = True
+                            self.error("EXPECTED SEMICOLON",
+                                       skip_to_symbol = "EOF")
                     else:
-                        self.error("EXPECTED END (MONITORS)")
-                        self.recovered_from_error = True
+                        self.error("EXPECTED END (MONITORS)",
+                                   skip_to_symbol = "EOF")
+                elif(not self.recovered_from_definition_error):
+                    self.recovered_from_definition_error = True
+                    if (self.symbol.id == self.scanner.END_ID and \
+                        self.symbol.type == self.scanner.KEYWORD):
+                        self.symbol = self.scanner.get_symbol()
+                        if (self.symbol.type == self.scanner.SEMICOLON):
+                            self.symbol = self.scanner.get_symbol()
+                            if(self.symbol.type == self.scanner.EOF):
+                                pass
+                            else:
+                                self.error("EXPECTED EOF",
+                                           skipt_to_symbol = "EOF")
+                        else:
+                            self.error("EXPECTED SEMICOLON",
+                                       skip_to_symbol = "EOF")
+                    else:
+                        self.error("EXPECTED END (MONITORS)",
+                                   skip_to_symbol = "EOF")
+#TODO make sure it still checks for END
                 else:
-                    self.error("EXPECTED SEMICOLON")
+                    self.error("EXPECTED SEMICOLON",
+                               skip_to_symbol = "END")
             else:
-                self.error("EXPECTED COLON (MONITORS)")
-                self.recovered_from_error = True
+                self.error("EXPECTED COLON (MONITORS)",
+                           skip_to_symbol = "END")
         elif(self.symbol.type == self.scanner.EOF):
             pass
         else:
-            self.error("EXPECTED MONITORS OR END OF FILE")
-            self.recovered_from_error = True
+            self.error("EXPECTED MONITORS OR END OF FILE",
+                       skip_to_symbol = "EOF")
 
     def parse_network(self):
         """Parse the circuit definition file."""
