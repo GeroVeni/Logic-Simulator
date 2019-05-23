@@ -29,35 +29,40 @@ def new_parser(filename):
 @pytest.mark.parametrize("filename, success, error_list", [
     ("test_spec_1.txt", True, []),
     ("test_spec_2.txt", True, []),
+    ("test_syntax_con_def_invalid_symbol.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_con_def_missing_comma.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_con_def_missing_semicolon.txt", False, [Parser.SYNTAX_ERROR]),
     ("test_syntax_dev_def_missing_comma.txt", False, [
-        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_dev_def_missing_parenthesis.txt", False, [
-        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_BAD_DEVICE,
-        Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.SYNTAX_ERROR,
+        Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_dev_def_missing_semicolon.txt", False, [
-        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_invalid_argument.txt", False, [
-        Parser.ERROR_INVALID_ARGUMENT, Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.VALUE_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_invalid_device.txt", False, [
-        Parser.ERROR_BAD_DEVICE, Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_invalid_names.txt", False, [
-        Parser.ERROR_BAD_NAME, Parser.ERROR_BAD_NAME]),
+        Parser.SYNTAX_ERROR, Parser.SYNTAX_ERROR]),
+    ("test_syntax_invalid_port.txt", False, [Parser.SYNTAX_ERROR, Parser.SYNTAX_ERROR]),
+    ("test_syntax_invalid_signal.txt", False, [Parser.SYNTAX_ERROR, Parser.SYNTAX_ERROR]),
     ("test_syntax_invalid_symbol.txt", False, [
-        Parser.ERROR_BAD_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
-    ("test_syntax_missing_cons_1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_cons_2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_cons_3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_devs_1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_devs_2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_devs_3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_mons_1.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_mons_2.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_missing_mons_3.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_mon_def_missing_comma.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_mon_def_missing_semicolon.txt", False, [Parser.ERROR_WRONG_SYMBOL]),
-    ("test_syntax_no_devices.txt", False, [Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
+    ("test_syntax_missing_cons_1.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_cons_2.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_cons_3.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_devs_1.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_devs_2.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_devs_3.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_mons_1.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_mons_2.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_missing_mons_3.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_mon_def_missing_comma.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_mon_def_missing_semicolon.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_no_devices.txt", False, [Parser.UNDEFINED_DEVICE_ERROR]),
     ("test_syntax_wrong_symbol.txt", False, [
-        Parser.ERROR_WRONG_SYMBOL, Parser.ERROR_UNDEFINED_DEVICE]),
+        Parser.SYNTAX_ERROR, Parser.UNDEFINED_DEVICE_ERROR]),
 ])
 def test_parse(new_parser, success, error_list):
     """Test that Parser.parse_network() returns the correct
