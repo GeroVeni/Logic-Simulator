@@ -113,8 +113,8 @@ class Scanner:
             self.current_character = self.fileIn.read(1)
 
     def look_ahead(self):
-        """Return the next character in the definition file, without updating current_character and without
-        incrementing the current position within the file.
+        """Return the next character in the definition file, without updating
+        current_character and without incrementing the current position within the file.
         """
         ch = self.fileIn.read(1)
         self.fileIn.seek(self.fileIn.tell()-1, 0)
@@ -248,7 +248,7 @@ class Scanner:
         if not isinstance(symbol, Symbol):
             raise TypeError('symbol must be an instance of the class Symbol')
         if symbol.line != self.current_line:
-            raise ValueError('The symbol passed as an argument is at a different line than the current state of the scanner')
+            raise ValueError('The symbol is at a different line than the current state of the scanner')
 
         # save current state of the scanner
         current_pos = self.fileIn.tell()
@@ -257,7 +257,8 @@ class Scanner:
         current_line = self.current_line
 
         # count line length
-        self.skip_line()
+        if current_ch != "\n":
+            self.skip_line()
         line_length = self.fileIn.tell() - current_line_pos - 1
         # get contents of line in the circuit definition file
         self.fileIn.seek(current_line_pos, 0)
@@ -272,12 +273,12 @@ class Scanner:
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile1.txt'
+    path = 'testfiles/tmp_scanner/specfile3.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()
         print(current_symbol)
         if current_symbol.type == scanner.INVALID_SYMBOL:
             err_symbol = current_symbol
-            print("Now, test get_error_line()")
+            print("-----------------------------------------------------------")
             scanner.get_error_line(err_symbol)
