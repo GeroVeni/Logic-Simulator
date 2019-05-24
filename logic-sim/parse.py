@@ -37,14 +37,17 @@ class Parser:
     parse_network(self): Parses the circuit definition file.
     """
 
-    [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, VALUE_ERROR] = range(3)
+    [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR] = range(3)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
         self.symbol = None
         self.scanner = scanner
         self.names = names
+        self.devices = devices
+        self.identifier_list = []
         self.error_count = 0
+        self.current_number = None
         #List of error codes used in get_error_codes
         self.error_codes = []
         self.recovered_from_definition_error = True
@@ -62,6 +65,9 @@ class Parser:
         if (error_type == self.SYNTAX_ERROR):
             self.scanner.get_error_line(self.symbol)
             print("***SyntaxError: invalid syntax. Expected", message)
+        elif (error_type == self.DEVICE_VALUE_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***ValueError:", message)
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         if (stopping_symbol == "KEYWORD or ;"):
@@ -94,8 +100,10 @@ class Parser:
                 self.symbol = self.scanner.get_symbol()
 
     def identifier(self):
+#TODO check that identifier not used twice or use keyword could maybe use make devices errors
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
+            self.identifier_list.append(self.symbol.id)
             self.symbol = self.scanner.get_symbol()
         else:
             self.error(self.SYNTAX_ERROR, "name")
@@ -103,6 +111,7 @@ class Parser:
     def device_type(self):
         if (self.symbol.type == self.scanner.DEVICE and
             self.recovered_from_definition_error):
+            self.current_device = self.symbol
             self.symbol = self.scanner.get_symbol()
         else:
             self.error(self.SYNTAX_ERROR, "device")
@@ -110,9 +119,43 @@ class Parser:
     def number(self):
         if (self.symbol.type == self.scanner.NUMBER and
             self.recovered_from_definition_error):
+            self.current_number = self.symbol.id
             self.symbol = self.scanner.get_symbol()
         else:
             self.error(self.SYNTAX_ERROR, "number")
+
+    def make_devices(self):
+        while len(self.identifier_list) != 0:
+            if (self.current_device.id == self.scanner.DTYPE_ID):
+                error = self.devices.make_device(
+                self.identifier_list.pop(), self.devices.D_TYPE,
+                self.current_number)
+                #should not raise bad devices as self.devices
+                #has been used
+                if (error == self.devices.QUALIFIER_PRESENT):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "DTYPE takes no number", None)
+                #should not recover to semicolon as already got to ;
+                    return
+            elif (self.current_device.id == self.scanner.SWITCH_ID):
+                if (self.current_number == None):
+                    #default value to 0
+                    self.current_number = 0
+                error = self.devices.make_device(
+                self.identifier_list.pop(), self.devices.SWITCH,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "SWITCH takes only 0 or 1", None)
+                #should not recover to semicolon as already got to ;
+                    #reset identifier_list to zero so later on dont get extra devices
+                    self.identifier_list = []
+                    return
+#TODO add clock and gates think of elegant way to do
+            else:
+                print("SHOULDNT HAPPEN")
+                print(self.symbol)
+                self.identifier_list.pop()
 
     def device_definition(self):
         self.identifier()
@@ -136,8 +179,11 @@ class Parser:
             elif (self.symbol.type == self.scanner.NUMBER and
                     self.recovered_from_definition_error):
                 self.error(self.SYNTAX_ERROR, "(")
+            else:
+                self.current_number = None
             if (self.symbol.type == self.scanner.SEMICOLON and
-                    self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
+                self.make_devices()
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error(self.SYNTAX_ERROR, ";")
