@@ -16,4 +16,5 @@ For running the gui on a different machine using Anaconda package manager, run:
 ```
 conda install wx
 conda install freeglut
-conda install pyopengl pyopengl-accelerate```
+conda install pyopengl pyopengl-accelerate
+```
