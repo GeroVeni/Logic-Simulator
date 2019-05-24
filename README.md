@@ -9,3 +9,7 @@ implementation, testing and maintenance.
 * prelim folder: Folder containing the preliminary exercises
 * logic-sim folder: Folder containing the main project files
 
+## Installation instructions
+For running the gui on a different machine using Anaconda package manager, run:
+
+```conda install pyopengl-accelerate```
