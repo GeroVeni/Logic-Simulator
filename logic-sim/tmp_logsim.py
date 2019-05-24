@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Temporary script for working with gui before the parse.py is complete
 """
