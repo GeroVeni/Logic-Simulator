@@ -4,4 +4,3 @@ hello1 mate8 := _ error19
 try1 Again6 _ error15
 
 SW common_clok := *
-ha

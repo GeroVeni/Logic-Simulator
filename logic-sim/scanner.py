@@ -273,7 +273,7 @@ class Scanner:
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile3.txt'
+    path = 'testfiles/tmp_scanner/specfile2.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()

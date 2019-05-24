@@ -41,12 +41,15 @@ def new_Scanner():
 ####################
 
 def test_constructor_raises_exception(new_Scanner):
-    # with pytest.raises(FileNotFoundError):
-       # new_Scanner("inexistant_file.txt")
+    with pytest.raises(FileNotFoundError):
+       new_Scanner("inexistant_file.txt")
     with pytest.raises(TypeError):
        new_Scanner(7)
     with pytest.raises(TypeError):
        new_Scanner("scanner.py")
+    # test excpeption for not passing an instance of Names class
+    with pytest.raises(TypeError):
+        Scanner("hello.txt", 4)
 
 def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
     empty_file = new_file("")
@@ -103,13 +106,27 @@ def test_get_symbol_comments(new_Scanner, new_file):
     valid_comment = new_file("//this is a valid comment")
     scanner = new_Scanner(valid_comment)
     assert scanner.get_symbol().type == scanner.EOF
-    same_line_comment = new_file("COMMENT//this is a valid inline comment")
+    same_line_comment = new_file("COMMENT//this is a valid //inline comment")
     scanner = new_Scanner(same_line_comment)
     assert scanner.get_symbol().type == scanner.NAME
     assert scanner.get_symbol().type == scanner.EOF
-    invalid_comment = new_file("/this is a wrong comment")
+    invalid_comment = new_file("/this is a wrong comment \n 123")
     scanner = new_Scanner(invalid_comment)
     assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
+    assert scanner.get_symbol().type == scanner.NUMBER
+    assert scanner.get_symbol().type == scanner.EOF
+    multiple_lines = new_file("hello //comment \n //comment \n hello_again //comment")
+    scanner = new_Scanner(multiple_lines)
+    assert scanner.get_symbol().type == scanner.NAME
+    assert scanner.get_symbol().type == scanner.NAME
+    assert scanner.get_symbol().type == scanner.EOF
+    multiple_invalid_comments = new_file("hello /there \n // \n // \n /wrong \n//\n/\n//\n =>")
+    scanner = new_Scanner(multiple_invalid_comments)
+    assert scanner.get_symbol().type == scanner.NAME
+    assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
+    assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
+    assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
+    assert scanner.get_symbol().type == scanner.CONNECTION_DEF
     assert scanner.get_symbol().type == scanner.EOF
 
 
