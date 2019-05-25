@@ -232,31 +232,29 @@ class Gui(wx.Frame):
         self.canvas = MyGLCanvas(self, devices, monitors)
 
         # Configure the widgets
-        self.text = wx.StaticText(self, wx.ID_ANY, "Cycles")
         self.spin = wx.SpinCtrl(self, wx.ID_ANY, "10")
-        self.run_button = wx.Button(self, wx.ID_ANY, "Run")
-        self.text_box = wx.TextCtrl(self, wx.ID_ANY, "",
-                                    style=wx.TE_PROCESS_ENTER)
+        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "paparia\n"*20,
+                                    style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
         self.spin.Bind(wx.EVT_SPINCTRL, self.on_spin)
-        self.run_button.Bind(wx.EVT_BUTTON, self.on_run_button)
-        self.text_box.Bind(wx.EVT_TEXT_ENTER, self.on_text_box)
 
         # Configure sizers for layout
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        side_sizer = wx.BoxSizer(wx.VERTICAL)
+        right_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        main_sizer.Add(self.canvas, 5, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(side_sizer, 1, wx.ALL, 5)
 
-        side_sizer.Add(self.text, 1, wx.TOP, 10)
-        side_sizer.Add(self.spin, 1, wx.ALL, 5)
-        side_sizer.Add(self.run_button, 1, wx.ALL, 5)
-        side_sizer.Add(self.text_box, 1, wx.ALL, 5)
+        main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.SetSizeHints(600, 600)
+        left_sizer.Add(self.canvas, 2, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
+
+        right_sizer.Add(self.spin, 0, wx.ALL, 5)
+
+        self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
 
     def on_menu(self, event):
