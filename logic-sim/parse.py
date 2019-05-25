@@ -37,7 +37,8 @@ class Parser:
     parse_network(self): Parses the circuit definition file.
     """
 
-    [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR] = range(3)
+    [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR,
+    KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR] = range(5)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
@@ -48,13 +49,13 @@ class Parser:
         self.identifier_list = []
         self.error_count = 0
         self.current_number = None
+        self.current_identifier = None
         #List of error codes used in get_error_codes
         self.error_codes = []
         self.recovered_from_definition_error = True
 
     def error(self, error_type, message = None,
               stopping_symbol="KEYWORD or ;" ):
-#TODO print error properly with line etc..
         if (self.recovered_from_definition_error):
             self.error_count +=1
             self.error_codes.append(error_type)
@@ -68,6 +69,15 @@ class Parser:
         elif (error_type == self.DEVICE_VALUE_ERROR):
             self.scanner.get_error_line(self.symbol)
             print("***ValueError:", message)
+        elif (error_type == self.KEYWORD_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***NameError: Keywords are reserved and" \
+                  "cannot be used as identifiers.")
+        elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
+            self.scanner.get_error_line(self.current_identifier)
+#TODO also add get_error_line by comparing identifier ids lookup names
+            print("***NameError: An identifier was repeated." \
+                  "All identifiers must have unique names.")
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         if (stopping_symbol == "KEYWORD or ;"):
@@ -100,11 +110,14 @@ class Parser:
                 self.symbol = self.scanner.get_symbol()
 
     def identifier(self):
-#TODO check that identifier not used twice or use keyword could maybe use make devices errors
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
-            self.identifier_list.append(self.symbol.id)
+            self.identifier_list.append(self.symbol)
             self.symbol = self.scanner.get_symbol()
+        elif(self.symbol.type == self.scanner.KEYWORD and
+             self.recovered_from_definition_error):
+            self.error(self.KEYWORD_ERROR)
+#TODO skip to ; remove keyword problems with this think about it change s to END in temp_file
         else:
             self.error(self.SYNTAX_ERROR, "name")
 
@@ -126,9 +139,14 @@ class Parser:
 
     def make_devices(self):
         while len(self.identifier_list) != 0:
+            self.current_identifier = self.identifier_list.pop()
+            if (self.devices.get_device(self.current_identifier.id)
+                is not None):
+                #TODO fix issue with END not working jumping wrong
+                self.error(self.REPEATED_IDENTIFIER_ERROR, None)
             if (self.current_device.id == self.scanner.DTYPE_ID):
                 error = self.devices.make_device(
-                self.identifier_list.pop(), self.devices.D_TYPE,
+                self.current_identifier.id, self.devices.D_TYPE,
                 self.current_number)
                 #should not raise bad devices as self.devices
                 #has been used
@@ -142,7 +160,7 @@ class Parser:
                     #default value to 0
                     self.current_number = 0
                 error = self.devices.make_device(
-                self.identifier_list.pop(), self.devices.SWITCH,
+                self.current_identifier.id, self.devices.SWITCH,
                 self.current_number)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,

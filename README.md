@@ -12,4 +12,9 @@ implementation, testing and maintenance.
 ## Installation instructions
 For running the gui on a different machine using Anaconda package manager, run:
 
-```conda install pyopengl-accelerate```
+
+```
+conda install wx
+conda install freeglut
+conda install pyopengl pyopengl-accelerate
+```
