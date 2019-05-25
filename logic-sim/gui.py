@@ -227,6 +227,14 @@ class Gui(wx.Frame):
         fileMenu.Append(wx.ID_EXIT, "&Exit")
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
+        
+        # Configure toolbar
+        toolBar = self.CreateToolBar()
+        openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
+        redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
+        toolBar.AddTool(1001, "Tool1", openIcon)
+        toolBar.AddTool(1002, "Tool2", redoIcon)
+        self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
         self.canvas = MyGLCanvas(self, devices, monitors)
