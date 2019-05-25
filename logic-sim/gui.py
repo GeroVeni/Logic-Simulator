@@ -240,30 +240,46 @@ class Gui(wx.Frame):
         self.canvas = MyGLCanvas(self, devices, monitors)
 
         # Configure the widgets
-        self.spin = wx.SpinCtrl(self, wx.ID_ANY, "10")
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "paparia\n"*20,
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
-        self.spin.Bind(wx.EVT_SPINCTRL, self.on_spin)
 
         # Configure sizers for layout
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
         right_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        left_sizer.Add(self.canvas, 2, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
+
+        #right_sizer.Add(self.spin, 0, wx.ALL, 5)
+        right_sizer = self.make_right_sizer()
 
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        left_sizer.Add(self.canvas, 2, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
-
-        right_sizer.Add(self.spin, 0, wx.ALL, 5)
-
         self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
+        
+    #Sizer helper functions
+    def make_right_sizer(self):
+        """Helper function that creates the right sizer"""
+        right_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Create the notebook to hold tabs
+        nb = wx.Notebook(self)
+        
+        # Create the tabs
+        tab1 = CustomTab(nb)
+        tab2 = CustomTab(nb)
+
+        nb.AddPage(tab1, "Switches")
+        nb.AddPage(tab2, "Monitors")
+
+        right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
+        return right_sizer
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -290,3 +306,47 @@ class Gui(wx.Frame):
         text_box_value = self.text_box.GetValue()
         text = "".join(["New text box value: ", text_box_value])
         self.canvas.render(text)
+        
+
+class CustomTab(wx.Panel):
+    """Configure the tabs added in the notebook.
+    
+    This class provides a generalised method to create tabs with list,
+    to aid the creation of the Switch tab and the Monitors tab.
+    
+    Parameters
+    ----------
+    parent: parent of the panel.
+    
+    Public methods
+    --------------
+    
+    TBD
+    """
+
+    def __init__(self, parent):
+        """Attach parent to panel and create the list control widget."""
+        wx.Panel.__init__(self, parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        #Constants
+        self.LIST_WIDTH = 165
+        self.LIST_STATUS_WIDTH = 90
+
+        self.gui = parent.GetParent()
+
+        mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
+        #mon_list.AppendColumn("Name")
+        #mon_list.AppendColumn("Status")
+        for i in range(30):
+            mon_list.Append(["You" + str(i)])
+        #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
+        #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+
+        sizer.Add(mon_list, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+
+    def on_run_button(self, event): 
+        """Handle the event when the user clicks the run button."""
+        #print("Run button pressed.")
+ 
