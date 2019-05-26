@@ -72,6 +72,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
+        # Variables for drawing signal traces
+        self.devices = devices
+        self.monitors = monitors
+        self.border_x = 10
+
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
         size = self.GetClientSize()
@@ -101,19 +106,24 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Draw specified text at position (10, 10)
         self.render_text(text, 10, 10)
 
-        # Draw a sample signal trace
-        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
+        # TODO remove this box drawing code
+        # Draw box around point
+        point = [10,10]
+        GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINE_STRIP)
-        for i in range(10):
-            x = (i * 20) + 10
-            x_next = (i * 20) + 30
-            if i % 2 == 0:
-                y = 75
-            else:
-                y = 100
-            GL.glVertex2f(x, y)
-            GL.glVertex2f(x_next, y)
+        GL.glVertex2f(point[0] + 2, point[1] + 2)
+        GL.glVertex2f(point[0] + 2, point[1] - 2)
+        GL.glVertex2f(point[0] - 2, point[1] - 2)
+        GL.glVertex2f(point[0] - 2, point[1] + 2)
+        GL.glVertex2f(point[0] + 2, point[1] + 2)
         GL.glEnd()
+
+        # TODO check how many monitors, and allocate the y axis space equally to them
+        # Draw signal traces
+        y_pos = 100
+        for device_id, output_id in self.monitors.monitors_dictionary:
+            self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
+            y_pos += 40
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -192,6 +202,49 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             else:
                 GLUT.glutBitmapCharacter(font, ord(character))
 
+    def render_monitor(self, device_id, output_id, y_min, y_max):
+        """Draw monitor name and signal trace for a particular monitor."""
+        # Boundary for bottom of text and top of the signal trace drawing
+        y_border = y_max - 10 # TODO fix text placement
+        cycle_width = 20
+        # TODO uncomment monitor_name
+        monitor_name = "Device 1"
+        # monitor_name = self.devices.get_signal_name(device_id, output_id)
+        signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
+
+        # Draw monitor name
+        # TODO put monitor name on the side, use monitors.get_margin()
+        self.render_text(monitor_name, self.border_x, y_border)
+
+        # Draw signal trace
+        x_pos = self.border_x
+        currently_drawing = False
+        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue TODO: change color for different traces
+        for signal in signal_list:
+            if signal == self.devices.BLANK:
+                if currently_drawing:
+                    GL.glEnd()
+                    currently_drawing = False
+                x_pos += cycle_width
+            else:
+                if not currently_drawing:
+                    GL.glBegin(GL.GL_LINE_STRIP)
+                    currently_drawing = True
+                if signal == self.devices.HIGH:
+                    y = y_border
+                if signal == self.devices.LOW:
+                    y = y_min
+                if signal == self.devices.RISING:
+                    y = y_border
+                if signal == self.devices.FALLING:
+                    y = y_min
+                GL.glVertex2f(x_pos, y)
+                x_pos += cycle_width
+                GL.glVertex2f(x_pos, y)
+        if currently_drawing:
+            GL.glEnd()
+            currently_drawing = False
+
 
 class Gui(wx.Frame):
     """Configure the main window and all the widgets.
@@ -227,7 +280,7 @@ class Gui(wx.Frame):
         fileMenu.Append(wx.ID_EXIT, "&Exit")
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
-        
+
         # Configure toolbar
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
@@ -262,7 +315,7 @@ class Gui(wx.Frame):
 
         self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
-        
+
     #Sizer helper functions
     def make_right_sizer(self):
         """Helper function that creates the right sizer"""
@@ -270,7 +323,7 @@ class Gui(wx.Frame):
 
         # Create the notebook to hold tabs
         nb = wx.Notebook(self)
-        
+
         # Create the tabs
         tab1 = CustomTab(nb)
         tab2 = CustomTab(nb)
@@ -289,6 +342,9 @@ class Gui(wx.Frame):
         if Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
+        if Id == 1002: # run button
+            text = "Run button pressed."
+            self.canvas.render(text)
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
@@ -306,21 +362,21 @@ class Gui(wx.Frame):
         text_box_value = self.text_box.GetValue()
         text = "".join(["New text box value: ", text_box_value])
         self.canvas.render(text)
-        
+
 
 class CustomTab(wx.Panel):
     """Configure the tabs added in the notebook.
-    
+
     This class provides a generalised method to create tabs with list,
     to aid the creation of the Switch tab and the Monitors tab.
-    
+
     Parameters
     ----------
     parent: parent of the panel.
-    
+
     Public methods
     --------------
-    
+
     TBD
     """
 
@@ -346,7 +402,6 @@ class CustomTab(wx.Panel):
         sizer.Add(mon_list, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
-    def on_run_button(self, event): 
+    def on_run_button(self, event):
         """Handle the event when the user clicks the run button."""
         #print("Run button pressed.")
- 
