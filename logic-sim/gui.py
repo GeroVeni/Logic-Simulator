@@ -72,10 +72,24 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
-        # Variables for drawing signal traces
         self.devices = devices
         self.monitors = monitors
-        self.border_x = 10
+
+        # Variables for canvas drawing
+        self.border_left = 10
+        self.border_right = 400
+        self.border_top = 200
+        self.border_bottom = 0
+        self.zoom_lower = 0.5
+        self.zoom_upper = 4
+        self.margin_left = 100
+        self.cycle_width = 20
+
+        # Variables for drawing text
+        # self.font = GLUT.GLUT_BITMAP_HELVETICA_12
+        self.font = GLUT.GLUT_BITMAP_9_BY_15
+        self.character_width = 9
+        self.character_height = 15
 
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
@@ -94,6 +108,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render(self, text):
         """Handle all drawing operations."""
+        self.bound_panning()
+        self.bound_zooming()
+
         self.SetCurrent(self.context)
         if not self.init:
             # Configure the viewport, modelview and projection matrices
@@ -111,15 +128,17 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         point = [10,10]
         GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINE_STRIP)
-        GL.glVertex2f(point[0] + 2, point[1] + 2)
-        GL.glVertex2f(point[0] + 2, point[1] - 2)
-        GL.glVertex2f(point[0] - 2, point[1] - 2)
-        GL.glVertex2f(point[0] - 2, point[1] + 2)
-        GL.glVertex2f(point[0] + 2, point[1] + 2)
+        GL.glVertex2f(point[0], point[1])
+        GL.glVertex2f(point[0] + 9, point[1])
+        GL.glVertex2f(point[0] + 9, point[1] + 15)
+        GL.glVertex2f(point[0], point[1] + 15)
+        GL.glVertex2f(point[0], point[1])
         GL.glEnd()
 
-        # TODO check how many monitors, and allocate the y axis space equally to them
         # Draw signal traces
+        # TODO uncomment bottom line
+        # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
+        # TODO check how many monitors, and allocate the y axis space equally to them
         y_pos = 100
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
@@ -189,57 +208,73 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         else:
             self.Refresh()  # triggers the paint event
 
+    def bound_panning(self):
+        """Makes sure the canvas is always panned within the bounds of the
+        signal traces."""
+        if self.pan_x < self.border_left:
+            self.pan_x = self.border_left
+        elif self.pan_x > self.border_right:
+            self.pan_x = self.border_right
+        if self.pan_y < self.border_bottom:
+            self.pan_y = self.border_bottom
+        elif self.pan_y > self.border_top:
+            self.pan_y = self.border_top
+
+    def bound_zooming(self):
+        """Makes sure the zoom is bounded."""
+        if self.zoom > self.zoom_upper:
+            self.zoom = self.zoom_upper
+        elif self.zoom < self.zoom_lower:
+            self.zoom = self.zoom_lower
+
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
         GL.glColor3f(0.0, 0.0, 0.0)  # text is black
         GL.glRasterPos2f(x_pos, y_pos)
-        font = GLUT.GLUT_BITMAP_HELVETICA_12
 
         for character in text:
             if character == '\n':
                 y_pos = y_pos - 20
                 GL.glRasterPos2f(x_pos, y_pos)
             else:
-                GLUT.glutBitmapCharacter(font, ord(character))
+                GLUT.glutBitmapCharacter(self.font, ord(character))
 
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Draw monitor name and signal trace for a particular monitor."""
-        # Boundary for bottom of text and top of the signal trace drawing
-        y_border = y_max - 10 # TODO fix text placement
-        cycle_width = 20
         # TODO uncomment monitor_name
         monitor_name = "Device 1"
         # monitor_name = self.devices.get_signal_name(device_id, output_id)
         signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
-        # TODO put monitor name on the side, use monitors.get_margin()
-        self.render_text(monitor_name, self.border_x, y_border)
+        text_x_pos = self.border_left
+        text_y_pos = (y_min + y_max)/2 - self.character_height/(2*self.zoom)
+        self.render_text(monitor_name, text_x_pos, text_y_pos)
 
         # Draw signal trace
-        x_pos = self.border_x
+        x_pos = self.margin_left/self.zoom # correct for zooming
         currently_drawing = False
-        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue TODO: change color for different traces
+        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         for signal in signal_list:
             if signal == self.devices.BLANK:
                 if currently_drawing:
                     GL.glEnd()
                     currently_drawing = False
-                x_pos += cycle_width
+                x_pos += self.cycle_width
             else:
                 if not currently_drawing:
                     GL.glBegin(GL.GL_LINE_STRIP)
                     currently_drawing = True
                 if signal == self.devices.HIGH:
-                    y = y_border
+                    y = y_max
                 if signal == self.devices.LOW:
                     y = y_min
                 if signal == self.devices.RISING:
-                    y = y_border
+                    y = y_max
                 if signal == self.devices.FALLING:
                     y = y_min
                 GL.glVertex2f(x_pos, y)
-                x_pos += cycle_width
+                x_pos += self.cycle_width
                 GL.glVertex2f(x_pos, y)
         if currently_drawing:
             GL.glEnd()
