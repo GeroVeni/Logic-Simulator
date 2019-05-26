@@ -38,7 +38,8 @@ class Parser:
     """
 
     [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR,
-    KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR] = range(5)
+    KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR, INPUT_ERROR,
+    OUTPUT_ERROR] = range(7)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
@@ -78,6 +79,14 @@ class Parser:
 #TODO also add get_error_line by comparing identifier ids lookup names
             print("***NameError: An identifier was repeated. " \
                   "All identifiers must have unique names.")
+        elif (error_type == self.INPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: Inputs must be on the right" \
+                  " hand side of the connection definition")
+        elif (error_type == self.OUTPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: Outputs must be on the left" \
+                  " hand side of the connection definition")
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         if (stopping_symbol == "KEYWORD or ;"):
@@ -253,6 +262,7 @@ class Parser:
                     "XOR gates can only have 2 inputs", None)
                     self.identifier_list = []
                     return
+
     def device_definition(self):
         self.identifier()
         while (self.symbol.type == self.scanner.COMMA and
@@ -316,8 +326,20 @@ class Parser:
             self.error(self.SYNTAX_ERROR, "DEVICES",
                        stopping_symbol = "END")
 
-    def port(self):
-        if (self.symbol.id == self.scanner.I_ID and
+    def port(self, I_O):
+        if (self.symbol.type == self.scanner.PORT and
+            I_O == "O" and (self.symbol.id == self.scanner.I_ID
+            or self.symbol.id == self.scanner.DATA_ID or
+            self.symbol.id == self.scanner.CLK_ID or
+            sself.symbol.id == self.sanner.SET_ID or
+            self.symbol.id == self.CLEAR_ID)):
+            self.error(self.INPUT_ERROR)
+        if (self.symbol.type == self.scanner.PORT and
+            I_O == "I" and (self.symbol.id == self.scanner.Q_ID
+            or self.symbol.id == self.scanner.QBAR_ID)):
+            self.error(self.OUTPUT_ERROR)
+        elif (self.symbol.id == self.scanner.I_ID and
+            self.symbol.type == self.scanner.PORT and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.number()
@@ -327,32 +349,33 @@ class Parser:
         else:
             self.error(self.SYNTAX_ERROR, "port")
 
-    def signal(self):
+    def signal(self, I_O):
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.DOT):
                 self.symbol = self.scanner.get_symbol()
-                self.port()
+                self.port(I_O)
         else:
             self.error(self.SYNTAX_ERROR, "name")
 
     def connection_definition(self):
-        self.signal()
+        self.signal("O")
         while (self.symbol.type == self.scanner.COMMA and
                self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
-            self.signal()
+            self.signal("O")
         if (self.symbol.type == self.scanner.CONNECTION_DEF and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
-            self.signal()
+            self.signal("I")
             while (self.symbol.type == self.scanner.COMMA and
                    self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
-                self.signal()
+                self.signal("I")
             if (self.symbol.type == self.scanner.SEMICOLON and
                 self.recovered_from_definition_error):
+                self.make_connection()
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error(self.SYNTAX_ERROR, ";")
