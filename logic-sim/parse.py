@@ -71,12 +71,12 @@ class Parser:
             print("***ValueError:", message)
         elif (error_type == self.KEYWORD_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***NameError: Keywords are reserved and" \
+            print("***NameError: Keywords are reserved and " \
                   "cannot be used as identifiers.")
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(self.current_identifier)
 #TODO also add get_error_line by comparing identifier ids lookup names
-            print("***NameError: An identifier was repeated." \
+            print("***NameError: An identifier was repeated. " \
                   "All identifiers must have unique names.")
 
     def skip_to_stopping_symbol(self, stopping_symbol):
@@ -92,6 +92,12 @@ class Parser:
             while (self.symbol.type != self.scanner.KEYWORD and
                    self.symbol.type != self.scanner.EOF):
                 self.symbol = self.scanner.get_symbol()
+        if (stopping_symbol == ";"):
+            self.recovered_from_definition_error = False
+            while (self.symbol.type != self.scanner.SEMICOLON and
+                   self.symbol.type != self.scanner.EOF):
+                self.symbol = self.scanner.get_symbol()
+            self.symbol = self.scanner.get_symbol()
         elif (stopping_symbol == "END"):
             while ((self.symbol.type != self.scanner.KEYWORD or
                    self.symbol.id != self.scanner.END_ID) and
@@ -108,16 +114,18 @@ class Parser:
         elif (stopping_symbol == "EOF"):
             while (self.symbol.type != self.scanner.EOF):
                 self.symbol = self.scanner.get_symbol()
+        elif (stopping_symbol == None):
+            pass
 
     def identifier(self):
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
             self.identifier_list.append(self.symbol)
             self.symbol = self.scanner.get_symbol()
+#will only catch KEYWORD error as identifier if not first name, should i catch further?
         elif(self.symbol.type == self.scanner.KEYWORD and
              self.recovered_from_definition_error):
-            self.error(self.KEYWORD_ERROR)
-#TODO skip to ; remove keyword problems with this think about it change s to END in temp_file
+            self.error(self.KEYWORD_ERROR, stopping_symbol = ";")
         else:
             self.error(self.SYNTAX_ERROR, "name")
 
@@ -142,9 +150,9 @@ class Parser:
             self.current_identifier = self.identifier_list.pop()
             if (self.devices.get_device(self.current_identifier.id)
                 is not None):
-                #TODO fix issue with END not working jumping wrong
-                self.error(self.REPEATED_IDENTIFIER_ERROR, None)
-            if (self.current_device.id == self.scanner.DTYPE_ID):
+                self.error(self.REPEATED_IDENTIFIER_ERROR,
+                           stopping_symbol = None)
+            elif (self.current_device.id == self.scanner.DTYPE_ID):
                 error = self.devices.make_device(
                 self.current_identifier.id, self.devices.D_TYPE,
                 self.current_number)
