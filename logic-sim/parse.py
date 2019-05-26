@@ -47,6 +47,8 @@ class Parser:
         self.scanner = scanner
         self.names = names
         self.devices = devices
+        self.network = network
+        self.monitors = monitors
         self.identifier_list = []
         self.error_count = 0
         self.current_number = None
@@ -358,6 +360,22 @@ class Parser:
                 self.port(I_O)
         else:
             self.error(self.SYNTAX_ERROR, "name")
+
+    def get_input(self):
+        return [None, None]
+
+    def get_device(self):
+        return [None, None]
+
+    def make_connection(self):
+        [in_device_id, in_port_id] = self.get_input()
+        [out_device_id, out_port_id] = self.get_device()
+        if (self.error_count == 0):
+            error_type = self.network.make_connection(
+                in_device_id, in_port_id, out_device_id,
+                out_port_id)
+            if (error_type != self.network.NO_ERROR):
+                print("UPS error occurred in making connection")
 
     def connection_definition(self):
         self.signal("O")
