@@ -177,12 +177,82 @@ class Parser:
                     #reset identifier_list to zero so later on dont get extra devices
                     self.identifier_list = []
                     return
-#TODO add clock and gates think of elegant way to do
-            else:
-                print("SHOULDNT HAPPEN")
-                print(self.symbol)
-                self.identifier_list.pop()
-
+            elif (self.current_device.id == self.scanner.CLOCK_ID):
+                if (self.current_number == None):
+                    #default value to 1
+                    self.current_number = 1
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.CLOCK,
+                self.current_number)
+                #this can only hapen if given a zero as - will be invalid
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "CLOCK takes only values greater than 0", None)
+                #should not recover to semicolon as already got to ;
+                #reset identifier_list to zero so later on dont get extra devices as all of these devices are instantiaing the same
+                    self.identifier_list = []
+                    return
+#TODO tidy up this so is one single elif
+            elif (self.current_device.id == self.scanner.NAND_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.NAND,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "NAND gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.AND_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.AND,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "AND gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.NOR_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.NOR,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "NOR gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.OR_ID):
+                if (self.current_number == None):
+                    #devault value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.OR,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "OR gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.XOR_ID):
+                if (self.current_number == 2):
+                    #devices module need Xor to have none in device_property so if number that is not 2 assigne will rasie problem
+                    self.current_number = None
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.XOR,
+                self.current_number)
+                if (error == self.devices.QUALIFIER_PRESENT):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "XOR gates can only have 2 inputs", None)
+                    self.identifier_list = []
+                    return
     def device_definition(self):
         self.identifier()
         while (self.symbol.type == self.scanner.COMMA and
