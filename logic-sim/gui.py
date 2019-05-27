@@ -335,8 +335,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glEnd()
         GL.glPopMatrix()
 
-
-
     def render_grid(self):
         """Draw a grid for separating the different cycles in the traces."""
         if self.cycles_completed == 0:
@@ -422,7 +420,7 @@ class Gui(wx.Frame):
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.SetSizeHints(1200, 800)
+        self.SetSizeHints(1280, 800)
         self.SetSizer(main_sizer)
 
     #Sizer helper functions
@@ -443,6 +441,16 @@ class Gui(wx.Frame):
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
+    def set_monitor(self, monitor_id, is_active):
+        """Activate or deactivate a monitor.
+        
+        Parameters
+        ----------
+        monitor_id: The id of the monitor to change state
+        is_active: The state of the monitor; True to activate
+                   and False to deactivate
+        """
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -453,7 +461,7 @@ class Gui(wx.Frame):
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
         if Id == 1002: # run button
             text = "Run button pressed."
-            self.canvas.render(text)
+            self.canvas.render(text, self.cycles_completed)
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
