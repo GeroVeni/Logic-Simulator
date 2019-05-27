@@ -137,31 +137,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # GL.glVertex2f(point[0], point[1])
         # GL.glEnd()
 
-        GL.glPushMatrix() #Make sure our transformations dont affect any other transformations in other code
-        GL.glLoadIdentity()
-        #GL.glTranslatef(size.width / 2, size.height / 2, 0.0) #Translate rectangle to its assigned x and y position
-        ##Put other transformations here
-        GL.glColor3f(1.0, 0.0, 0.0) #Set the colour to red 
-        GL.glBegin(GL.GL_QUADS) #We want to draw a quad, i.e. shape with four sides
-        GL.glVertex2f(0.0, size.height) #Draw the four corners of the rectangle
-        GL.glVertex2f(0.0, size.height - self.character_height)
-        GL.glVertex2f(size.width, size.height - self.character_height)
-        GL.glVertex2f(size.width, size.height)
-        GL.glEnd()
-        GL.glPopMatrix()
-
+        self.render_grid()
         # Draw signal traces
         # TODO uncomment bottom line
         # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
         # TODO check how many monitors, and allocate the y axis space equally to them
-        self.render_grid()
-
         y_pos = 30
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
             y_pos += 40
 
-        # Draw ruler of cycle numbers
+            
+        # Draw ruler components
+        self.render_ruler_background()
         self.render_cycle_numbers()
 
         # We have been drawing to the back buffer, flush the graphics pipeline
@@ -327,6 +315,27 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
             text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
+
+    def render_ruler_background(self):
+        """Draw a background for the ruler numbers at the top of the visible
+        part of the canvas.
+        """
+        size = self.GetClientSize()
+        ruler_color = [128/255, 128/255, 128/255]
+        ruler_height = 1.3 * self.character_height
+        #Make sure our transformations don't affect any other transformations in other code
+        GL.glPushMatrix()
+        GL.glLoadIdentity()
+        GL.glColor3fv(ruler_color)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glVertex2f(0.0, size.height)
+        GL.glVertex2f(0.0, size.height - ruler_height)
+        GL.glVertex2f(size.width, size.height - ruler_height)
+        GL.glVertex2f(size.width, size.height)
+        GL.glEnd()
+        GL.glPopMatrix()
+
+
 
     def render_grid(self):
         """Draw a grid for separating the different cycles in the traces."""
