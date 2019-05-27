@@ -442,6 +442,13 @@ class Gui(wx.Frame):
                    and False to deactivate
         """
 
+    def clear_log(self):
+        self.error_log.Clear()
+
+    def log_message(self, text):
+        """Add message to the error log."""
+        self.error_log.AppendText(text)
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -450,6 +457,14 @@ class Gui(wx.Frame):
         if Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
+        if Id == 1001: # file dialog
+            text = "Open file dialog."
+            openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
+                                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+            res = openFileDialog.ShowModal()
+            if res == wx.ID_OK: # user selected a file
+                file_path = openFileDialog.GetPath()
+                self.log_message("File opened: {}".format(file_path))
         if Id == 1002: # run button
             text = "Run button pressed."
             self.canvas.render(text, self.cycles_completed)
