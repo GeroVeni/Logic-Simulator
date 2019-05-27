@@ -108,6 +108,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render(self, text):
         """Handle all drawing operations."""
+        size = self.GetClientSize()
         self.bound_panning()
         self.bound_zooming()
 
@@ -134,6 +135,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # GL.glVertex2f(point[0], point[1] + 15)
         # GL.glVertex2f(point[0], point[1])
         # GL.glEnd()
+
+        GL.glPushMatrix() #Make sure our transformations dont affect any other transformations in other code
+        GL.glLoadIdentity()
+        #GL.glTranslatef(size.width / 2, size.height / 2, 0.0) #Translate rectangle to its assigned x and y position
+        ##Put other transformations here
+        GL.glColor3f(1.0, 0.0, 0.0) #Set the colour to red 
+        GL.glBegin(GL.GL_QUADS) #We want to draw a quad, i.e. shape with four sides
+        GL.glVertex2f(0.0, size.height) #Draw the four corners of the rectangle
+        GL.glVertex2f(0.0, size.height - self.character_height)
+        GL.glVertex2f(size.width, size.height - self.character_height)
+        GL.glVertex2f(size.width, size.height)
+        GL.glEnd()
+        GL.glPopMatrix()
 
         # Draw signal traces
         # TODO uncomment bottom line
