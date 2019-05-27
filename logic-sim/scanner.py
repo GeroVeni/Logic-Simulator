@@ -87,10 +87,13 @@ class Scanner:
         [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID,
          self.SWITCH_ID] = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
-        # keep track of the beginning of the current line in self.fileIn
+
+        # keep track of the beginning of the position of each line
         self.current_line_pos = 0
         self.current_line = 1
         self.current_character = None
+        self.line_pos_record = {}
+        self.update_line_pos_record()
         self.advance() # place first character in current_character
 
 
@@ -109,8 +112,23 @@ class Scanner:
             self.current_character = self.fileIn.read(1)
             self.current_line += 1
             self.current_line_pos = self.fileIn.tell() - 1
+            self.update_line_pos_record()
         else:
             self.current_character = self.fileIn.read(1)
+
+    def update_line_pos_record(self):
+        """Update the record containing the beginning position of each line in
+        the input file.
+        """
+        if self.current_line not in self.line_pos_record:
+            self.line_pos_record[self.current_line] = self.current_line_pos
+
+    def get_line_pos(self, line_no):
+        """Returns the beginning position of the line with number line_no.
+        """
+        if line_no not in self.line_pos_record:
+            raise ValueError("The line requested from the definition file has not been encountered.")
+        return self.line_pos_record[line_no]
 
     def look_ahead(self):
         """Return the next character in the definition file, without updating
@@ -247,21 +265,26 @@ class Scanner:
         """
         if not isinstance(symbol, Symbol):
             raise TypeError('symbol must be an instance of the class Symbol')
-        if symbol.line != self.current_line:
-            raise ValueError('The symbol is at a different line than the current state of the scanner')
 
         # save current state of the scanner
         current_pos = self.fileIn.tell()
         current_ch = self.current_character
         current_line_pos = self.current_line_pos
         current_line = self.current_line
+        line_record = self.line_pos_record.copy()
+
+        # go to start of the line of the requested symbol
+        symbol_line_pos = self.get_line_pos(symbol.line)
+        self.fileIn.seek(symbol_line_pos, 0)
+        self.current_character = self.advance()
 
         # count line length
-        if current_ch != "\n":
+        if self.current_character != "\n":
             self.skip_line()
-        line_length = self.fileIn.tell() - current_line_pos - 1
+        line_length = self.fileIn.tell() - symbol_line_pos - 1
+
         # get contents of line in the circuit definition file
-        self.fileIn.seek(current_line_pos, 0)
+        self.fileIn.seek(symbol_line_pos, 0)
         print(self.fileIn.read(line_length))
         print(" "*(symbol.column - 1) + "^")
 
@@ -270,10 +293,11 @@ class Scanner:
         self.current_line = current_line
         self.current_character = current_ch
         self.current_line_pos = current_line_pos
+        self.line_pos_record = line_record.copy()
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile2.txt'
+    path = 'testfiles/tmp_scanner/specfile3.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()
@@ -282,3 +306,14 @@ if __name__ == "__main__":
             err_symbol = current_symbol
             print("-----------------------------------------------------------")
             scanner.get_error_line(err_symbol)
+
+    print(scanner.line_pos_record)
+    print("print symbol in previous line:")
+    err_symbol = Symbol()
+    err_symbol.line = 4
+    err_symbol.column = 13
+    scanner.get_error_line(err_symbol)
+    err_symbol.line = 5
+    err_symbol.column = 34
+    scanner.get_error_line(err_symbol)
+    
