@@ -40,7 +40,7 @@ class Parser:
     [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR,
     KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR, CONNECTION_INPUT_ERROR,
     OUTPUT_ERROR, MONITOR_INPUT_ERROR, INVALID_DEVICE_OUTPUT_ERROR,
-    REPEATED_MONITOR_ERROR, VALUE_ERROR] = range(11)
+    REPEATED_MONITOR_ERROR, VALUE_ERROR, UNMATCHED_INPUT_OUTPUT_ERROR] = range(12)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
@@ -408,34 +408,38 @@ class Parser:
         else:
             self.error(self.SYNTAX_ERROR, "signal")
 
-    def get_in(self):
+    def get_in(selfi, output):
         #input ports can only be None, Q or QBAR
         #input port are already specifiec as 
-        for output in self.outputs_list:
-            name, port = output
-            return name.id, port.id
+        name, port = output
+        return name.id, port.id
 
-    def get_out(self):
-        for device_input in self.inputs_list:
-            name, port = device_input
-            if (port.type == self.scanner.NUMBER):
-                input_name = "".join(["I", str(port.id)])
-                [port.id] = self.names.lookup([input_name])
-            return name.id, port.id
+    def get_out(self, device_input):
+        name, port = device_input
+        if (port.type == self.scanner.NUMBER):
+            input_name = "".join(["I", str(port.id)])
+            [port.id] = self.names.lookup([input_name])
+        return name.id, port.id
 
     def make_connection(self):
-        [in_device_id, in_port_id] = self.get_in()
-        [out_device_id, out_port_id] = self.get_out()
-        if (self.error_count == 0):
-            error_type = self.network.make_connection(
-                in_device_id, in_port_id, out_device_id,
-                out_port_id)
+        #one to one or many to many
+        if (len(self.outputs_list) == len(self.inputs_list)):
+            for i in range(len(self.outputs_list)):
+                [in_device_id, in_port_id] = self.get_in(self.outputs_list[i])
+                [out_device_id, out_port_id] = self.get_out(self.inputs_list[i])
+                error_type = self.network.make_connection(
+                             in_device_id, in_port_id, out_device_id,
+                             out_port_id)
             if (error_type != self.network.NO_ERROR):
-                print(self.network.NO_ERROR, self.network.INPUT_TO_INPUT, self.network.OUTPUT_TO_OUTPUT,
-         self.network.INPUT_CONNECTED, self.network.PORT_ABSENT,
-         self.network.DEVICE_ABSENT)
-                print(error_type)
                 print("UPS error occurred in making connection")
+        #many to one
+        elif (len(self.inputs_list) == 1):
+            pass
+        #one to many
+        elif (len(self.outputs_list) == 1):
+            pass
+        else:
+            self.error(UNMATCHED_INPUT_OUTPUT_ERROR, stopping_symbol = None)
 
     def connection_definition(self):
         #beginning erase all variables
@@ -446,7 +450,7 @@ class Parser:
             #beginning erase all variables
             self.clear_vars()
             self.symbol = self.scanner.get_symbol()
-            self.outputs.append(self.signal("O"))
+            self.outputs_list.append(self.signal("O"))
         if (self.symbol.type == self.scanner.CONNECTION_DEF and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
@@ -461,7 +465,8 @@ class Parser:
                 self.inputs_list.append(self.signal("I"))
             if (self.symbol.type == self.scanner.SEMICOLON and
                 self.recovered_from_definition_error):
-                self.make_connection()
+                if (self.error_count == 0):
+                    self.make_connection()
                 self.symbol = self.scanner.get_symbol()
             elif (self.symbol.type == self.scanner.NAME):
                 self.error(self.SYNTAX_ERROR, ",")
