@@ -75,7 +75,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.devices = devices
         self.monitors = monitors
 
-        self.cycles_completed = 30 # updated when the gui calls render()
+        self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
 
         # Variables for canvas drawing
         self.border_left = 10
@@ -107,8 +107,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
-    def render(self, text):
+    def render(self, text, cycles=None):
         """Handle all drawing operations."""
+        # Update cycles_completed if required
+        if cycles is not None:
+            self.cycles_completed = cycles
+
         size = self.GetClientSize()
         self.bound_panning()
         self.bound_zooming()
@@ -125,18 +129,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Draw specified text at position (10, 10)
         self.render_text(text, 10, 10)
 
-        # TODO remove this box drawing code
-        # Draw box around point
-        # point = [10,10]
-        # GL.glColor3f(1.0, 0.0, 0.0)
-        # GL.glBegin(GL.GL_LINE_STRIP)
-        # GL.glVertex2f(point[0], point[1])
-        # GL.glVertex2f(point[0] + 9, point[1])
-        # GL.glVertex2f(point[0] + 9, point[1] + 15)
-        # GL.glVertex2f(point[0], point[1] + 15)
-        # GL.glVertex2f(point[0], point[1])
-        # GL.glEnd()
-
         self.render_grid()
         # Draw signal traces
         # TODO uncomment bottom line
@@ -147,7 +139,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
             y_pos += 40
 
-            
         # Draw ruler components
         self.render_ruler_background()
         self.render_cycle_numbers()
