@@ -339,7 +339,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         # render either on the ruler or on the rest of the canvas
         if render_on_ruler:
-            line_y_pos_start = line_y_pos_end - self.ruler_height
+            line_y_pos_start = line_y_pos_end - self.ruler_height/self.zoom
         else:
             line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
 
