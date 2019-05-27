@@ -77,20 +77,21 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
 
-        # Variables for canvas drawing
-        self.border_left = 10
-        self.border_right = 400
-        self.border_top = 200
-        self.border_bottom = 0
-        self.zoom_lower = 0.8
-        self.zoom_upper = 4
-        self.margin_left = 100
-        self.cycle_width = 20
-
         # Variables for drawing text
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
         self.character_height = 15
+
+        # Variables for canvas drawing
+        self.border_left = 10 # constant
+        self.border_right = 400
+        self.border_top = 200
+        self.border_bottom = 0 # constant
+        self.zoom_lower = 0.8
+        self.zoom_upper = 4
+        self.margin_left = 100
+        self.cycle_width = 20
+        self.ruler_height = 1.3 * self.character_height
 
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
@@ -142,6 +143,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Draw ruler components
         self.render_ruler_background()
         self.render_cycle_numbers()
+        self.render_grid(render_on_ruler = True)
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -210,6 +212,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def bound_panning(self):
         """Makes sure the canvas is always panned within the bounds of the
         signal traces."""
+        size = self.GetClientSize()
         if self.pan_x < self.border_left:
             self.pan_x = self.border_left
         elif self.pan_x > self.border_right:
@@ -303,6 +306,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         for cycle in range(self.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
+            # print cycle number
             text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
             text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
@@ -313,33 +317,36 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """
         size = self.GetClientSize()
         ruler_color = [128/255, 128/255, 128/255]
-        ruler_height = 1.3 * self.character_height
         #Make sure our transformations don't affect any other transformations in other code
         GL.glPushMatrix()
         GL.glLoadIdentity()
         GL.glColor3fv(ruler_color)
         GL.glBegin(GL.GL_QUADS)
         GL.glVertex2f(0.0, size.height)
-        GL.glVertex2f(0.0, size.height - ruler_height)
-        GL.glVertex2f(size.width, size.height - ruler_height)
+        GL.glVertex2f(0.0, size.height - self.ruler_height)
+        GL.glVertex2f(size.width, size.height - self.ruler_height)
         GL.glVertex2f(size.width, size.height)
         GL.glEnd()
         GL.glPopMatrix()
 
-    def render_grid(self):
+    def render_grid(self, render_on_ruler = False):
         """Draw a grid for separating the different cycles in the traces."""
         if self.cycles_completed == 0:
             return
 
         canvas_size = self.GetClientSize()
-        line_x_pos = self.margin_left/self.zoom
-        line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
         line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+
+        # render either on the ruler or on the rest of the canvas
+        if render_on_ruler:
+            line_y_pos_start = line_y_pos_end - self.ruler_height
+        else:
+            line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
+
+        line_x_pos = self.margin_left/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
         for cycle in range(self.cycles_completed):
             line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
-            line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
-            line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
 
@@ -388,7 +395,7 @@ class Gui(wx.Frame):
 
         # Canvas for drawing signals
         self.canvas = MyGLCanvas(self, devices, monitors)
-        self.cycles_completed = 0  # number of simulation cycles completed
+        self.cycles_completed = 5  # number of simulation cycles completed
 
         # Configure the widgets
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "paparia\n"*20,
@@ -411,7 +418,7 @@ class Gui(wx.Frame):
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.SetSizeHints(1280, 800)
+        self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
 
     #Sizer helper functions
@@ -431,16 +438,6 @@ class Gui(wx.Frame):
 
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
-
-    def set_monitor(self, monitor_id, is_active):
-        """Activate or deactivate a monitor.
-        
-        Parameters
-        ----------
-        monitor_id: The id of the monitor to change state
-        is_active: The state of the monitor; True to activate
-                   and False to deactivate
-        """
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
