@@ -10,6 +10,7 @@ Gui - configures the main window and all the widgets.
 """
 import wx
 import wx.glcanvas as wxcanvas
+import wx.lib.mixins.listctrl as listmix
 from OpenGL import GL, GLUT
 
 from names import Names
@@ -306,7 +307,17 @@ class Gui(wx.Frame):
         text_box_value = self.text_box.GetValue()
         text = "".join(["New text box value: ", text_box_value])
         self.canvas.render(text)
-        
+
+
+class CustomListCtrl(wx.CheckListBox, listmix.ListCtrlAutoWidthMixin):
+    """Docstring for CustomListCtrl. """
+
+    def __init__(self, parent, ID, pos=wx.DefaultPosition,
+                 size=wx.DefaultSize, style=0):
+        """ TODO. """
+        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
+
 
 class CustomTab(wx.Panel):
     """Configure the tabs added in the notebook.
