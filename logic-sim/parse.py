@@ -424,9 +424,9 @@ class Parser:
     def make_connection(self):
         #one to one or many to many
         if (len(self.outputs_list) == len(self.inputs_list)):
-            for i in range(len(self.outputs_list)):
-                [in_device_id, in_port_id] = self.get_in(self.outputs_list[i])
-                [out_device_id, out_port_id] = self.get_out(self.inputs_list[i])
+            for output, device_input in zip(self.outputs_list, self.inputs_list):
+                [in_device_id, in_port_id] = self.get_in(output)
+                [out_device_id, out_port_id] = self.get_out(device_input)
                 error_type = self.network.make_connection(
                              in_device_id, in_port_id, out_device_id,
                              out_port_id)
@@ -434,10 +434,40 @@ class Parser:
                 print("UPS error occurred in making connection")
         #many to one
         elif (len(self.inputs_list) == 1):
-            pass
+            [device_input] = self.inputs_list
+            [out_device_id, out_port] = self.get_out(device_input)
+            device = self.devices.get_device(out_device_id)
+            if (device.device_kind not in self.devices.gate_types):
+                print("ERRROR only gates support many to one assigmnet")
+            else:
+                if (len(device.inputs) == len(self.outputs_list)):
+                    device_inputs = list(device.inputs.keys())
+                    for output, out_port_id in zip(self.outputs_list,
+                                                  device_inputs):
+                        [in_device_id, in_port_id] = self.get_in(output)
+                        error_type = self.network.make_connection(
+                                     in_device_id, in_port_id,
+                                     out_device_id, out_port_id)
+                    if (error_type != self.network.NO_ERROR):
+                        print("UPS error occurred in making connection many to one")
+                else:
+                    print("Too many inputs specified")
         #one to many
         elif (len(self.outputs_list) == 1):
-            pass
+            [output] = self.outputs_list
+            [in_device_id, in_port_id] = self.get_in(output)
+            for device_input in self.inputs_list:
+                [out_device_id, out_port_id] = self.get_out(device_input)
+                error_type = self.network.make_connection(
+                             in_device_id, in_port_id, out_device_id,
+                             out_port_id)
+            if (error_type != self.network.NO_ERROR):
+                print(self.network.NO_ERROR, self.network.INPUT_TO_INPUT, self.network.OUTPUT_TO_OUTPUT,
+         self.network.INPUT_CONNECTED, self.network.PORT_ABSENT,
+         self.network.DEVICE_ABSENT)
+                print(error_type)
+                print(self.symbol)
+                print("UPS error occurred in making connection one to many")
         else:
             self.error(UNMATCHED_INPUT_OUTPUT_ERROR, stopping_symbol = None)
 
@@ -589,10 +619,6 @@ class Parser:
 
     def parse_network(self):
         """Parse the circuit definition file."""
-        # For now just return True, so that userint and gui can run in the
-        # skeleton code. When complete, should return False when there are
-        # errors in the circuit definition file.
-        #what about empty file how to raise errors for no connections, definitons, expected blabalbal
         self.symbol = self.scanner.get_symbol()
         self.device_list()
         self.connection_list()
