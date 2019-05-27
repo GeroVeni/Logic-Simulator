@@ -382,6 +382,7 @@ class Gui(wx.Frame):
         menuBar = wx.MenuBar()
         fileMenu.Append(wx.ID_ABOUT, "&About")
         fileMenu.Append(wx.ID_EXIT, "&Exit")
+        fileMenu.Append(ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
@@ -389,6 +390,9 @@ class Gui(wx.Frame):
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
+        #TODO Change names icons and event handling of tools
+        #TODO Create matching options in the fileMenu and associate them
+        #with shortcuts
         toolBar.AddTool(ID_OPEN, "Tool1", openIcon)
         toolBar.AddTool(ID_CENTER, "Tool2", redoIcon)
         toolBar.AddSeparator()
@@ -402,8 +406,9 @@ class Gui(wx.Frame):
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
-        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "paparia\n"*20,
+        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.log_message("paparia\n"*20)
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
@@ -425,8 +430,6 @@ class Gui(wx.Frame):
         self.SetSizeHints(1280, 800)
         self.SetSizer(main_sizer)
 
-        self.error_log.ShowPosition(self.error_log.GetLastPosition())
-
     #Sizer helper functions
     def make_right_sizer(self):
         """Helper function that creates the right sizer"""
@@ -436,11 +439,11 @@ class Gui(wx.Frame):
         nb = wx.Notebook(self)
 
         # Create the tabs
-        tab1 = CustomTab(nb)
-        tab2 = CustomTab(nb)
+        tab1 = CustomTab(nb, ["mon" + str(i) for i in range(40)])
+        tab2 = CustomTab(nb, ["swi" + str(i) for i in range(40)])
 
-        nb.AddPage(tab1, "Switches")
-        nb.AddPage(tab2, "Monitors")
+        nb.AddPage(tab1, "Monitors")
+        nb.AddPage(tab2, "Switches")
 
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
@@ -454,7 +457,7 @@ class Gui(wx.Frame):
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
-        return
+        self.log_message("Hey")
 
     def set_switch(self, switch_id, is_on):
         """Turn a swtich on and off.
@@ -475,7 +478,7 @@ class Gui(wx.Frame):
     def log_message(self, text):
         """Add message to the error log."""
         self.error_log.AppendText("\n" + str(text))
-        #self.error_log.ShowPosition(self.error_log.GetLastPosition())
+        self.error_log.ShowPosition(self.error_log.GetLastPosition())
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -531,7 +534,7 @@ class CustomTab(wx.Panel):
     TBD
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, name_list):
         """Attach parent to panel and create the list control widget."""
         wx.Panel.__init__(self, parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -546,8 +549,8 @@ class CustomTab(wx.Panel):
         self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
         #mon_list.AppendColumn("Name")
         #mon_list.AppendColumn("Status")
-        for i in range(30):
-            self.mon_list.Append(["You" + str(i)])
+        for i in name_list:
+            self.mon_list.Append(i)
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
         #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
 
@@ -558,3 +561,4 @@ class CustomTab(wx.Panel):
         """Handle the event when the user changes the state of a monitor."""
         item_id = event.GetInt()
         print("Clicked monitor: {} state: {}".format(item_id, self.mon_list.IsChecked(item_id)))
+        self.gui.set_monitor(item_id, self.mon_list.IsChecked(item_id))
