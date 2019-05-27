@@ -312,7 +312,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         part of the canvas.
         """
         size = self.GetClientSize()
-        ruler_color = [128/255, 128/255, 128/255]
+        ruler_color = [200/255, 230/255, 255/255]
         ruler_height = 1.3 * self.character_height
         #Make sure our transformations don't affect any other transformations in other code
         GL.glPushMatrix()
@@ -370,6 +370,13 @@ class Gui(wx.Frame):
         """Initialise widgets and layout."""
         super().__init__(parent=None, title=title, size=(800, 600))
 
+        # Add IDs for menu and toolbar items
+        ID_OPEN = 1001;
+        ID_CENTER = 1002;
+        ID_RUN = 1003;
+        ID_CONTINUE = 1004;
+        ID_CYCLES_CTRL = 1005;
+
         # Configure the file menu
         fileMenu = wx.Menu()
         menuBar = wx.MenuBar()
@@ -382,8 +389,12 @@ class Gui(wx.Frame):
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
-        toolBar.AddTool(1001, "Tool1", openIcon)
-        toolBar.AddTool(1002, "Tool2", redoIcon)
+        toolBar.AddTool(ID_OPEN, "Tool1", openIcon)
+        toolBar.AddTool(ID_CENTER, "Tool2", redoIcon)
+        toolBar.AddSeparator()
+        toolBar.AddTool(ID_RUN, "Tool3", openIcon)
+        toolBar.AddTool(ID_CONTINUE, "Tool4", openIcon)
+        toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
@@ -414,6 +425,8 @@ class Gui(wx.Frame):
         self.SetSizeHints(1280, 800)
         self.SetSizer(main_sizer)
 
+        self.error_log.ShowPosition(self.error_log.GetLastPosition())
+
     #Sizer helper functions
     def make_right_sizer(self):
         """Helper function that creates the right sizer"""
@@ -441,13 +454,28 @@ class Gui(wx.Frame):
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
+        return
+
+    def set_switch(self, switch_id, is_on):
+        """Turn a swtich on and off.
+        
+        Parameters
+        ----------
+        switch_id: The id of the switch to change output
+        is_on: The state of the monitor; True to turn on
+               and False to turn off
+
+        """
+        return
 
     def clear_log(self):
+        """Clear the error log."""
         self.error_log.Clear()
 
     def log_message(self, text):
         """Add message to the error log."""
-        self.error_log.AppendText(text)
+        self.error_log.AppendText("\n" + str(text))
+        #self.error_log.ShowPosition(self.error_log.GetLastPosition())
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -514,17 +542,19 @@ class CustomTab(wx.Panel):
 
         self.gui = parent.GetParent()
 
-        mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
+        self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
+        self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
         #mon_list.AppendColumn("Name")
         #mon_list.AppendColumn("Status")
         for i in range(30):
-            mon_list.Append(["You" + str(i)])
+            self.mon_list.Append(["You" + str(i)])
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
         #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
 
-        sizer.Add(mon_list, 1, wx.EXPAND)
+        sizer.Add(self.mon_list, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
-    def on_run_button(self, event):
-        """Handle the event when the user clicks the run button."""
-        #print("Run button pressed.")
+    def on_monitor_selected(self, event):
+        """Handle the event when the user changes the state of a monitor."""
+        item_id = event.GetInt()
+        print("Clicked monitor: {} state: {}".format(item_id, self.mon_list.IsChecked(item_id)))
