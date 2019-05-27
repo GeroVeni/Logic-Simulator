@@ -87,10 +87,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0 # constant
+
         self.zoom_lower = 0.8
-        self.zoom_upper = 4
-        self.margin_left = 100
+        self.zoom_upper = 5
+
+        self.margin_left = 100 # margin for placement of device name
+        self.margin_bottom = 30
         self.cycle_width = 20
+        self.trace_height = 30
+        self.monitor_spacing = 40 # spacing between different monitor_signals
+
         self.ruler_height = 1.3 * self.character_height
 
     def init_gl(self):
@@ -114,6 +120,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if cycles is not None:
             self.cycles_completed = cycles
 
+        # Adjust zoom bounds depending on number of monitors
+        # num_monitors = len(self.monitors.monitors_dictionary)
+        # self.zoom_lower = min((self.margin_bottom + num_monitors * self.monitor_spacing)/50 * 0.2, self.zoom_upper)
+
         size = self.GetClientSize()
         self.bound_panning()
         self.bound_zooming()
@@ -131,14 +141,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_text(text, 10, 10)
 
         self.render_grid()
-        # Draw signal traces
+        # Render signal traces
         # TODO uncomment bottom line
-        # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
-        # TODO check how many monitors, and allocate the y axis space equally to them
-        y_pos = 30
+        # self.margin_left = max((self.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+        y_pos = self.margin_bottom
         for device_id, output_id in self.monitors.monitors_dictionary:
-            self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
-            y_pos += 40
+            self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
+            y_pos += self.monitor_spacing
 
         # Draw ruler components
         self.render_ruler_background()
