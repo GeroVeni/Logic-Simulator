@@ -38,7 +38,8 @@ class Parser:
     """
 
     [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR,
-    KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR] = range(5)
+    KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR, INPUT_ERROR,
+    OUTPUT_ERROR] = range(7)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
@@ -46,6 +47,8 @@ class Parser:
         self.scanner = scanner
         self.names = names
         self.devices = devices
+        self.network = network
+        self.monitors = monitors
         self.identifier_list = []
         self.error_count = 0
         self.current_number = None
@@ -71,13 +74,21 @@ class Parser:
             print("***ValueError:", message)
         elif (error_type == self.KEYWORD_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***NameError: Keywords are reserved and" \
+            print("***NameError: Keywords are reserved and " \
                   "cannot be used as identifiers.")
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(self.current_identifier)
 #TODO also add get_error_line by comparing identifier ids lookup names
-            print("***NameError: An identifier was repeated." \
+            print("***NameError: An identifier was repeated. " \
                   "All identifiers must have unique names.")
+        elif (error_type == self.INPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: Inputs must be on the right" \
+                  " hand side of the connection definition")
+        elif (error_type == self.OUTPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: Outputs must be on the left" \
+                  " hand side of the connection definition")
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         if (stopping_symbol == "KEYWORD or ;"):
@@ -92,6 +103,12 @@ class Parser:
             while (self.symbol.type != self.scanner.KEYWORD and
                    self.symbol.type != self.scanner.EOF):
                 self.symbol = self.scanner.get_symbol()
+        if (stopping_symbol == ";"):
+            self.recovered_from_definition_error = False
+            while (self.symbol.type != self.scanner.SEMICOLON and
+                   self.symbol.type != self.scanner.EOF):
+                self.symbol = self.scanner.get_symbol()
+            self.symbol = self.scanner.get_symbol()
         elif (stopping_symbol == "END"):
             while ((self.symbol.type != self.scanner.KEYWORD or
                    self.symbol.id != self.scanner.END_ID) and
@@ -108,16 +125,18 @@ class Parser:
         elif (stopping_symbol == "EOF"):
             while (self.symbol.type != self.scanner.EOF):
                 self.symbol = self.scanner.get_symbol()
+        elif (stopping_symbol == None):
+            pass
 
     def identifier(self):
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
             self.identifier_list.append(self.symbol)
             self.symbol = self.scanner.get_symbol()
+#will only catch KEYWORD error as identifier if not first name, should i catch further?
         elif(self.symbol.type == self.scanner.KEYWORD and
              self.recovered_from_definition_error):
-            self.error(self.KEYWORD_ERROR)
-#TODO skip to ; remove keyword problems with this think about it change s to END in temp_file
+            self.error(self.KEYWORD_ERROR, stopping_symbol = ";")
         else:
             self.error(self.SYNTAX_ERROR, "name")
 
@@ -142,9 +161,9 @@ class Parser:
             self.current_identifier = self.identifier_list.pop()
             if (self.devices.get_device(self.current_identifier.id)
                 is not None):
-                #TODO fix issue with END not working jumping wrong
-                self.error(self.REPEATED_IDENTIFIER_ERROR, None)
-            if (self.current_device.id == self.scanner.DTYPE_ID):
+                self.error(self.REPEATED_IDENTIFIER_ERROR,
+                           stopping_symbol = None)
+            elif (self.current_device.id == self.scanner.DTYPE_ID):
                 error = self.devices.make_device(
                 self.current_identifier.id, self.devices.D_TYPE,
                 self.current_number)
@@ -169,11 +188,82 @@ class Parser:
                     #reset identifier_list to zero so later on dont get extra devices
                     self.identifier_list = []
                     return
-#TODO add clock and gates think of elegant way to do
-            else:
-                print("SHOULDNT HAPPEN")
-                print(self.symbol)
-                self.identifier_list.pop()
+            elif (self.current_device.id == self.scanner.CLOCK_ID):
+                if (self.current_number == None):
+                    #default value to 1
+                    self.current_number = 1
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.CLOCK,
+                self.current_number)
+                #this can only hapen if given a zero as - will be invalid
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "CLOCK takes only values greater than 0", None)
+                #should not recover to semicolon as already got to ;
+                #reset identifier_list to zero so later on dont get extra devices as all of these devices are instantiaing the same
+                    self.identifier_list = []
+                    return
+#TODO tidy up this so is one single elif
+            elif (self.current_device.id == self.scanner.NAND_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.NAND,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "NAND gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.AND_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.AND,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "AND gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.NOR_ID):
+                if (self.current_number == None):
+                    #default value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.NOR,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "NOR gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.OR_ID):
+                if (self.current_number == None):
+                    #devault value to 2
+                    self.current_number = 2
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.OR,
+                self.current_number)
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "OR gates can only have 1 to 16 inputs", None)
+                    self.identifier_list = []
+                    return
+            elif (self.current_device.id == self.scanner.XOR_ID):
+                if (self.current_number == 2):
+                    #devices module need Xor to have none in device_property so if number that is not 2 assigne will rasie problem
+                    self.current_number = None
+                error = self.devices.make_device(
+                self.current_identifier.id, self.devices.XOR,
+                self.current_number)
+                if (error == self.devices.QUALIFIER_PRESENT):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                    "XOR gates can only have 2 inputs", None)
+                    self.identifier_list = []
+                    return
 
     def device_definition(self):
         self.identifier()
@@ -238,8 +328,20 @@ class Parser:
             self.error(self.SYNTAX_ERROR, "DEVICES",
                        stopping_symbol = "END")
 
-    def port(self):
-        if (self.symbol.id == self.scanner.I_ID and
+    def port(self, I_O):
+        if (self.symbol.type == self.scanner.PORT and
+            I_O == "O" and (self.symbol.id == self.scanner.I_ID
+            or self.symbol.id == self.scanner.DATA_ID or
+            self.symbol.id == self.scanner.CLK_ID or
+            sself.symbol.id == self.sanner.SET_ID or
+            self.symbol.id == self.CLEAR_ID)):
+            self.error(self.INPUT_ERROR)
+        if (self.symbol.type == self.scanner.PORT and
+            I_O == "I" and (self.symbol.id == self.scanner.Q_ID
+            or self.symbol.id == self.scanner.QBAR_ID)):
+            self.error(self.OUTPUT_ERROR)
+        elif (self.symbol.id == self.scanner.I_ID and
+            self.symbol.type == self.scanner.PORT and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.number()
@@ -249,32 +351,49 @@ class Parser:
         else:
             self.error(self.SYNTAX_ERROR, "port")
 
-    def signal(self):
+    def signal(self, I_O):
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.DOT):
                 self.symbol = self.scanner.get_symbol()
-                self.port()
+                self.port(I_O)
         else:
             self.error(self.SYNTAX_ERROR, "name")
 
+    def get_input(self):
+        return [None, None]
+
+    def get_device(self):
+        return [None, None]
+
+    def make_connection(self):
+        [in_device_id, in_port_id] = self.get_input()
+        [out_device_id, out_port_id] = self.get_device()
+        if (self.error_count == 0):
+            error_type = self.network.make_connection(
+                in_device_id, in_port_id, out_device_id,
+                out_port_id)
+            if (error_type != self.network.NO_ERROR):
+                print("UPS error occurred in making connection")
+
     def connection_definition(self):
-        self.signal()
+        self.signal("O")
         while (self.symbol.type == self.scanner.COMMA and
                self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
-            self.signal()
+            self.signal("O")
         if (self.symbol.type == self.scanner.CONNECTION_DEF and
             self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
-            self.signal()
+            self.signal("I")
             while (self.symbol.type == self.scanner.COMMA and
                    self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
-                self.signal()
+                self.signal("I")
             if (self.symbol.type == self.scanner.SEMICOLON and
                 self.recovered_from_definition_error):
+                self.make_connection()
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error(self.SYNTAX_ERROR, ";")
