@@ -125,21 +125,21 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         # TODO remove this box drawing code
         # Draw box around point
-        point = [10,10]
-        GL.glColor3f(1.0, 0.0, 0.0)
-        GL.glBegin(GL.GL_LINE_STRIP)
-        GL.glVertex2f(point[0], point[1])
-        GL.glVertex2f(point[0] + 9, point[1])
-        GL.glVertex2f(point[0] + 9, point[1] + 15)
-        GL.glVertex2f(point[0], point[1] + 15)
-        GL.glVertex2f(point[0], point[1])
-        GL.glEnd()
+        # point = [10,10]
+        # GL.glColor3f(1.0, 0.0, 0.0)
+        # GL.glBegin(GL.GL_LINE_STRIP)
+        # GL.glVertex2f(point[0], point[1])
+        # GL.glVertex2f(point[0] + 9, point[1])
+        # GL.glVertex2f(point[0] + 9, point[1] + 15)
+        # GL.glVertex2f(point[0], point[1] + 15)
+        # GL.glVertex2f(point[0], point[1])
+        # GL.glEnd()
 
         # Draw signal traces
         # TODO uncomment bottom line
         # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
         # TODO check how many monitors, and allocate the y axis space equally to them
-        y_pos = 100
+        y_pos = 30
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
             y_pos += 40
@@ -326,6 +326,7 @@ class Gui(wx.Frame):
 
         # Canvas for drawing signals
         self.canvas = MyGLCanvas(self, devices, monitors)
+        self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "paparia\n"*20,
