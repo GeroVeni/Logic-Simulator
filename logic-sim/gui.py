@@ -75,12 +75,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.devices = devices
         self.monitors = monitors
 
+        self.cycles_completed = 30 # updated when the gui calls render()
+
         # Variables for canvas drawing
         self.border_left = 10
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0
-        self.zoom_lower = 0.5
+        self.zoom_lower = 0.8
         self.zoom_upper = 4
         self.margin_left = 100
         self.cycle_width = 20
@@ -143,6 +145,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
             y_pos += 40
+
+        # Draw ruler of cycle numbers
+        self.render_cycle_numbers()
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -247,7 +252,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
-        text_x_pos = self.border_left
+        text_x_pos = self.border_left/self.zoom
         text_y_pos = (y_min + y_max)/2 - self.character_height/(2*self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
 
@@ -279,6 +284,18 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if currently_drawing:
             GL.glEnd()
             currently_drawing = False
+
+    def render_cycle_numbers(self):
+        """Draw a ruler of cycle numbers at the top of the visible part of the
+        canvas."""
+        if self.cycles_completed == 0:
+            return
+        canvas_size = self.GetClientSize()
+        for cycle in range(self.cycles_completed):
+            x_pos = (self.margin_left - self.character_width/2)/self.zoom + (cycle + 1/2)*self.cycle_width 
+            y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
+            self.render_text(str(cycle + 1), x_pos, y_pos)
+
 
 
 class Gui(wx.Frame):
