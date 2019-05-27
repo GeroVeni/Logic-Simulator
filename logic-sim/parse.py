@@ -40,7 +40,9 @@ class Parser:
     [SYNTAX_ERROR, UNDEFINED_DEVICE_ERROR, DEVICE_VALUE_ERROR,
     KEYWORD_ERROR, REPEATED_IDENTIFIER_ERROR, CONNECTION_INPUT_ERROR,
     OUTPUT_ERROR, MONITOR_INPUT_ERROR, INVALID_DEVICE_OUTPUT_ERROR,
-    REPEATED_MONITOR_ERROR, VALUE_ERROR, UNMATCHED_INPUT_OUTPUT_ERROR] = range(12)
+    REPEATED_MONITOR_ERROR, VALUE_ERROR, UNMATCHED_INPUT_OUTPUT_ERROR,
+    MISSING_INPUTS_ERROR, REPEATED_INPUT_ERROR, INVALID_PORT_ERROR,
+    NOT_GATE_ERROR, OUT_OF_BOUND_INPUTS_ERROR] = range(17)
 
     def __init__(self, names, devices, network, monitors, scanner):
         """Initialise constants."""
@@ -114,6 +116,35 @@ class Parser:
             self.scanner.get_error_line(message)
             print("***NameError: The device has not been previously" \
                    " defined in DEVICES.")
+        elif (error_type == self.UNMATCHED_INPUT_OUTPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: The number of inputs and outputs " \
+                  "must match unless you are specifying one output to" \
+                  " many inputs or all the inputs of a device at once")
+        elif (error_type == self.REPEATED_INPUT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***ValueError: The input has already been " \
+                  "specified previously. Repeated assignment of " \
+                  "inputs is not allowed.")
+        elif (error_type == self.INVALID_PORT_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***ValueError: The port specified does not exist " \
+                  "for such device or is out of bounds")
+        elif (error_type == self.NOT_GATE_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            print("***TypeError: Only gates can have simultaneous " \
+                  "assignment of all of its inputs.")
+        elif (error_type == self.OUT_OF_BOUND_INPUTS_ERROR):
+            self.scanner.get_error_line(self.symbol)
+            #TODO specify if too many or too few just add elif and message for few or too many with > or <
+            print("***TypeError: Too many or too few inputs " \
+                  "have been assigned simultaneously to the device." \
+                  " When using simultaneous defintion the same number" \
+                  " of inputs as the device has must be given.")
+        elif (error_type == self.MISSING_INPUTS_ERROR):
+        #TODO which inputs have not been specified
+            print("***ValueError: Inputs have not been specificed" \
+                   " for all DEVICES.")
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         if (stopping_symbol == "KEYWORD or ;"):
@@ -414,31 +445,47 @@ class Parser:
         name, port = output
         return name.id, port.id
 
-    def get_out(self, device_input):
-        name, port = device_input
+    def get_out(self, device_ip):
+        name, port = device_ip
         if (port.type == self.scanner.NUMBER):
             input_name = "".join(["I", str(port.id)])
             [port.id] = self.names.lookup([input_name])
         return name.id, port.id
 
+    def check_connection_error(self, error_type):
+        if (error_type == self.network.NO_ERROR):
+            return True
+        elif (error_type == self.network.DEVICE_ABSENT):
+            #TODO print the actual problem place
+            self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
+                       stopping_symbol = None)
+        elif (error_type == self.network.INPUT_CONNECTED):
+            #TODO print actual place
+            self.error(self.REPEATED_INPUT_ERROR,
+                       stopping_symbol = None)
+        elif (error_type == self.network.PORT_ABSENT):
+            #TODO specific check for I out of bounds compared to invalid port used like .Q by non DTYPE, also show appropriate symbol
+            self.error(self.INVALID_PORT_ERROR,
+                       stopping_symbol = None)
+
     def make_connection(self):
         #one to one or many to many
         if (len(self.outputs_list) == len(self.inputs_list)):
-            for output, device_input in zip(self.outputs_list, self.inputs_list):
+            for output, device_ip in zip(self.outputs_list,
+                                         self.inputs_list):
                 [in_device_id, in_port_id] = self.get_in(output)
-                [out_device_id, out_port_id] = self.get_out(device_input)
+                [out_device_id, out_port_id] = self.get_out(device_ip)
                 error_type = self.network.make_connection(
                              in_device_id, in_port_id, out_device_id,
                              out_port_id)
-            if (error_type != self.network.NO_ERROR):
-                print("UPS error occurred in making connection")
+                self.check_connection_error(error_type)
         #many to one
         elif (len(self.inputs_list) == 1):
             [device_input] = self.inputs_list
             [out_device_id, out_port] = self.get_out(device_input)
             device = self.devices.get_device(out_device_id)
             if (device.device_kind not in self.devices.gate_types):
-                print("ERRROR only gates support many to one assigmnet")
+                self.error(self.NOT_GATE_ERROR, stopping_symbol = None)
             else:
                 if (len(device.inputs) == len(self.outputs_list)):
                     device_inputs = list(device.inputs.keys())
@@ -448,28 +495,23 @@ class Parser:
                         error_type = self.network.make_connection(
                                      in_device_id, in_port_id,
                                      out_device_id, out_port_id)
-                    if (error_type != self.network.NO_ERROR):
-                        print("UPS error occurred in making connection many to one")
+                        self.check_connection_error(error_type)
                 else:
-                    print("Too many inputs specified")
+                    self.error(self.OUT_OF_BOUND_INPUTS_ERROR,
+                               stopping_symbol = None)
         #one to many
         elif (len(self.outputs_list) == 1):
             [output] = self.outputs_list
             [in_device_id, in_port_id] = self.get_in(output)
-            for device_input in self.inputs_list:
-                [out_device_id, out_port_id] = self.get_out(device_input)
+            for device_ip in self.inputs_list:
+                [out_device_id, out_port_id] = self.get_out(device_ip)
                 error_type = self.network.make_connection(
                              in_device_id, in_port_id, out_device_id,
                              out_port_id)
-            if (error_type != self.network.NO_ERROR):
-                print(self.network.NO_ERROR, self.network.INPUT_TO_INPUT, self.network.OUTPUT_TO_OUTPUT,
-         self.network.INPUT_CONNECTED, self.network.PORT_ABSENT,
-         self.network.DEVICE_ABSENT)
-                print(error_type)
-                print(self.symbol)
-                print("UPS error occurred in making connection one to many")
+                self.check_connection_error(error_type)
         else:
-            self.error(UNMATCHED_INPUT_OUTPUT_ERROR, stopping_symbol = None)
+            self.error(self.UNMATCHED_INPUT_OUTPUT_ERROR,
+                       stopping_symbol = None)
 
     def connection_definition(self):
         #beginning erase all variables
@@ -525,6 +567,10 @@ class Parser:
                     self.symbol.type == self.scanner.KEYWORD):
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
+                        if ((not self.network.check_network()) and
+                             self.error_count == 0):
+                            self.error(self.MISSING_INPUTS_ERROR,
+                                       stopping_symbol = None)
                         self.symbol = self.scanner.get_symbol()
                     else:
                         self.error(self.SYNTAX_ERROR, ";",
