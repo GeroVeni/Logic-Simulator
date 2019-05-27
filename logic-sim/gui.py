@@ -10,6 +10,7 @@ Gui - configures the main window and all the widgets.
 """
 import wx
 import wx.glcanvas as wxcanvas
+import wx.dataview as dv
 import wx.lib.mixins.listctrl as listmix
 from OpenGL import GL, GLUT
 
@@ -570,12 +571,16 @@ class CustomTab(wx.Panel):
 
         self.gui = parent.GetParent()
 
-        self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
-        self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
+        #Create ListCtrl
+        self.mon_list = dv.DataViewListCtrl(self)
+        self.mon_list.AppendTextColumn('a', width=110, flags = 0)
+        self.mon_list.AppendToggleColumn('b', width=30, align=wx.ALIGN_RIGHT, flags = 0)
+        #self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
+        #self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
         #mon_list.AppendColumn("Name")
         #mon_list.AppendColumn("Status")
         for i in name_list:
-            self.mon_list.Append(i)
+            self.mon_list.AppendItem([i, True])
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
         #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
 
