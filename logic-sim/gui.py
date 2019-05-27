@@ -75,18 +75,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.devices = devices
         self.monitors = monitors
 
+        self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
+
         # Variables for canvas drawing
         self.border_left = 10
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0
-        self.zoom_lower = 0.5
+        self.zoom_lower = 0.8
         self.zoom_upper = 4
         self.margin_left = 100
         self.cycle_width = 20
 
         # Variables for drawing text
-        # self.font = GLUT.GLUT_BITMAP_HELVETICA_12
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
         self.character_height = 15
@@ -106,8 +107,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
-    def render(self, text):
+    def render(self, text, cycles=None):
         """Handle all drawing operations."""
+        # Update cycles_completed if required
+        if cycles is not None:
+            self.cycles_completed = cycles
+
+        size = self.GetClientSize()
         self.bound_panning()
         self.bound_zooming()
 
@@ -123,18 +129,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Draw specified text at position (10, 10)
         self.render_text(text, 10, 10)
 
-        # TODO remove this box drawing code
-        # Draw box around point
-        # point = [10,10]
-        # GL.glColor3f(1.0, 0.0, 0.0)
-        # GL.glBegin(GL.GL_LINE_STRIP)
-        # GL.glVertex2f(point[0], point[1])
-        # GL.glVertex2f(point[0] + 9, point[1])
-        # GL.glVertex2f(point[0] + 9, point[1] + 15)
-        # GL.glVertex2f(point[0], point[1] + 15)
-        # GL.glVertex2f(point[0], point[1])
-        # GL.glEnd()
-
+        self.render_grid()
         # Draw signal traces
         # TODO uncomment bottom line
         # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
@@ -143,6 +138,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
             y_pos += 40
+
+        # Draw ruler components
+        self.render_ruler_background()
+        self.render_cycle_numbers()
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -247,7 +246,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
-        text_x_pos = self.border_left
+        text_x_pos = self.border_left/self.zoom
         text_y_pos = (y_min + y_max)/2 - self.character_height/(2*self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
 
@@ -255,6 +254,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         x_pos = self.margin_left/self.zoom # correct for zooming
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
+        GL.glLineWidth(1)
         for signal in signal_list:
             if signal == self.devices.BLANK:
                 if currently_drawing:
@@ -279,6 +279,68 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if currently_drawing:
             GL.glEnd()
             currently_drawing = False
+
+    def render_line(self, start_point, end_point):
+        """Renders a straight line on the canvas, with the given end points."""
+        if not (isinstance(start_point, tuple) and isinstance(end_point, tuple)):
+            raise TypeError("start_point and end_point arguments must be of Type tuple")
+        if (len(start_point) != 2  or len(end_point) != 2):
+            raise ValueError("start_point and end_point arguments must be tuples of length 2")
+        GL.glColor3f(0.9, 0.9, 0.9) # light grey color
+        GL.glLineWidth(1)
+        GL.glBegin(GL.GL_LINE_STRIP)
+        GL.glVertex2f(start_point[0], start_point[1])
+        GL.glVertex2f(end_point[0], end_point[1])
+        GL.glEnd()
+
+    def render_cycle_numbers(self):
+        """Draw a ruler of cycle numbers at the top of the visible part of the
+        canvas."""
+        if self.cycles_completed == 0:
+            return
+
+        canvas_size = self.GetClientSize()
+        for cycle in range(self.cycles_completed):
+            # count number of digits in number
+            num_digits = len(str(cycle + 1))
+            text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
+            text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
+            self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
+
+    def render_ruler_background(self):
+        """Draw a background for the ruler numbers at the top of the visible
+        part of the canvas.
+        """
+        size = self.GetClientSize()
+        ruler_color = [128/255, 128/255, 128/255]
+        ruler_height = 1.3 * self.character_height
+        #Make sure our transformations don't affect any other transformations in other code
+        GL.glPushMatrix()
+        GL.glLoadIdentity()
+        GL.glColor3fv(ruler_color)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glVertex2f(0.0, size.height)
+        GL.glVertex2f(0.0, size.height - ruler_height)
+        GL.glVertex2f(size.width, size.height - ruler_height)
+        GL.glVertex2f(size.width, size.height)
+        GL.glEnd()
+        GL.glPopMatrix()
+
+    def render_grid(self):
+        """Draw a grid for separating the different cycles in the traces."""
+        if self.cycles_completed == 0:
+            return
+
+        canvas_size = self.GetClientSize()
+        line_x_pos = self.margin_left/self.zoom
+        line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
+        line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+        self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
+        for cycle in range(self.cycles_completed):
+            line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
+            line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
+            line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+            self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
 
 class Gui(wx.Frame):
@@ -349,7 +411,7 @@ class Gui(wx.Frame):
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.SetSizeHints(1200, 800)
+        self.SetSizeHints(1280, 800)
         self.SetSizer(main_sizer)
 
     #Sizer helper functions
@@ -370,6 +432,23 @@ class Gui(wx.Frame):
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
+    def set_monitor(self, monitor_id, is_active):
+        """Activate or deactivate a monitor.
+        
+        Parameters
+        ----------
+        monitor_id: The id of the monitor to change state
+        is_active: The state of the monitor; True to activate
+                   and False to deactivate
+        """
+
+    def clear_log(self):
+        self.error_log.Clear()
+
+    def log_message(self, text):
+        """Add message to the error log."""
+        self.error_log.AppendText(text)
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -378,9 +457,17 @@ class Gui(wx.Frame):
         if Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
+        if Id == 1001: # file dialog
+            text = "Open file dialog."
+            openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
+                                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+            res = openFileDialog.ShowModal()
+            if res == wx.ID_OK: # user selected a file
+                file_path = openFileDialog.GetPath()
+                self.log_message("File opened: {}".format(file_path))
         if Id == 1002: # run button
             text = "Run button pressed."
-            self.canvas.render(text)
+            self.canvas.render(text, self.cycles_completed)
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
