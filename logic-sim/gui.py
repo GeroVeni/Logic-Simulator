@@ -88,7 +88,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.cycle_width = 20
 
         # Variables for drawing text
-        # self.font = GLUT.GLUT_BITMAP_HELVETICA_12
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
         self.character_height = 15
@@ -141,6 +140,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # TODO uncomment bottom line
         # self.margin_left = max(self.monitors.get_margin()*self.character_width + 10, 100)
         # TODO check how many monitors, and allocate the y axis space equally to them
+        self.render_grid()
+
         y_pos = 30
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + 30)
@@ -260,6 +261,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         x_pos = self.margin_left/self.zoom # correct for zooming
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
+        GL.glLineWidth(1)
         for signal in signal_list:
             if signal == self.devices.BLANK:
                 if currently_drawing:
@@ -285,17 +287,48 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             GL.glEnd()
             currently_drawing = False
 
+    def render_line(self, start_point, end_point):
+        """Renders a straight line on the canvas, with the given end points."""
+        if not (isinstance(start_point, tuple) and isinstance(end_point, tuple)):
+            raise TypeError("start_point and end_point arguments must be of Type tuple")
+        if (len(start_point) != 2  or len(end_point) != 2):
+            raise ValueError("start_point and end_point arguments must be tuples of length 2")
+        GL.glColor3f(0.9, 0.9, 0.9) # light grey color
+        GL.glLineWidth(1)
+        GL.glBegin(GL.GL_LINE_STRIP)
+        GL.glVertex2f(start_point[0], start_point[1])
+        GL.glVertex2f(end_point[0], end_point[1])
+        GL.glEnd()
+
     def render_cycle_numbers(self):
         """Draw a ruler of cycle numbers at the top of the visible part of the
         canvas."""
         if self.cycles_completed == 0:
             return
+
         canvas_size = self.GetClientSize()
         for cycle in range(self.cycles_completed):
-            x_pos = (self.margin_left - self.character_width/2)/self.zoom + (cycle + 1/2)*self.cycle_width 
-            y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
-            self.render_text(str(cycle + 1), x_pos, y_pos)
+            # count number of digits in number
+            num_digits = len(str(cycle + 1))
+            text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
+            text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
+            self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
+    def render_grid(self):
+        """Draw a grid for separating the different cycles in the traces."""
+        if self.cycles_completed == 0:
+            return
+
+        canvas_size = self.GetClientSize()
+        line_x_pos = self.margin_left/self.zoom
+        line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
+        line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+        self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
+        for cycle in range(self.cycles_completed):
+            line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
+            line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
+            line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+            self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
 
 class Gui(wx.Frame):
