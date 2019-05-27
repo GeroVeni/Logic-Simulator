@@ -41,8 +41,6 @@ def new_Scanner():
 ####################
 
 def test_constructor_raises_exception(new_Scanner):
-    with pytest.raises(FileNotFoundError):
-       new_Scanner("inexistant_file.txt")
     with pytest.raises(TypeError):
        new_Scanner(7)
     with pytest.raises(TypeError):
