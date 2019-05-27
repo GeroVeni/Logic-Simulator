@@ -285,8 +285,11 @@ class Scanner:
 
         # get contents of line in the circuit definition file
         self.fileIn.seek(symbol_line_pos, 0)
-        print(self.fileIn.read(line_length))
-        print(" "*(symbol.column - 1) + "^")
+        line_retrieved = self.fileIn.read(line_length)
+        # replace tabs in line_retrieved with a single space for correct printing
+        # to the terminal
+        print(line_retrieved.expandtabs(1))
+        print(" "*(symbol.column - 1) + "^") # pointer to the symbol
 
         # restore state of the scanner
         self.fileIn.seek(current_pos,0)
@@ -297,7 +300,7 @@ class Scanner:
 
 if __name__ == "__main__":
     names = Names()
-    path = 'testfiles/tmp_scanner/specfile3.txt'
+    path = 'testfiles/tmp_scanner/specfile5.txt'
     scanner = Scanner(path, names)
     while (scanner.current_character != ''):
         current_symbol = scanner.get_symbol()
@@ -310,10 +313,6 @@ if __name__ == "__main__":
     print(scanner.line_pos_record)
     print("print symbol in previous line:")
     err_symbol = Symbol()
-    err_symbol.line = 4
-    err_symbol.column = 13
+    err_symbol.line = 1
+    err_symbol.column = 3
     scanner.get_error_line(err_symbol)
-    err_symbol.line = 5
-    err_symbol.column = 34
-    scanner.get_error_line(err_symbol)
-    
