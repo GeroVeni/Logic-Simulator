@@ -380,6 +380,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.init = False
         self.render("Recenter canvas")
 
+    def restore_canvas_on_open(self):
+        """Restores the state of the canvas when a new circuit definition file
+        is loaded using the gui method on_open().
+
+        restore_canvas_on_open() should be called whenever the gui method
+        on_open() is called.
+        """
+        self.init = False
+        self.update_zoom_lower_bound()
+        self.zoom = self.zoom_lower
 
 class Gui(wx.Frame):
     """Configure the main window and all the widgets.
@@ -545,7 +555,7 @@ class Gui(wx.Frame):
             file_path = openFileDialog.GetPath()
             self.log_message("File opened: {}".format(file_path))
             self.run_parser(file_path)
-
+            self.canvas.restore_canvas_on_open()
 
 
     def run_network(self, cycles):
