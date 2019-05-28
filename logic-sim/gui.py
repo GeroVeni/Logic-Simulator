@@ -68,7 +68,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.devices = devices
         self.monitors = monitors
 
-        self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
+        self.cycles_completed = 0 # updated when the gui calls render() TODO initialize to 0
 
         # Text rendering settings
         self.font = GLUT.GLUT_BITMAP_9_BY_15
@@ -142,7 +142,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_grid()
         # Render signal traces
         # TODO uncomment bottom line
-        # self.margin_left = max((self.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+        if self.monitors.get_margin() is not None:
+            self.margin_left = max((self.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
         y_pos = self.margin_bottom
         for device_id, output_id in self.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
@@ -267,8 +268,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Draw monitor name and signal trace for a particular monitor."""
         # TODO uncomment monitor_name
-        monitor_name = "Device 1"
-        # monitor_name = self.devices.get_signal_name(device_id, output_id)
+        # monitor_name = "Device 1"
+        monitor_name = self.devices.get_signal_name(device_id, output_id)
         signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
