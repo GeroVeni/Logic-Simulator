@@ -50,7 +50,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                                            operations.
     """
 
-    def __init__(self, parent, devices, monitors):
+    def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
         super().__init__(parent, -1,
                          attribList=[wxcanvas.WX_GL_RGBA,
@@ -65,8 +65,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
-        self.devices = devices
-        self.monitors = monitors
+        self.parent = parent
 
         self.cycles_completed = 0 # updated when the gui calls render() TODO initialize to 0
 
@@ -142,10 +141,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_grid()
         # Render signal traces
         # TODO uncomment bottom line
-        if self.monitors.get_margin() is not None:
-            self.margin_left = max((self.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+        if self.parent.monitors.get_margin() is not None:
+            self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
         y_pos = self.margin_bottom
-        for device_id, output_id in self.monitors.monitors_dictionary:
+        for device_id, output_id in self.parent.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
             y_pos += self.monitor_spacing
 
@@ -247,7 +246,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         size = self.GetClientSize()
 
         # Allow a max number of 9 monitors to be displayed at once
-        num_monitors = min(9, len(self.monitors.monitors_dictionary))
+        num_monitors = min(9, len(self.parent.monitors.monitors_dictionary))
 
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
@@ -269,8 +268,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """Draw monitor name and signal trace for a particular monitor."""
         # TODO uncomment monitor_name
         # monitor_name = "Device 1"
-        monitor_name = self.devices.get_signal_name(device_id, output_id)
-        signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
+        monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
+        signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
         text_x_pos = self.border_left/self.zoom
@@ -283,7 +282,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
         for signal in signal_list:
-            if signal == self.devices.BLANK:
+            if signal == self.parent.devices.BLANK:
                 if currently_drawing:
                     GL.glEnd()
                     currently_drawing = False
@@ -292,13 +291,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 if not currently_drawing:
                     GL.glBegin(GL.GL_LINE_STRIP)
                     currently_drawing = True
-                if signal == self.devices.HIGH:
+                if signal == self.parent.devices.HIGH:
                     y = y_max
-                if signal == self.devices.LOW:
+                if signal == self.parent.devices.LOW:
                     y = y_min
-                if signal == self.devices.RISING:
+                if signal == self.parent.devices.RISING:
                     y = y_max
-                if signal == self.devices.FALLING:
+                if signal == self.parent.devices.FALLING:
                     y = y_min
                 GL.glVertex2f(x_pos, y)
                 x_pos += self.cycle_width
@@ -446,7 +445,7 @@ class Gui(wx.Frame):
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
-        self.canvas = MyGLCanvas(self, self.devices, self.monitors)
+        self.canvas = MyGLCanvas(self)
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
@@ -532,7 +531,7 @@ class Gui(wx.Frame):
         self.scanner = Scanner(file_path, self.names)
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
-        if self.parser.parse_network:
+        if self.parser.parse_network():
             self.log_message("Network parsed Correctly")
         else:
             self.log_message("Failed to parse network")
@@ -546,6 +545,8 @@ class Gui(wx.Frame):
             file_path = openFileDialog.GetPath()
             self.log_message("File opened: {}".format(file_path))
             self.run_parser(file_path)
+
+
 
     def run_network(self, cycles):
         """Run the network for the specified number of simulation cycles.
