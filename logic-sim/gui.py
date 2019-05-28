@@ -70,26 +70,22 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
 
-        # Variables for drawing text
+        # Text rendering settings
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
         self.character_height = 15
 
-        # Variables for canvas drawing
+        # Canvas rendering settings
         self.border_left = 10 # constant
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0 # constant
 
-        self.zoom_lower = 0.8
-        self.zoom_upper = 5
-
-        self.margin_left = 100 # margin for placement of device name
+        self.margin_left = 100 # margin for placement of monitor name
         self.margin_bottom = 30
         self.cycle_width = 20
         self.trace_height = 30
         self.monitor_spacing = 40 # spacing between different monitor_signals
-
         self.ruler_height = 1.3 * self.character_height
 
         # Initialise variables for panning
@@ -99,6 +95,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.last_mouse_y = 0  # previous mouse y position
 
         # Initialise variables for zooming
+        self.zoom_lower = 0.8
+        self.zoom_upper = 5
         # self.zoom = 1
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
@@ -249,7 +247,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         # Allow a max number of 9 monitors to be displayed at once
         num_monitors = min(9, len(self.monitors.monitors_dictionary))
-        
+
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
