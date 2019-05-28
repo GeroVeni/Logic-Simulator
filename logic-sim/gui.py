@@ -583,6 +583,8 @@ class CustomTab(wx.Panel):
             #ic = wx.ArtProvider.GetIcon(wx.ART_ERROR)
             #ic = wx.Icon('', type=wx.BITMAP_TYPE_ANY, desiredWidth=16, desiredHeight=16)
             #TODO Convert from bitmap
+            bmp = wx.Bitmap(16, 16)
+            ic = wx.Icon(bmp)
             it = dv.DataViewIconText(" " + i, ic)
             self.mon_list.AppendItem([it, True])
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
