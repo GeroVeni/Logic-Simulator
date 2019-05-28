@@ -436,6 +436,7 @@ class Gui(wx.Frame):
         fileMenu.Append(wx.ID_EXIT, "&Exit")
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
         fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
@@ -589,6 +590,22 @@ class Gui(wx.Frame):
         self.run_command()
         self.canvas.render("RUN", self.cycles_completed)
 
+    def continue_command(self):
+        """Continue a previously run simulation."""
+        cycles = 10
+        if cycles is not None:  # if the number of cycles provided is valid
+            if self.cycles_completed == 0:
+                self.log_message("Error! Nothing to continue. Run first.")
+            elif self.run_network(cycles):
+                self.cycles_completed += cycles
+                self.log_message(" ".join(["Continuing for", str(cycles),
+                        "cycles.", "Total:", str(self.cycles_completed)]))
+
+    def on_continue(self):
+        self.log_message("Continue button pressed.")
+        self.continue_command()
+        self.canvas.render("Continue", self.cycles_completed)
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -601,6 +618,8 @@ class Gui(wx.Frame):
             self.on_open()
         if Id == self.ID_RUN: # run button
             self.on_run()
+        if Id == self.ID_CONTINUE: #continue button
+            self.on_continue()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
