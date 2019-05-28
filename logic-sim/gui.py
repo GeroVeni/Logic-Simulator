@@ -126,7 +126,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.cycles_completed = cycles
 
         self.update_zoom_lower_bound()
-        self.bound_panning()
+        # self.bound_panning()
         self.bound_zooming()
 
         self.SetCurrent(self.context)
@@ -371,6 +371,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
+    def recenter_canvas(self):
+        """Restores the canvas to its default position and state of zoom."""
+        self.pan_x = 0
+        self.pan_y = 0
+        self.zoom = self.zoom_lower
+        self.init = False
+        self.render("Recenter canvas")
+
 
 class Gui(wx.Frame):
     """Configure the main window and all the widgets.
@@ -527,7 +535,8 @@ class Gui(wx.Frame):
                 self.log_message("File opened: {}".format(file_path))
         if Id == 1002: # run button
             text = "Run button pressed."
-            self.canvas.render(text, self.cycles_completed)
+            # self.canvas.render(text, self.cycles_completed)
+            self.canvas.recenter_canvas()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
