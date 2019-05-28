@@ -246,8 +246,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         than the amount of zoom that just lets all the monitors to be seen on
         the canvas at once."""
         size = self.GetClientSize()
+
+        # Allow a max number of 9 monitors to be displayed at once
+        num_monitors = min(9, len(self.monitors.monitors_dictionary))
+        
         # Adjust zoom bounds depending on number of monitors
-        num_monitors = len(self.monitors.monitors_dictionary)
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
 
