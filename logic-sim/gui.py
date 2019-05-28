@@ -454,7 +454,7 @@ class Gui(wx.Frame):
         right_sizer = self.make_right_sizer()
 
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(right_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
@@ -465,7 +465,7 @@ class Gui(wx.Frame):
         right_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create the notebook to hold tabs
-        nb = wx.Notebook(self)
+        nb = wx.Notebook(self, size=(200, -1))
 
         # Create the tabs
         tab1 = CustomTab(nb, ["mon" + str(i) for i in range(40)])
@@ -568,7 +568,7 @@ class CustomTab(wx.Panel):
     Public methods
     --------------
 
-    TBD
+    TODO
     """
 
     def __init__(self, parent, name_list):
@@ -584,14 +584,18 @@ class CustomTab(wx.Panel):
 
         #Create ListCtrl
         self.mon_list = dv.DataViewListCtrl(self)
-        self.mon_list.AppendTextColumn('a', width=110, flags = 0)
-        self.mon_list.AppendToggleColumn('b', width=30, align=wx.ALIGN_RIGHT, flags = 0)
+        self.mon_list.AppendIconTextColumn('Names', width=140, flags = 0)
+        self.mon_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
         #self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
         #self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
         #mon_list.AppendColumn("Name")
         #mon_list.AppendColumn("Status")
         for i in name_list:
-            self.mon_list.AppendItem([i, True])
+            #ic = wx.ArtProvider.GetIcon(wx.ART_ERROR)
+            #ic = wx.Icon('', type=wx.BITMAP_TYPE_ANY, desiredWidth=16, desiredHeight=16)
+            #TODO Convert from bitmap
+            it = dv.DataViewIconText(" " + i, ic)
+            self.mon_list.AppendItem([it, True])
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
         #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
 
