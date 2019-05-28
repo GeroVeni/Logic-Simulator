@@ -408,19 +408,26 @@ class Gui(wx.Frame):
         """Initialise widgets and layout."""
         super().__init__(parent=None, title=title, size=(800, 600))
 
+        self.names = names
+        self.devices = devices
+        self.path = path
+        self.network = network
+        self.monitors = monitors
+
         # Add IDs for menu and toolbar items
-        ID_OPEN = 1001;
-        ID_CENTER = 1002;
-        ID_RUN = 1003;
-        ID_CONTINUE = 1004;
-        ID_CYCLES_CTRL = 1005;
+        self.ID_OPEN = 1001;
+        self.ID_CENTER = 1002;
+        self.ID_RUN = 1003;
+        self.ID_CONTINUE = 1004;
+        self.ID_CYCLES_CTRL = 1005;
 
         # Configure the file menu
         fileMenu = wx.Menu()
         menuBar = wx.MenuBar()
         fileMenu.Append(wx.ID_ABOUT, "&About")
         fileMenu.Append(wx.ID_EXIT, "&Exit")
-        fileMenu.Append(ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
@@ -431,22 +438,21 @@ class Gui(wx.Frame):
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
-        toolBar.AddTool(ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(ID_CENTER, "Tool2", redoIcon)
+        toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
+        toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
         toolBar.AddSeparator()
-        toolBar.AddTool(ID_RUN, "Tool3", openIcon)
-        toolBar.AddTool(ID_CONTINUE, "Tool4", openIcon)
+        toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
+        toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
         toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
         self.canvas = MyGLCanvas(self, devices, monitors)
-        self.cycles_completed = 5  # number of simulation cycles completed
+        self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
-        self.log_message("paparia\n"*20)
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
@@ -518,6 +524,46 @@ class Gui(wx.Frame):
         self.error_log.AppendText("\n" + str(text))
         self.error_log.ShowPosition(self.error_log.GetLastPosition())
 
+    def on_open(self):
+        text = "Open file dialog."
+        openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
+                                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+        res = openFileDialog.ShowModal()
+        if res == wx.ID_OK: # user selected a file
+            file_path = openFileDialog.GetPath()
+            self.log_message("File opened: {}".format(file_path))
+
+    def run_network(self, cycles):
+        """Run the network for the specified number of simulation cycles.
+
+        Return True if successful.
+        """
+        for _ in range(cycles):
+            if self.network.execute_network():
+                self.monitors.record_signals()
+            else:
+                self.log_message("Error! Network oscillating.")
+                return False
+        return True
+
+    def run_command(self):
+        """Run the simulation from scratch."""
+        self.cycles_completed = 0
+        cycles = 10 #this must get input from other box
+
+        if cycles is not None:  # if the number of cycles provided is valid
+            self.monitors.reset_monitors()
+            self.log_message("".join(["Running for ", str(cycles),
+                                      " cycles"]))
+            self.devices.cold_startup()
+            if self.run_network(cycles):
+                self.cycles_completed += cycles
+
+    def on_run(self):
+        self.log_message("Run button pressed.")
+        self.run_command()
+        self.canvas.render("RUN", self.cycles_completed)
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -526,28 +572,15 @@ class Gui(wx.Frame):
         if Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
-        if Id == 1001: # file dialog
-            text = "Open file dialog."
-            openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
-                                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
-            res = openFileDialog.ShowModal()
-            if res == wx.ID_OK: # user selected a file
-                file_path = openFileDialog.GetPath()
-                self.log_message("File opened: {}".format(file_path))
-        if Id == 1002: # run button
-            text = "Run button pressed."
-            # self.canvas.render(text, self.cycles_completed)
-            self.canvas.recenter_canvas()
+        if Id == self.ID_OPEN: # file dialog
+            self.on_open()
+        if Id == self.ID_RUN: # run button
+            self.on_run()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
         spin_value = self.spin.GetValue()
         text = "".join(["New spin control value: ", str(spin_value)])
-        self.canvas.render(text)
-
-    def on_run_button(self, event):
-        """Handle the event when the user clicks the run button."""
-        text = "Run button pressed."
         self.canvas.render(text)
 
     def on_text_box(self, event):
