@@ -405,15 +405,13 @@ class Gui(wx.Frame):
     on_text_box(self, event): Event handler for when the user enters text.
     """
 
-    def __init__(self, title, path, names, devices, network, monitors):
+    def __init__(self, title):
         """Initialise widgets and layout."""
         super().__init__(parent=None, title=title, size=(800, 600))
-
-        self.names = names
-        self.devices = devices
-        self.path = path
-        self.network = network
-        self.monitors = monitors
+        self.names = Names()
+        self.devices = Devices(self.names)
+        self.network = Network(self.names, self.devices)
+        self.monitors = Monitors(self.names, self.devices, self.network)
 
         # Add IDs for menu and toolbar items
         self.ID_OPEN = 1001;
@@ -448,7 +446,7 @@ class Gui(wx.Frame):
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
-        self.canvas = MyGLCanvas(self, devices, monitors)
+        self.canvas = MyGLCanvas(self, self.devices, self.monitors)
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
@@ -525,6 +523,20 @@ class Gui(wx.Frame):
         self.error_log.AppendText("\n" + str(text))
         self.error_log.ShowPosition(self.error_log.GetLastPosition())
 
+    def run_parser(self, file_path):
+        #clear all at the begging
+        self.names = Names()
+        self.devices = Devices(self.names)
+        self.network = Network(self.names, self.devices)
+        self.monitors = Monitors(self.names, self.devices, self.network)
+        self.scanner = Scanner(file_path, self.names)
+        self.parser = Parser(self.names, self.devices, self.network,
+                             self.monitors, self.scanner)
+        if self.parser.parse_network:
+            self.log_message("Network parsed Correctly")
+        else:
+            self.log_message("Failed to parse network")
+
     def on_open(self):
         text = "Open file dialog."
         openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
@@ -533,6 +545,7 @@ class Gui(wx.Frame):
         if res == wx.ID_OK: # user selected a file
             file_path = openFileDialog.GetPath()
             self.log_message("File opened: {}".format(file_path))
+            self.run_parser(file_path)
 
     def run_network(self, cycles):
         """Run the network for the specified number of simulation cycles.
