@@ -439,7 +439,7 @@ class Gui(wx.Frame):
 
         # Canvas for drawing signals
         self.canvas = MyGLCanvas(self, devices, monitors)
-        self.cycles_completed = 5  # number of simulation cycles completed
+        self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
@@ -524,8 +524,35 @@ class Gui(wx.Frame):
             file_path = openFileDialog.GetPath()
             self.log_message("File opened: {}".format(file_path))
 
+    def run_network(self, cycles):
+        """Run the network for the specified number of simulation cycles.
+
+        Return True if successful.
+        """
+        for _ in range(cycles):
+            if self.network.execute_network():
+                self.monitors.record_signals()
+            else:
+                self.log_message("Error! Network oscillating.")
+                return False
+        return True
+
+    def run_command(self):
+        """Run the simulation from scratch."""
+        self.cycles_completed = 0
+        cycles = 10 #this must get input from other box
+
+        if cycles is not None:  # if the number of cycles provided is valid
+            self.monitors.reset_monitors()
+            self.log_message("".join(["Running for ", str(cycles),
+                                      " cycles"]))
+            self.devices.cold_startup()
+            if self.run_network(cycles):
+                self.cycles_completed += cycles
+
     def on_run(self):
         self.log_message("Run button pressed.")
+        self.run_command()
         self.canvas.render("RUN", self.cycles_completed)
 
     def on_menu(self, event):
