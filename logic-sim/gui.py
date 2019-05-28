@@ -60,15 +60,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.init = False
         self.context = wxcanvas.GLContext(self)
 
-        # Initialise variables for panning
-        self.pan_x = 0
-        self.pan_y = 0
-        self.last_mouse_x = 0  # previous mouse x position
-        self.last_mouse_y = 0  # previous mouse y position
-
-        # Initialise variables for zooming
-        self.zoom = 1
-
         # Bind events to the canvas
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
@@ -101,6 +92,18 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         self.ruler_height = 1.3 * self.character_height
 
+        # Initialise variables for panning
+        self.pan_x = 0
+        self.pan_y = 0
+        self.last_mouse_x = 0  # previous mouse x position
+        self.last_mouse_y = 0  # previous mouse y position
+
+        # Initialise variables for zooming
+        # self.zoom = 1
+        self.update_zoom_lower_bound()
+        self.zoom = self.zoom_lower
+
+
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
         size = self.GetClientSize()
@@ -122,11 +125,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if cycles is not None:
             self.cycles_completed = cycles
 
-        # Adjust zoom bounds depending on number of monitors
-        # num_monitors = len(self.monitors.monitors_dictionary)
-        # self.zoom_lower = min((self.margin_bottom + num_monitors * self.monitor_spacing)/50 * 0.2, self.zoom_upper)
-
-        size = self.GetClientSize()
+        self.update_zoom_lower_bound()
         self.bound_panning()
         self.bound_zooming()
 
@@ -154,7 +153,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Draw ruler components
         self.render_ruler_background()
         self.render_cycle_numbers()
-        self.render_grid(render_on_ruler = True)
+        self.render_grid(render_only_on_ruler = True)
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -179,6 +178,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Forces reconfiguration of the viewport, modelview and projection
         # matrices on the next paint event
         self.init = False
+        self.update_zoom_lower_bound()
+        self.zoom = self.zoom_lower
 
     def on_mouse(self, event):
         """Handle mouse events."""
@@ -239,6 +240,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.zoom = self.zoom_upper
         elif self.zoom < self.zoom_lower:
             self.zoom = self.zoom_lower
+
+    def update_zoom_lower_bound(self):
+        """Adjusts the zoom settings such that the user cannot zoom out further
+        than the amount of zoom that just lets all the monitors to be seen on
+        the canvas at once."""
+        size = self.GetClientSize()
+        # Adjust zoom bounds depending on number of monitors
+        num_monitors = len(self.monitors.monitors_dictionary)
+        visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
+        self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -340,7 +351,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glEnd()
         GL.glPopMatrix()
 
-    def render_grid(self, render_on_ruler = False):
+    def render_grid(self, render_only_on_ruler = False):
         """Draw a grid for separating the different cycles in the traces."""
         if self.cycles_completed == 0:
             return
@@ -348,8 +359,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         canvas_size = self.GetClientSize()
         line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
 
-        # render either on the ruler or on the rest of the canvas
-        if render_on_ruler:
+        # render either only on the ruler or on the whole the canvas
+        if render_only_on_ruler:
             line_y_pos_start = line_y_pos_end - self.ruler_height/self.zoom
         else:
             line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
