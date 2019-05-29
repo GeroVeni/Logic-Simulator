@@ -50,6 +50,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     render_text(self, text, x_pos, y_pos): Handles text drawing
                                            operations.
+
+    recenter(self): Restores canvas to its default pan position and zoom state.
+
+    restore_state(self): Restores the state of the canvas when a new circuit
+                         definition file is loaded using the gui, or when the
+                         number of monitors is changed in the gui.
     """
 
     def __init__(self, parent):
@@ -67,6 +73,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
+        # keep reference to parent
         self.parent = parent
 
         # Text rendering settings
@@ -118,6 +125,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render(self, text):
         """Handle all drawing operations."""
+        # Update pan and zoom variables
         self.update_zoom_lower_bound()
         self.bound_zooming()
         self.update_borders()
@@ -132,14 +140,15 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Clear everything
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-        # Draw specified text at position (10, 10)
-        self.render_text(text, 10, 10)
+        # Enable line below only when debugging the canvas
+        # self.render_text(text, 10, 10)
 
-        self.render_grid()
-
-        # Set the left margin in the canvas
+        # Set the left margin for the canvas
         if self.parent.monitors.get_margin() is not None:
             self.margin_left = (self.parent.monitors.get_margin()*self.character_width + 10)
+
+        # Render canvas canvas components
+        self.render_grid()
 
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
@@ -150,8 +159,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
                 y_pos -= self.monitor_spacing
 
-
-        # Draw ruler components
+        # Render ruler components
         self.render_ruler_background()
         self.render_cycle_numbers()
         self.render_grid(render_only_on_ruler = True)
@@ -223,7 +231,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.Refresh()  # triggers the paint event
 
     def bound_panning(self):
-        """Bound pan variables with respect to the signal traces."""
+        """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.GetClientSize()
         allowable_pan_right = -(self.border_right - size.width/self.zoom)
         allowable_pan_left = self.border_left
@@ -275,16 +283,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         # self.border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
-        if self.border_top <= self.border_bottom: # TODO remove error raising here
-            raise ValueError("border_top must be larger than border_bottom")
         # self.border_right depends only on the number of cycles to be simulated
         self.border_right = (self.border_left + self.margin_left)/self.zoom + self.parent.cycles_completed * self.cycle_width
-        if self.border_right <= self.border_left: # TODO remove error raising here
-            #raise ValueError("border_right must be larger than border_left")
-            pass
-
-        print("border_right: {}".format(self.border_right)) # TODO remove
-
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -335,17 +335,18 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 x_pos += self.cycle_width
                 GL.glVertex2f(x_pos, y)
 
-        print("final location of trace: {}".format(x_pos)) # TODO remove
         if currently_drawing:
             GL.glEnd()
             currently_drawing = False
 
     def render_line(self, start_point, end_point):
         """Render a straight line on the canvas, with the given end points."""
+        # check validity of arguments
         if not (isinstance(start_point, tuple) and isinstance(end_point, tuple)):
             raise TypeError("start_point and end_point arguments must be of Type tuple")
         if (len(start_point) != 2  or len(end_point) != 2):
             raise ValueError("start_point and end_point arguments must be tuples of length 2")
+        # draw line
         GL.glColor3f(0.9, 0.9, 0.9) # light grey color
         GL.glLineWidth(1)
         GL.glBegin(GL.GL_LINE_STRIP)
@@ -354,7 +355,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glEnd()
 
     def render_cycle_numbers(self):
-        """Handle cycle numbers drawing on the top of the canvas (ruler)."""
+        """Handle cycle numbers drawing at the top of the canvas (ruler)."""
         if self.parent.cycles_completed == 0:
             return
 
@@ -371,7 +372,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """Draw a background for the ruler."""
         size = self.GetClientSize()
         ruler_color = [200/255, 230/255, 255/255]
-        #Make sure our transformations don't affect any other transformations in other code
+        # Make sure transformations don't affect other renderings
         GL.glPushMatrix()
         GL.glLoadIdentity()
         GL.glColor3fv(ruler_color)
@@ -397,13 +398,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         else:
             line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
 
+        # render vertical lines
         line_x_pos = (self.border_left + self.margin_left)/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
         for cycle in range(self.parent.cycles_completed):
             line_x_pos += self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
-    def recenter_canvas(self):
+    def recenter(self):
         """Restore canvas to its default pan position and zoom state."""
         self.pan_x = self.border_left
         self.pan_y = self.border_bottom
@@ -411,12 +413,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.init = False
         self.render("Recenter canvas")
 
-    def restore_canvas_on_open(self):
+    def restore_state(self):
         """Restore the state of the canvas when a new circuit definition file
-        is loaded using the gui method on_open().
+        is loaded using the gui, or when the number of monitors is changed in
+        the gui.
 
-        restore_canvas_on_open() should be called whenever the gui method
-        on_open() is called."""
+        restore_state() should be called whenever the gui method
+        on_open() and set_monitor() is called."""
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
@@ -633,7 +636,7 @@ class Gui(wx.Frame):
             else:
                 #TODO: Print error
                 return
-        self.canvas.restore_canvas_on_open()
+        self.canvas.restore_state()
         self.canvas.render('Monitor changed')
 
     def set_switch(self, switch_name, is_on):
@@ -665,7 +668,7 @@ class Gui(wx.Frame):
         else:
             #TODO: Print error
             return
- 
+
     def clear_log(self):
         """Clear the error log."""
         self.activity_log.Clear()
@@ -702,7 +705,7 @@ class Gui(wx.Frame):
             file_path = openFileDialog.GetPath()
             self.log_message("File opened: {}".format(file_path))
             self.run_parser(file_path)
-            self.canvas.restore_canvas_on_open()
+            self.canvas.restore_state()
             self.update_tabs()
 
 
@@ -754,7 +757,7 @@ class Gui(wx.Frame):
     def on_center(self):
         """Centers the canvas to its default state of zoom and panning."""
         self.log_message("Center canvas.")
-        self.canvas.recenter_canvas()
+        self.canvas.recenter()
 
     def on_help(self):
         """Shows a help window with user instructions."""
