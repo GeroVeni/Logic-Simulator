@@ -21,6 +21,9 @@ from monitors import Monitors
 from scanner import Scanner
 from parse import Parser
 
+from contextlib import redirect_stdout
+import io
+
 
 class MyGLCanvas(wxcanvas.GLCanvas):
     """Handle all drawing operations.
@@ -495,7 +498,7 @@ class Gui(wx.Frame):
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
-        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
+        self.activity_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
@@ -508,7 +511,7 @@ class Gui(wx.Frame):
 
         left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(wx.StaticText(self, label="Activity Log"), 0.2, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
         #right_sizer.Add(self.spin, 0, wx.ALL, 5)
         right_sizer = self.make_right_sizer()
@@ -563,12 +566,12 @@ class Gui(wx.Frame):
 
     def clear_log(self):
         """Clear the error log."""
-        self.error_log.Clear()
+        self.activity_log.Clear()
 
     def log_message(self, text):
         """Add message to the error log."""
-        self.error_log.AppendText("\n" + str(text))
-        self.error_log.ShowPosition(self.error_log.GetLastPosition())
+        self.activity_log.AppendText("\n" + str(text))
+        self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
 
     def run_parser(self, file_path):
         #clear all at the begging
@@ -580,10 +583,13 @@ class Gui(wx.Frame):
         self.scanner = Scanner(file_path, self.names)
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
-        if self.parser.parse_network():
-            self.log_message("Succesfully parsed network.")
-        else:
-            self.log_message("Failed to parse network.")
+        captured_stdout = io.StringIO()
+        with redirect_stdout(captured_stdout):
+            if self.parser.parse_network():
+                self.log_message("Succesfully parsed network.")
+            else:
+                self.log_message("Failed to parse network.")
+        self.log_message(captured_stdout.getvalue())
 
     def on_open(self):
         text = "Open file dialog."
