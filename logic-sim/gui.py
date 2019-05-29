@@ -588,7 +588,7 @@ class Gui(wx.Frame):
         self.switch_tab.clear()
         self.switch_tab.append(list(zip(switch_names, switch_states)))
 
-    def set_monitor(self, monitor_id, is_active):
+    def set_monitor(self, monitor_name, is_active):
         """Activate or deactivate a monitor.
 
         Parameters
@@ -599,6 +599,7 @@ class Gui(wx.Frame):
         """
         # Split the monitor to device name and port name if it exists
         splt = monitor_name.split('.')
+        self.log_message(str(splt))
         if len(splt) == 1:
             # No port given
             device_id = self.names.query(splt[0])
@@ -635,7 +636,7 @@ class Gui(wx.Frame):
         self.canvas.restore_canvas_on_open()
         self.canvas.render('Monitor changed')
 
-    def set_switch(self, switch_id, is_on):
+    def set_switch(self, switch_name, is_on):
         """Turn a swtich on and off.
 
         Parameters
@@ -872,7 +873,6 @@ class CustomTab(wx.Panel):
         row = self.item_list.ItemToRow(event.GetItem())
         name = self.item_list.GetValue(row, self.TEXT_COLUMN).GetText()
         state = self.item_list.GetToggleValue(row, self.TOGGLE_COLUMN)
-        #self.gui.set_monitor(name, state)
         self.on_item_selected_listener(name, state)
 
     def clear(self):
@@ -885,5 +885,5 @@ class CustomTab(wx.Panel):
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
             i, val = name_list[cnt]
-            it = dv.DataViewIconText(" " + i, ic)
+            it = dv.DataViewIconText("" + i, ic)
             self.item_list.AppendItem([it, val])
