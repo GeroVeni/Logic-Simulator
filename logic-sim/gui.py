@@ -447,12 +447,13 @@ class Gui(wx.Frame):
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
+        self.spin = wx.SpinCtrl(toolBar)
         toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
         toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
         toolBar.AddSeparator()
         toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
         toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
-        toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
+        toolBar.AddControl(self.spin, "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
@@ -535,6 +536,7 @@ class Gui(wx.Frame):
 
     def run_parser(self, file_path):
         #clear all at the begging
+        self.cycles_completed = 0
         self.names = Names()
         self.devices = Devices(self.names)
         self.network = Network(self.names, self.devices)
@@ -543,9 +545,9 @@ class Gui(wx.Frame):
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
         if self.parser.parse_network():
-            self.log_message("Network parsed Correctly")
+            self.log_message("Succesfully parsed network.")
         else:
-            self.log_message("Failed to parse network")
+            self.log_message("Failed to parse network.")
 
     def on_open(self):
         text = "Open file dialog."
@@ -575,24 +577,23 @@ class Gui(wx.Frame):
     def run_command(self):
         """Run the simulation from scratch."""
         self.cycles_completed = 0
-        cycles = 10 #this must get input from other box
+        cycles = self.spin.GetValue() #this must get input from other box
 
         if cycles is not None:  # if the number of cycles provided is valid
             self.monitors.reset_monitors()
             self.log_message("".join(["Running for ", str(cycles),
-                                      " cycles"]))
+                                      " cycles."]))
             self.devices.cold_startup()
             if self.run_network(cycles):
                 self.cycles_completed += cycles
 
     def on_run(self):
-        self.log_message("Run button pressed.")
         self.run_command()
         self.canvas.render("RUN", self.cycles_completed)
 
     def continue_command(self):
         """Continue a previously run simulation."""
-        cycles = 10
+        cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
                 self.log_message("Error! Nothing to continue. Run first.")
@@ -602,7 +603,6 @@ class Gui(wx.Frame):
                         "cycles.", "Total:", str(self.cycles_completed)]))
 
     def on_continue(self):
-        self.log_message("Continue button pressed.")
         self.continue_command()
         self.canvas.render("Continue", self.cycles_completed)
 
@@ -620,12 +620,6 @@ class Gui(wx.Frame):
             self.on_run()
         if Id == self.ID_CONTINUE: #continue button
             self.on_continue()
-
-    def on_spin(self, event):
-        """Handle the event when the user changes the spin control value."""
-        spin_value = self.spin.GetValue()
-        text = "".join(["New spin control value: ", str(spin_value)])
-        self.canvas.render(text)
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
