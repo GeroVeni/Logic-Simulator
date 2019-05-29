@@ -745,7 +745,7 @@ class Gui(wx.Frame):
 
     def on_run(self):
         self.run_command()
-        self.canvas.recenter_canvas()
+        self.canvas.recenter()
         self.canvas.render("RUN")
 
     def continue_command(self):
