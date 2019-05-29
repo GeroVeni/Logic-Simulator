@@ -116,10 +116,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render(self, text):
         """Handle all drawing operations."""
-        self.update_borders()
         self.update_zoom_lower_bound()
-        # self.bound_panning()
         self.bound_zooming()
+        self.update_borders()
+        self.bound_panning()
 
         self.SetCurrent(self.context)
         if not self.init:
@@ -131,7 +131,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Draw specified text at position (10, 10)
-        self.render_text(text, 10, 10)
+        self.render_text(text, 100, 10)
 
         self.render_grid()
 
@@ -142,7 +142,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
-            y_pos = self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
+            y_pos = self.border_bottom + self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
 
             for device_id, output_id in self.parent.monitors.monitors_dictionary:
                 self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
@@ -224,19 +224,30 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """Makes sure the canvas is always panned within the bounds of the
         signal traces."""
         size = self.GetClientSize()
-        pan_right_bound = -(self.border_right + (-size.width)/self.zoom)
-        pan_down_bound = -(self.border_top + (-size.height + self.character_height)/self.zoom)
-        pan_up_bound = self.border_bottom
-        # print("down: {}, up: {}, pan_y: {}".format(pan_down_bound, pan_up_bound, self.pan_y)) # TODO remove
-        # print("border_top: {}, up: {}, pan_y: {}".format(self.border_top, pan_up_bound, self.pan_y)) # TODO remove
-        if self.pan_x < pan_right_bound: # fix
-            self.pan_x = pan_right_bound
-        elif self.pan_x > self.border_left:
-            self.pan_x = self.border_left
-        if self.pan_y < pan_down_bound: # fix
-            self.pan_y = pan_down_bound
-        if self.pan_y > pan_up_bound:
-            self.pan_y = pan_up_bound
+        allowable_pan_right = -(self.border_right - size.width/self.zoom)
+        allowable_pan_left = self.border_left
+        allowable_pan_bottom = self.border_bottom
+        allowable_pan_top = -(self.border_top - size.height/self.zoom)
+        # print("bottom: {}, top: {}".format(allowable_pan_bottom, allowable_pan_top)) # TODO remove
+        print("left: {}, right: {}".format(allowable_pan_left, allowable_pan_right)) # TODO remove
+
+        if allowable_pan_right < 0: # if true, some part of the signal traces is hidden (x dir)
+            if self.pan_x < allowable_pan_right: # fix
+                self.pan_x = allowable_pan_right
+        else:
+            if self.pan_x < 0:
+                self.pan_x = 0
+        if self.pan_x > allowable_pan_left:
+            self.pan_x = allowable_pan_left
+
+        if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
+            if self.pan_y < allowable_pan_top: # fix
+                self.pan_y = allowable_pan_top
+        else:
+            if self.pan_y < 0:
+                self.pan_y = 0
+        if self.pan_y > allowable_pan_bottom:
+            self.pan_y = allowable_pan_bottom
 
     def bound_zooming(self):
         """Makes sure the zoom is bounded."""
@@ -264,8 +275,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         # self.border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
+        if self.border_top <= self.border_bottom: # TODO remove error raising here
+            raise ValueError("border_top must be larger than border_bottom")
         # self.border_right depends only on the number of cycles to be simulated
-        self.border_right = self.margin_left/self.zoom + self.parent.cycles_completed * self.cycle_width
+        self.border_right = (self.border_left + self.margin_left)/self.zoom + self.parent.cycles_completed * self.cycle_width
+        if self.border_right <= self.border_left: # TODO remove error raising here
+            raise ValueError("border_right must be larger than border_left")
 
 
     def render_text(self, text, x_pos, y_pos):
@@ -291,7 +306,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_text(monitor_name, text_x_pos, text_y_pos)
 
         # Draw signal trace
-        x_pos = self.margin_left/self.zoom # correct for zooming
+        x_pos = (self.border_left + self.margin_left)/self.zoom # correct for zooming
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
@@ -339,13 +354,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if self.parent.cycles_completed == 0:
             return
 
-        canvas_size = self.GetClientSize()
+        size = self.GetClientSize()
         for cycle in range(self.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
-            text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
-            text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
+            text_x_pos = (self.border_left + self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
+            text_y_pos = (size.height - self.pan_y - self.character_height)/self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
     def render_ruler_background(self):
@@ -371,8 +386,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if self.parent.cycles_completed == 0:
             return
 
-        canvas_size = self.GetClientSize()
-        line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+        size = self.GetClientSize()
+        line_y_pos_end = self.border_bottom + (- self.pan_y + size.height)/self.zoom
 
         # render either only on the ruler or on the whole the canvas
         if render_only_on_ruler:
@@ -380,10 +395,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         else:
             line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
 
-        line_x_pos = self.margin_left/self.zoom
+        line_x_pos = (self.border_left + self.margin_left)/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
         for cycle in range(self.parent.cycles_completed):
-            line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
+            line_x_pos += self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
     def recenter_canvas(self):
