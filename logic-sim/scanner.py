@@ -55,6 +55,10 @@ class Scanner:
     -------------
     get_symbol(self): Translates the next sequence of characters into a symbol
                       and returns the symbol.
+
+    get_error_line(self, symbol): Prints the line from the definition file
+                            containing the symbol, and a marker pointing to its
+                            position.
     """
 
     def __init__(self, path, names):
@@ -108,7 +112,7 @@ class Scanner:
         return file
 
     def advance(self):
-        """Update current_character with next character in self.fileIn, and also check for new line."""
+        """Update current_character, and line position record."""
         if self.current_character == "\n":
             self.current_character = self.fileIn.read(1)
             self.current_line += 1
@@ -119,43 +123,39 @@ class Scanner:
 
     def update_line_pos_record(self):
         """Update the record containing the beginning position of each line in
-        the input file.
-        """
+        the input file."""
         if self.current_line not in self.line_pos_record:
             self.line_pos_record[self.current_line] = self.current_line_pos
 
     def get_line_pos(self, line_no):
-        """Returns the beginning position of the line with number line_no.
-        """
+        """Return the beginning position of the line in the input file."""
         if line_no not in self.line_pos_record:
             raise ValueError("The line requested from the definition file has not been encountered.")
         return self.line_pos_record[line_no]
 
     def look_ahead(self):
         """Return the next character in the definition file, without updating
-        current_character and without incrementing the current position within the file.
-        """
+        current_character and without incrementing the current position within the file."""
         ch = self.fileIn.read(1)
         self.fileIn.seek(self.fileIn.tell()-1, 0)
         return ch
 
     def skip_spaces(self):
-        """advances in self.fileIn until it finds the first non whitespace character"""
+        """Advance current position in input file until the first non whitespace character."""
         while self.current_character != '' and self.current_character.isspace():
             self.advance()
 
     def skip_line(self):
-        """"Skips the rest of the current line but not the new line character in self.fileIn"""
+        """"Skip the rest of the current line in the input file."""
         self.advance()
         while self.current_character != '' and self.current_character != "\n":
             self.advance()
 
     def get_name(self):
-        """Return the name string that starts at the current_character in self.fileIn, and advance to the
+        """Return the name string that starts at the current_character, and advance to the
         next character after the name string.
 
-        This method assumes that the current_character is already a letter.
-        """
+        This method assumes that the current_character is already a letter."""
         name = self.current_character
         self.advance()
         while self.current_character != '' and (self.current_character.isalnum() or self.current_character == "_"):
@@ -164,11 +164,10 @@ class Scanner:
         return name
 
     def get_number(self):
-        """Return the number that starts at the current_character in self.fileIn, and advance to the
+        """Return the number that starts at the current_character, and advance to the
         next character after the number.
 
-        This method assumes that the current_character is already a digit.
-        """
+        This method assumes that the current_character is already a digit."""
         numList = self.current_character
         self.advance()
         while self.current_character != '' and self.current_character.isdigit():
@@ -260,10 +259,8 @@ class Scanner:
         return symbol
 
     def get_error_line(self, symbol):
-        """Prints a string that contains the line where the symbol passed as an argument appears in
-        the circuit definition file, and also a new line with the symbol '^' at the location of the
-        symbol
-        """
+        """Print the line from the definition file containing the symbol,
+        and a marker pointing to its position."""
         if not isinstance(symbol, Symbol):
             raise TypeError('symbol must be an instance of the class Symbol')
 
@@ -298,22 +295,3 @@ class Scanner:
         self.current_character = current_ch
         self.current_line_pos = current_line_pos
         self.line_pos_record = line_record.copy()
-
-if __name__ == "__main__":
-    names = Names()
-    path = 'testfiles/tmp_scanner/specfile5.txt'
-    scanner = Scanner(path, names)
-    while (scanner.current_character != ''):
-        current_symbol = scanner.get_symbol()
-        print(current_symbol)
-        if current_symbol.type == scanner.INVALID_SYMBOL:
-            err_symbol = current_symbol
-            print("-----------------------------------------------------------")
-            scanner.get_error_line(err_symbol)
-
-    print(scanner.line_pos_record)
-    print("print symbol in previous line:")
-    err_symbol = Symbol()
-    err_symbol.line = 1
-    err_symbol.column = 3
-    scanner.get_error_line(err_symbol)
