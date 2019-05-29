@@ -282,8 +282,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Draw monitor name and signal trace for a particular monitor."""
-        # TODO uncomment monitor_name
-        # monitor_name = "Device 1"
         monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
         signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
