@@ -578,28 +578,66 @@ class Gui(wx.Frame):
         self.switch_tab.clear()
         self.switch_tab.append(list(zip(switch_names, [True for i in mons])))
 
-    def set_monitor(self, monitor_id, is_active):
+    def set_monitor(self, monitor_name, is_active):
         """Activate or deactivate a monitor.
 
         Parameters
         ----------
-        monitor_id: The id of the monitor to change state
+        monitor_name: The name of the monitor to change state
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
-        self.log_message("Clicked monitor: {} state: {}".format(monitor_id, is_active))
+        # Split the monitor to device name and port name if it exists
+        splt = monitor_name.split('.')
+        if len(splt) == 1:
+            # No port given
+            device_id = self.names.query(splt[0])
+            port_id = None
+        elif len(splt) == 2:
+            # Port given
+            device_id = self.names.query(splt[0])
+            port_id = self.names.query(splt[1])
+        else:
+            # TODO: Print error
+            pass
 
-    def set_switch(self, switch_id, is_on):
+        if device_id is None:
+            # TODO: Reformat error text for consistency with parser
+            self.log_message("Error: Monitor {} not found.".format(monitor_name))
+            return
+        # Add/remove monitor
+        if is_active:
+            action = 'activated'
+            monitor_error = self.monitors.make_monitor(device_id, port_id,
+                                                        self.cycles_completed)
+            if monitor_error == self.monitors.NO_ERROR:
+                self.log_message("Monitor {} was {}.".format(monitor_name, action))
+            else:
+                #TODO: Print error
+                pass
+        else:
+            action = 'deactivated'
+            if self.monitors.remove_monitor(device_id, port_id):
+                self.log_message("Monitor {} was {}.".format(monitor_name, action))
+            else:
+                #TODO: Print error
+                pass
+        self.canvas.restore_canvas_on_open()
+
+    def set_switch(self, switch_name, is_on):
         """Turn a swtich on and off.
 
         Parameters
         ----------
-        switch_id: The id of the switch to change output
+        switch_name: The name of the switch to change output
         is_on: The state of the monitor; True to turn on
                and False to turn off
-
         """
-        self.log_message("Switch")
+        if is_on:
+            state = 'ON'
+        else:
+            state = 'OFF'
+        self.log_message("Switch {} was switched {}".format(switch_name, state))
 
     def clear_log(self):
         """Clear the error log."""
@@ -816,10 +854,9 @@ class CustomTab(wx.Panel):
         self.item_list.DeleteAllItems()
 
     def append(self, name_list):
-        #ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
             i, val = name_list[cnt]
-            it = dv.DataViewIconText(" " + i, ic)
+            it = dv.DataViewIconText("" + i, ic)
             self.item_list.AppendItem([it, val])
