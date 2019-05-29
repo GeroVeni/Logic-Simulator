@@ -12,6 +12,7 @@ import sys
 
 from names import Names
 
+
 class Symbol:
 
     """Encapsulate a symbol and store its properties.
@@ -30,11 +31,12 @@ class Symbol:
         self.type = None
         self.id = None
         self.line = None
-        self.column = None # position on line
+        self.column = None  # position on line
 
     def __repr__(self):
         """Prints the attributes of the symbol instance to the terminal"""
-        return "type: {}, id: {}, line: {}, column: {}".format(self.type, self.id, self.line, self.column)
+        return "type: {}, id: {}, line: {}, column: {}"\
+            .format(self.type, self.id, self.line, self.column)
 
 
 class Scanner:
@@ -65,42 +67,48 @@ class Scanner:
         """Open specified file and initialise reserved words and IDs."""
         # Check validity of arguments
         if not isinstance(path, str):
-            raise TypeError('path argument must be a string')
-        if len(path) < 4: # path has length at least 4 due to the extension ".txt"
+            raise TypeError('path must be a string')
+        if len(path) < 4:  # path has length >= 4 due to the extension ".txt"
             raise TypeError('File should have the extension .txt')
         if path[-4:] != '.txt':
             raise TypeError('File should have the extension .txt')
         if not isinstance(names, Names):
-            raise TypeError('names argument must be an instance of Names class')
+            raise TypeError('names must be an instance of Names class')
         # open file
         self.fileIn = self.open_file(path)
 
-        # initialize symbol types
         self.names = names
-        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT, self.NAME, self.NUMBER,
-                                 self.COLON, self.SEMICOLON, self.COMMA, self.DEVICE_DEF,
-                                 self.BRACKET_LEFT, self.BRACKET_RIGHT, self.CONNECTION_DEF,
-                                 self.DOT, self.INVALID_SYMBOL, self.EOF] = range(15)
-        # (DEVICE_DEF: ":="), (CONNECTION_DEF: "=>"),
-        # (INVALID_SYMBOL: anything not in the symbol_type_list)
+
+        # initialize symbol types
+        # (DEVICE_DEF is ":="), (CONNECTION_DEF is "=>"),
+        # (INVALID_SYMBOL is anything not in the symbol_type_list)
+        self.symbol_type_list = [self.KEYWORD, self.DEVICE, self.PORT,
+                                 self.NAME, self.NUMBER, self.COLON,
+                                 self.SEMICOLON, self.COMMA, self.DEVICE_DEF,
+                                 self.BRACKET_LEFT, self.BRACKET_RIGHT,
+                                 self.CONNECTION_DEF, self.DOT,
+                                 self.INVALID_SYMBOL, self.EOF] = range(15)
 
         # split syntax reserved words into keywords, devices and ports
         self.keywords_list = ["DEVICES", "CONNECTIONS", "MONITORS", "END"]
-        self.devices_list = ["NAND", "AND", "NOR", "OR", "XOR", "DTYPE", "CLOCK", "SWITCH"]
+        self.devices_list = ["NAND", "AND", "NOR", "OR", "XOR", "DTYPE",
+                             "CLOCK", "SWITCH"]
         self.ports_list = ["Q", "QBAR", "DATA", "CLK", "SET", "CLEAR", "I"]
-        [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] = self.names.lookup(self.keywords_list)
-        [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID, self.DTYPE_ID, self.CLOCK_ID,
-         self.SWITCH_ID] = self.names.lookup(self.devices_list)
-        [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID, self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
+        [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] \
+            = self.names.lookup(self.keywords_list)
+        [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID,
+            self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] \
+            = self.names.lookup(self.devices_list)
+        [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID,
+            self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
 
-        # keep track of the beginning of the position of each line
+        # keep track of the beginning position of each line
         self.current_line_pos = 0
         self.current_line = 1
         self.current_character = None
         self.line_pos_record = {}
         self.update_line_pos_record()
-        self.advance() # place first character in current_character
-
+        self.advance()  # place first character in current_character
 
     def open_file(self, path):
         """Open and return the file specified by path."""
@@ -130,47 +138,54 @@ class Scanner:
     def get_line_pos(self, line_no):
         """Return the beginning position of the line in the input file."""
         if line_no not in self.line_pos_record:
-            raise ValueError("The line requested from the definition file has not been encountered.")
+            raise ValueError("The line requested from the definition file has\
+                    not been encountered.")
         return self.line_pos_record[line_no]
 
     def look_ahead(self):
         """Return the next character in the definition file, without updating
-        current_character and without incrementing the current position within the file."""
+        current_character and without incrementing the current position within
+        the file."""
         ch = self.fileIn.read(1)
         self.fileIn.seek(self.fileIn.tell()-1, 0)
         return ch
 
     def skip_spaces(self):
-        """Advance current position in input file until the first non whitespace character."""
-        while self.current_character != '' and self.current_character.isspace():
+        """Advance current position in input file until the first non
+        whitespace character."""
+        while self.current_character != '' \
+                and self.current_character.isspace():
             self.advance()
 
     def skip_line(self):
-        """"Skip the rest of the current line in the input file."""
+        """Skip the rest of the current line in the input file."""
         self.advance()
         while self.current_character != '' and self.current_character != "\n":
             self.advance()
 
     def get_name(self):
-        """Return the name string that starts at the current_character, and advance to the
-        next character after the name string.
+        """Return the name string that starts at the current_character, and
+        advance to the next character after the name string.
 
         This method assumes that the current_character is already a letter."""
         name = self.current_character
         self.advance()
-        while self.current_character != '' and (self.current_character.isalnum() or self.current_character == "_"):
+        while (self.current_character.isalnum() or
+                self.current_character == "_") \
+                and self.current_character != '':
             name += self.current_character
             self.advance()
         return name
 
     def get_number(self):
-        """Return the number that starts at the current_character, and advance to the
-        next character after the number.
+        """Return the number that starts at the current_character, and advance
+        to the next character after the number.
 
         This method assumes that the current_character is already a digit."""
         numList = self.current_character
         self.advance()
-        while self.current_character != '' and self.current_character.isdigit():
+        while self.current_character != '' \
+                and self.current_character.isdigit():
             numList += self.current_character
             self.advance()
 
@@ -179,7 +194,7 @@ class Scanner:
     def get_symbol(self):
         """Translate the next sequence of characters into a symbol."""
         symbol = Symbol()
-        self.skip_spaces() # current character now not whitespace
+        self.skip_spaces()  # current character now not whitespace
 
         symbol.line = self.current_line
         symbol.column = self.fileIn.tell() - self.current_line_pos
@@ -212,7 +227,7 @@ class Scanner:
             symbol.id = self.get_number()
             symbol.type = self.NUMBER
         # handle punctuation
-        elif self.current_character == ":": # handle ":", ":="
+        elif self.current_character == ":":  # handle ":", ":="
             if (self.look_ahead() == "="):
                 symbol.type = self.DEVICE_DEF
                 self.advance()
@@ -231,7 +246,7 @@ class Scanner:
         elif self.current_character == ")":
             symbol.type = self.BRACKET_RIGHT
             self.advance()
-        elif self.current_character == "=": # handle special case "=>"
+        elif self.current_character == "=":  # handle special case "=>"
             if (self.look_ahead() == ">"):
                 symbol.type = self.CONNECTION_DEF
                 self.advance()
@@ -241,18 +256,19 @@ class Scanner:
         elif self.current_character == ".":
             symbol.type = self.DOT
             self.advance()
-        elif self.current_character == "/": # handle comments
+        elif self.current_character == "/":  # handle comments
             if (self.look_ahead() == "/"):
                 self.advance()
                 self.skip_line()
-                # return next symbol right after the comment or any immediately following comments
+                # return next symbol right after the comment or any
+                # immediately following comments
                 symbol = self.get_symbol()
             else:
                 symbol.type = self.INVALID_SYMBOL
                 self.skip_line()
-        elif self.current_character == "": # end of file
+        elif self.current_character == "":  # end of file
             symbol.type = self.EOF
-        else: # not a valid character
+        else:  # not a valid character
             symbol.type = self.INVALID_SYMBOL
             self.advance()
 
@@ -284,13 +300,13 @@ class Scanner:
         # get contents of line in the circuit definition file
         self.fileIn.seek(symbol_line_pos, 0)
         line_retrieved = self.fileIn.read(line_length)
-        # replace tabs in line_retrieved with a single space for correct printing
-        # to the terminal
+        # replace tabs in line_retrieved with a single space for correct
+        # printing to the terminal
         print(line_retrieved.expandtabs(1))
-        print(" "*(symbol.column - 1) + "^") # pointer to the symbol
+        print(" "*(symbol.column - 1) + "^")  # pointer to the symbol
 
         # restore state of the scanner
-        self.fileIn.seek(current_pos,0)
+        self.fileIn.seek(current_pos, 0)
         self.current_line = current_line
         self.current_character = current_ch
         self.current_line_pos = current_line_pos
