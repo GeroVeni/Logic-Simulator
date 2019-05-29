@@ -1,0 +1,7 @@
+DEVICES:
+    XOR := XOR;
+    sw1, AND := AND(3);
+END;
+CONNECTIONS:
+END;
+

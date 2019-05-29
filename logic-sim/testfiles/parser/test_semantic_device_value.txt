@@ -1,0 +1,13 @@
+DEVICES:
+    dt := DTYPE(1);
+    sw1 := SWITCH(2);
+    clk := CLOCK(0);
+    nand := NAND(17);
+    and := AND(0);
+    nor := NOR(17);
+    or := OR(0);
+    xor := XOR(1);
+END;
+CONNECTIONS:
+END;
+
