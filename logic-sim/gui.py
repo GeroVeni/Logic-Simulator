@@ -50,7 +50,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                                            operations.
     """
 
-    def __init__(self, parent, devices, monitors):
+    def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
         super().__init__(parent, -1,
                          attribList=[wxcanvas.WX_GL_RGBA,
@@ -65,31 +65,26 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
-        self.devices = devices
-        self.monitors = monitors
+        self.parent = parent
 
-        self.cycles_completed = 30 # updated when the gui calls render() TODO initialize to 0
+        self.cycles_completed = 0 # updated when the gui calls render() TODO initialize to 0
 
-        # Variables for drawing text
+        # Text rendering settings
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
         self.character_height = 15
 
-        # Variables for canvas drawing
+        # Canvas rendering settings
         self.border_left = 10 # constant
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0 # constant
 
-        self.zoom_lower = 0.8
-        self.zoom_upper = 5
-
-        self.margin_left = 100 # margin for placement of device name
+        self.margin_left = 100 # margin for placement of monitor name
         self.margin_bottom = 30
         self.cycle_width = 20
         self.trace_height = 30
         self.monitor_spacing = 40 # spacing between different monitor_signals
-
         self.ruler_height = 1.3 * self.character_height
 
         # Initialise variables for panning
@@ -99,6 +94,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.last_mouse_y = 0  # previous mouse y position
 
         # Initialise variables for zooming
+        self.zoom_lower = 0.8
+        self.zoom_upper = 5
         # self.zoom = 1
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
@@ -126,7 +123,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.cycles_completed = cycles
 
         self.update_zoom_lower_bound()
-        self.bound_panning()
+        # self.bound_panning()
         self.bound_zooming()
 
         self.SetCurrent(self.context)
@@ -144,9 +141,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_grid()
         # Render signal traces
         # TODO uncomment bottom line
-        # self.margin_left = max((self.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+        if self.parent.monitors.get_margin() is not None:
+            self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
         y_pos = self.margin_bottom
-        for device_id, output_id in self.monitors.monitors_dictionary:
+        for device_id, output_id in self.parent.monitors.monitors_dictionary:
             self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
             y_pos += self.monitor_spacing
 
@@ -246,8 +244,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         than the amount of zoom that just lets all the monitors to be seen on
         the canvas at once."""
         size = self.GetClientSize()
+
+        # Allow a max number of 9 monitors to be displayed at once
+        num_monitors = min(9, len(self.parent.monitors.monitors_dictionary))
+
         # Adjust zoom bounds depending on number of monitors
-        num_monitors = len(self.monitors.monitors_dictionary)
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
 
@@ -266,9 +267,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Draw monitor name and signal trace for a particular monitor."""
         # TODO uncomment monitor_name
-        monitor_name = "Device 1"
-        # monitor_name = self.devices.get_signal_name(device_id, output_id)
-        signal_list = self.monitors.monitors_dictionary[(device_id, output_id)]
+        # monitor_name = "Device 1"
+        monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
+        signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
         # Draw monitor name
         text_x_pos = self.border_left/self.zoom
@@ -281,7 +282,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
         for signal in signal_list:
-            if signal == self.devices.BLANK:
+            if signal == self.parent.devices.BLANK:
                 if currently_drawing:
                     GL.glEnd()
                     currently_drawing = False
@@ -290,13 +291,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 if not currently_drawing:
                     GL.glBegin(GL.GL_LINE_STRIP)
                     currently_drawing = True
-                if signal == self.devices.HIGH:
+                if signal == self.parent.devices.HIGH:
                     y = y_max
-                if signal == self.devices.LOW:
+                if signal == self.parent.devices.LOW:
                     y = y_min
-                if signal == self.devices.RISING:
+                if signal == self.parent.devices.RISING:
                     y = y_max
-                if signal == self.devices.FALLING:
+                if signal == self.parent.devices.FALLING:
                     y = y_min
                 GL.glVertex2f(x_pos, y)
                 x_pos += self.cycle_width
@@ -371,6 +372,24 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
+    def recenter_canvas(self):
+        """Restores the canvas to its default position and state of zoom."""
+        self.pan_x = 0
+        self.pan_y = 0
+        self.zoom = self.zoom_lower
+        self.init = False
+        self.render("Recenter canvas")
+
+    def restore_canvas_on_open(self):
+        """Restores the state of the canvas when a new circuit definition file
+        is loaded using the gui method on_open().
+
+        restore_canvas_on_open() should be called whenever the gui method
+        on_open() is called.
+        """
+        self.init = False
+        self.update_zoom_lower_bound()
+        self.zoom = self.zoom_lower
 
 class Gui(wx.Frame):
     """Configure the main window and all the widgets.
@@ -395,23 +414,29 @@ class Gui(wx.Frame):
     on_text_box(self, event): Event handler for when the user enters text.
     """
 
-    def __init__(self, title, path, names, devices, network, monitors):
+    def __init__(self, title):
         """Initialise widgets and layout."""
         super().__init__(parent=None, title=title, size=(800, 600))
+        self.names = Names()
+        self.devices = Devices(self.names)
+        self.network = Network(self.names, self.devices)
+        self.monitors = Monitors(self.names, self.devices, self.network)
 
         # Add IDs for menu and toolbar items
-        ID_OPEN = 1001;
-        ID_CENTER = 1002;
-        ID_RUN = 1003;
-        ID_CONTINUE = 1004;
-        ID_CYCLES_CTRL = 1005;
+        self.ID_OPEN = 1001;
+        self.ID_CENTER = 1002;
+        self.ID_RUN = 1003;
+        self.ID_CONTINUE = 1004;
+        self.ID_CYCLES_CTRL = 1005;
 
         # Configure the file menu
         fileMenu = wx.Menu()
         menuBar = wx.MenuBar()
         fileMenu.Append(wx.ID_ABOUT, "&About")
         fileMenu.Append(wx.ID_EXIT, "&Exit")
-        fileMenu.Append(ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
@@ -422,22 +447,21 @@ class Gui(wx.Frame):
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
-        toolBar.AddTool(ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(ID_CENTER, "Tool2", redoIcon)
+        toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
+        toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
         toolBar.AddSeparator()
-        toolBar.AddTool(ID_RUN, "Tool3", openIcon)
-        toolBar.AddTool(ID_CONTINUE, "Tool4", openIcon)
+        toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
+        toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
         toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
-        self.canvas = MyGLCanvas(self, devices, monitors)
-        self.cycles_completed = 5  # number of simulation cycles completed
+        self.canvas = MyGLCanvas(self)
+        self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
         self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
-        self.log_message("paparia\n"*20)
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
@@ -509,6 +533,79 @@ class Gui(wx.Frame):
         self.error_log.AppendText("\n" + str(text))
         self.error_log.ShowPosition(self.error_log.GetLastPosition())
 
+    def run_parser(self, file_path):
+        #clear all at the begging
+        self.names = Names()
+        self.devices = Devices(self.names)
+        self.network = Network(self.names, self.devices)
+        self.monitors = Monitors(self.names, self.devices, self.network)
+        self.scanner = Scanner(file_path, self.names)
+        self.parser = Parser(self.names, self.devices, self.network,
+                             self.monitors, self.scanner)
+        if self.parser.parse_network():
+            self.log_message("Network parsed Correctly")
+        else:
+            self.log_message("Failed to parse network")
+
+    def on_open(self):
+        text = "Open file dialog."
+        openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
+                                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+        res = openFileDialog.ShowModal()
+        if res == wx.ID_OK: # user selected a file
+            file_path = openFileDialog.GetPath()
+            self.log_message("File opened: {}".format(file_path))
+            self.run_parser(file_path)
+            self.canvas.restore_canvas_on_open()
+
+
+    def run_network(self, cycles):
+        """Run the network for the specified number of simulation cycles.
+
+        Return True if successful.
+        """
+        for _ in range(cycles):
+            if self.network.execute_network():
+                self.monitors.record_signals()
+            else:
+                self.log_message("Error! Network oscillating.")
+                return False
+        return True
+
+    def run_command(self):
+        """Run the simulation from scratch."""
+        self.cycles_completed = 0
+        cycles = 10 #this must get input from other box
+
+        if cycles is not None:  # if the number of cycles provided is valid
+            self.monitors.reset_monitors()
+            self.log_message("".join(["Running for ", str(cycles),
+                                      " cycles"]))
+            self.devices.cold_startup()
+            if self.run_network(cycles):
+                self.cycles_completed += cycles
+
+    def on_run(self):
+        self.log_message("Run button pressed.")
+        self.run_command()
+        self.canvas.render("RUN", self.cycles_completed)
+
+    def continue_command(self):
+        """Continue a previously run simulation."""
+        cycles = 10
+        if cycles is not None:  # if the number of cycles provided is valid
+            if self.cycles_completed == 0:
+                self.log_message("Error! Nothing to continue. Run first.")
+            elif self.run_network(cycles):
+                self.cycles_completed += cycles
+                self.log_message(" ".join(["Continuing for", str(cycles),
+                        "cycles.", "Total:", str(self.cycles_completed)]))
+
+    def on_continue(self):
+        self.log_message("Continue button pressed.")
+        self.continue_command()
+        self.canvas.render("Continue", self.cycles_completed)
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -517,27 +614,17 @@ class Gui(wx.Frame):
         if Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
-        if Id == 1001: # file dialog
-            text = "Open file dialog."
-            openFileDialog = wx.FileDialog(self, "Open", wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
-                                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
-            res = openFileDialog.ShowModal()
-            if res == wx.ID_OK: # user selected a file
-                file_path = openFileDialog.GetPath()
-                self.log_message("File opened: {}".format(file_path))
-        if Id == 1002: # run button
-            text = "Run button pressed."
-            self.canvas.render(text, self.cycles_completed)
+        if Id == self.ID_OPEN: # file dialog
+            self.on_open()
+        if Id == self.ID_RUN: # run button
+            self.on_run()
+        if Id == self.ID_CONTINUE: #continue button
+            self.on_continue()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
         spin_value = self.spin.GetValue()
         text = "".join(["New spin control value: ", str(spin_value)])
-        self.canvas.render(text)
-
-    def on_run_button(self, event):
-        """Handle the event when the user clicks the run button."""
-        text = "Run button pressed."
         self.canvas.render(text)
 
     def on_text_box(self, event):

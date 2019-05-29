@@ -79,6 +79,8 @@ class Parser:
             self.skip_to_stopping_symbol(stopping_symbol)
 
     def display_error(self, error_type, message):
+        #TODO change how i use message + what type error raised (NameError) etc.. maybe use CONNECTION error etc..
+        #TODO add line and column number print message in parser errors
         if (error_type == self.SYNTAX_ERROR):
             self.scanner.get_error_line(self.symbol)
             print("***SyntaxError: invalid syntax. Expected", message)
@@ -91,7 +93,7 @@ class Parser:
                   "are reserved and cannot be used as identifiers.")
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(message)
-#TODO also add get_error_line by comparing identifier ids lookup names
+        #TODO also add get_error_line by comparing identifier ids lookup names
             print("***NameError: An identifier was repeated. " \
                   "All identifiers must have unique names.")
         elif (error_type == self.CONNECTION_INPUT_ERROR):
@@ -136,7 +138,7 @@ class Parser:
                   "assignment of all of its inputs.")
         elif (error_type == self.OUT_OF_BOUND_INPUTS_ERROR):
             self.scanner.get_error_line(self.symbol)
-            #TODO specify if too many or too few just add elif and message for few or too many with > or <
+        #TODO specify if too many or too few just add elif and message for few or too many with > or <
             print("***TypeError: Too many or too few inputs " \
                   "have been assigned simultaneously to the device." \
                   " When using simultaneous defintion the same number" \
@@ -272,7 +274,7 @@ class Parser:
                 #should not recover to semicolon as already got to ;
                 #reset identifier_list to zero so later on dont get extra devices as all of these devices are instantiaing the same
                     return
-#TODO tidy up this so is one single elif
+            #TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
                 if (self.current_number.id == None):
                     #default value to 2
@@ -359,7 +361,7 @@ class Parser:
                 self.symbol = self.scanner.get_symbol()
             else:
                 self.error(self.SYNTAX_ERROR, ";")
-#name followed by name possibly mising comma 
+        #name followed by name possibly mising comma 
         elif (self.symbol.type == self.scanner.NAME):
             self.error(self.SYNTAX_ERROR, ",")
         else:
@@ -398,20 +400,20 @@ class Parser:
             self.error(self.SYNTAX_ERROR, "DEVICES",
                        stopping_symbol = "END")
 
-    def port(self, I_O):
+    def port(self, I_O_M):
         if (self.symbol.type == self.scanner.PORT and
-            (I_O == "O" or I_O == "M") and
+            (I_O_M == "O" or I_O_M == "M") and
             (self.symbol.id == self.scanner.I_ID or
             self.symbol.id == self.scanner.DATA_ID or
             self.symbol.id == self.scanner.CLK_ID or
             self.symbol.id == self.scanner.SET_ID or
             self.symbol.id == self.scanner.CLEAR_ID)):
-            if (I_O == "O"):
+            if (I_O_M == "O"):
                 self.error(self.CONNECTION_INPUT_ERROR)
-            elif (I_O == "M"):
+            elif (I_O_M == "M"):
                 self.error(self.MONITOR_INPUT_ERROR)
         elif (self.symbol.type == self.scanner.PORT and
-            I_O == "I" and (self.symbol.id == self.scanner.Q_ID
+            I_O_M == "I" and (self.symbol.id == self.scanner.Q_ID
             or self.symbol.id == self.scanner.QBAR_ID)):
             self.error(self.OUTPUT_ERROR)
         elif (self.symbol.id == self.scanner.I_ID and
@@ -427,19 +429,19 @@ class Parser:
         else:
             self.error(self.SYNTAX_ERROR, "port")
 
-    def signal(self, I_O):
+    def signal(self, I_O_M):
         if (self.symbol.type == self.scanner.NAME and
             self.recovered_from_definition_error):
             self.current_name = self.symbol
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.DOT):
                 self.symbol = self.scanner.get_symbol()
-                self.port(I_O)
+                self.port(I_O_M)
             return (self.current_name, self.current_port)
         else:
             self.error(self.SYNTAX_ERROR, "signal")
 
-    def get_in(selfi, output):
+    def get_in(self, output):
         #input ports can only be None, Q or QBAR
         #input port are already specifiec as 
         name, port = output
@@ -453,6 +455,7 @@ class Parser:
         return name.id, port.id
 
     def check_connection_error(self, error_type):
+    #TODO errors raised point to correct symbols
         if (error_type == self.network.NO_ERROR):
             return True
         elif (error_type == self.network.DEVICE_ABSENT):
@@ -464,17 +467,37 @@ class Parser:
             self.error(self.REPEATED_INPUT_ERROR,
                        stopping_symbol = None)
         elif (error_type == self.network.PORT_ABSENT):
-            #TODO specific check for I out of bounds compared to invalid port used like .Q by non DTYPE, also show appropriate symbol
+            #TODO specific check for I out of bounds (ValueError) compared to invalid port used like .Q by non DTYPE (TypeError), also show appropriate symbol or no ports given at all!
             self.error(self.INVALID_PORT_ERROR,
+                       stopping_symbol = None)
+        elif(error_type == self.network.INPUT_TO_INPUT):
+            self.error(self.CONNECTION_INPUT_ERROR,
+                       stopping_symbol = None)
+        elif(error_type == self.network.OUTPUT_TO_OUTPUT):
+            self.error(self.OUTPUT_ERROR,
                        stopping_symbol = None)
 
     def make_connection(self):
-        #one to one or many to many
+        # many to many
         if (len(self.outputs_list) == len(self.inputs_list)):
             for output, device_ip in zip(self.outputs_list,
                                          self.inputs_list):
                 [in_device_id, in_port_id] = self.get_in(output)
                 [out_device_id, out_port_id] = self.get_out(device_ip)
+                # for device with one input so you can do with .I1 and without it
+                if (len(self.inputs_list) == 1 and out_port_id == None):
+                    device = self.devices.get_device(out_device_id)
+                    #check that only change port if device has input 1
+                    #and has been specified
+                    if (device == None):
+                    #cheK_connection_error will raise undefined_device
+                        pass
+                    elif (len(device.inputs) != 1):
+                    #checK_connection_error will rais OUTPUT_TO_OUTPUT
+                        pass
+                    else:
+                        input_name = "".join(["I", str(1)])
+                        [out_port_id] = self.names.lookup([input_name])
                 error_type = self.network.make_connection(
                              in_device_id, in_port_id, out_device_id,
                              out_port_id)
@@ -484,6 +507,8 @@ class Parser:
             [device_input] = self.inputs_list
             [out_device_id, out_port] = self.get_out(device_input)
             device = self.devices.get_device(out_device_id)
+            #TODO add many to one for DTYPE and make sure keys sorted
+            #as the .SET .CLEAR .DATA, .CLOCK ids assigned in specific order
             if (device.device_kind not in self.devices.gate_types):
                 self.error(self.NOT_GATE_ERROR, stopping_symbol = None)
             else:
@@ -568,7 +593,8 @@ class Parser:
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
                         if ((not self.network.check_network()) and
-                             self.error_count == 0):
+                            self.error_count == 0):
+                        #TODO show the input that has no input
                             self.error(self.MISSING_INPUTS_ERROR,
                                        stopping_symbol = None)
                         self.symbol = self.scanner.get_symbol()
@@ -692,7 +718,7 @@ class Parser:
 
 if __name__ == "__main__":
     name = Names()
-    path = "testfiles/parser/temporary_test.txt"
+    path = "testfiles/parser/temporary_test_1.txt"
     scanner = Scanner(path, name)
     devices = Devices(name)
     network = Network(name, devices)
