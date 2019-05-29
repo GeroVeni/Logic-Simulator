@@ -1,0 +1,18 @@
+DEVICES:
+    not1, not2, not3, not4 := NAND(1);
+    d1, d2, d3, d4 := DTYPE;
+    sw1, sw2 := SWITCH;
+    clock := CLOCK;
+END;
+
+CONNECTIONS:
+    not1, not2, not3, not4 => d1.DATA, d2.DATA, d3.DATA, d4.DATA;
+    sw1 => d1.SET, d2.SET, d3.SET, d4.SET;
+    sw2 => d1.CLEAR, d2.CLEAR, d3.CLEAR, d4.CLEAR;
+    clock, d1.Q, d2.Q, d3.Q => d1.CLK, d2.CLK, d3.CLK, d4.CLK;
+    d1.Q, d2.Q, d3.Q, d4.Q => not1.I1, not2.I1, not3.I1, not4.I1;
+END;
+
+MONITORS:
+    clock, d1.Q, d1.QBAR, d2.Q, d2.QBAR, d3.Q, d3.QBAR, d4.Q, d4.QBAR;
+END;

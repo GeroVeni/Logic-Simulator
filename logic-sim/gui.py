@@ -8,6 +8,7 @@ Classes:
 MyGLCanvas - handles all canvas drawing operations.
 Gui - configures the main window and all the widgets.
 """
+import os
 import wx
 import wx.glcanvas as wxcanvas
 import wx.dataview as dv
@@ -34,8 +35,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     Parameters
     ----------
     parent: parent window.
-    devices: instance of the devices.Devices() class.
-    monitors: instance of the monitors.Monitors() class.
 
     Public methods
     --------------
@@ -119,10 +118,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render(self, text):
         """Handle all drawing operations."""
-        self.update_borders()
         self.update_zoom_lower_bound()
-        # self.bound_panning()
         self.bound_zooming()
+        self.update_borders()
+        self.bound_panning()
 
         self.SetCurrent(self.context)
         if not self.init:
@@ -140,12 +139,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
-            self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+            self.margin_left = (self.parent.monitors.get_margin()*self.character_width + 10)
 
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
-            y_pos = self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
+            y_pos = self.border_bottom + self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
 
             for device_id, output_id in self.parent.monitors.monitors_dictionary:
                 self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
@@ -224,34 +223,43 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.Refresh()  # triggers the paint event
 
     def bound_panning(self):
-        """Makes sure the canvas is always panned within the bounds of the
-        signal traces."""
+        """Bound pan variables with respect to the signal traces."""
         size = self.GetClientSize()
-        pan_right_bound = -(self.border_right + (-size.width)/self.zoom)
-        pan_down_bound = -(self.border_top + (-size.height + self.character_height)/self.zoom)
-        pan_up_bound = self.border_bottom
-        # print("down: {}, up: {}, pan_y: {}".format(pan_down_bound, pan_up_bound, self.pan_y)) # TODO remove
-        # print("border_top: {}, up: {}, pan_y: {}".format(self.border_top, pan_up_bound, self.pan_y)) # TODO remove
-        if self.pan_x < pan_right_bound: # fix
-            self.pan_x = pan_right_bound
-        elif self.pan_x > self.border_left:
-            self.pan_x = self.border_left
-        if self.pan_y < pan_down_bound: # fix
-            self.pan_y = pan_down_bound
-        if self.pan_y > pan_up_bound:
-            self.pan_y = pan_up_bound
+        allowable_pan_right = -(self.border_right - size.width/self.zoom)
+        allowable_pan_left = self.border_left
+        allowable_pan_bottom = self.border_bottom
+        allowable_pan_top = -(self.border_top - size.height/self.zoom)
+        # print("bottom: {}, top: {}".format(allowable_pan_bottom, allowable_pan_top)) # TODO remove
+        # print("left: {}, right: {}".format(allowable_pan_left, allowable_pan_right)) # TODO remove
+
+        # if allowable_pan_right < 0: # if true, some part of the signal traces is hidden (x dir)
+        #     if self.pan_x < allowable_pan_right: # fix
+        #         self.pan_x = allowable_pan_right
+        # else:
+        #     if self.pan_x < 0:
+        #         self.pan_x = 0
+        if self.pan_x > allowable_pan_left:
+            self.pan_x = allowable_pan_left
+
+        # if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
+        #     if self.pan_y < allowable_pan_top: # fix
+        #         self.pan_y = allowable_pan_top
+        # else:
+        #     if self.pan_y < 0:
+        #         self.pan_y = 0
+        if self.pan_y > allowable_pan_bottom:
+            self.pan_y = allowable_pan_bottom
 
     def bound_zooming(self):
-        """Makes sure the zoom is bounded."""
+        """Bound zoom."""
         if self.zoom > self.zoom_upper:
             self.zoom = self.zoom_upper
         elif self.zoom < self.zoom_lower:
             self.zoom = self.zoom_lower
 
     def update_zoom_lower_bound(self):
-        """Adjusts the zoom settings such that the user cannot zoom out further
-        than the amount of zoom that just lets all the monitors to be seen on
-        the canvas at once."""
+        """Adjust zoom lower bound when the canvas is resized or the number of
+        monitors changes."""
         size = self.GetClientSize()
 
         # Allow a max number of 9 monitors to be displayed at once
@@ -262,13 +270,20 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
 
     def update_borders(self):
-        """Updates the borders of the canvas depending on the number of monitors
+        """Update the borders of the canvas depending on the number of monitors
         and the number of cycles to be simulated."""
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         # self.border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
+        if self.border_top <= self.border_bottom: # TODO remove error raising here
+            raise ValueError("border_top must be larger than border_bottom")
         # self.border_right depends only on the number of cycles to be simulated
-        self.border_right = self.margin_left/self.zoom + self.parent.cycles_completed * self.cycle_width
+        self.border_right = (self.border_left + self.margin_left)/self.zoom + self.parent.cycles_completed * self.cycle_width
+        if self.border_right <= self.border_left: # TODO remove error raising here
+            #raise ValueError("border_right must be larger than border_left")
+            pass
+
+        print("border_right: {}".format(self.border_right)) # TODO remove
 
 
     def render_text(self, text, x_pos, y_pos):
@@ -284,7 +299,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 GLUT.glutBitmapCharacter(self.font, ord(character))
 
     def render_monitor(self, device_id, output_id, y_min, y_max):
-        """Draw monitor name and signal trace for a particular monitor."""
+        """Handle monitor name and signal trace drawing for a single monitor."""
         monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
         signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
@@ -294,7 +309,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_text(monitor_name, text_x_pos, text_y_pos)
 
         # Draw signal trace
-        x_pos = self.margin_left/self.zoom # correct for zooming
+        x_pos = (self.border_left + self.margin_left)/self.zoom # correct for zooming
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
@@ -319,12 +334,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 GL.glVertex2f(x_pos, y)
                 x_pos += self.cycle_width
                 GL.glVertex2f(x_pos, y)
+
+        print("final location of trace: {}".format(x_pos)) # TODO remove
         if currently_drawing:
             GL.glEnd()
             currently_drawing = False
 
     def render_line(self, start_point, end_point):
-        """Renders a straight line on the canvas, with the given end points."""
+        """Render a straight line on the canvas, with the given end points."""
         if not (isinstance(start_point, tuple) and isinstance(end_point, tuple)):
             raise TypeError("start_point and end_point arguments must be of Type tuple")
         if (len(start_point) != 2  or len(end_point) != 2):
@@ -337,24 +354,21 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glEnd()
 
     def render_cycle_numbers(self):
-        """Draw a ruler of cycle numbers at the top of the visible part of the
-        canvas."""
+        """Handle cycle numbers drawing on the top of the canvas (ruler)."""
         if self.parent.cycles_completed == 0:
             return
 
-        canvas_size = self.GetClientSize()
+        size = self.GetClientSize()
         for cycle in range(self.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
-            text_x_pos = (self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
-            text_y_pos = (canvas_size.height - self.pan_y - self.character_height)/self.zoom
+            text_x_pos = (self.border_left + self.margin_left - 0.5 * num_digits * self.character_width)/self.zoom + (cycle + 0.5) * self.cycle_width
+            text_y_pos = (size.height - self.pan_y - self.character_height)/self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
     def render_ruler_background(self):
-        """Draw a background for the ruler numbers at the top of the visible
-        part of the canvas.
-        """
+        """Draw a background for the ruler."""
         size = self.GetClientSize()
         ruler_color = [200/255, 230/255, 255/255]
         #Make sure our transformations don't affect any other transformations in other code
@@ -374,8 +388,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if self.parent.cycles_completed == 0:
             return
 
-        canvas_size = self.GetClientSize()
-        line_y_pos_end = self.border_bottom + (- self.pan_y + canvas_size.height)/self.zoom
+        size = self.GetClientSize()
+        line_y_pos_end = self.border_bottom + (- self.pan_y + size.height)/self.zoom
 
         # render either only on the ruler or on the whole the canvas
         if render_only_on_ruler:
@@ -383,14 +397,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         else:
             line_y_pos_start = self.border_bottom - self.pan_y/self.zoom
 
-        line_x_pos = self.margin_left/self.zoom
+        line_x_pos = (self.border_left + self.margin_left)/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
         for cycle in range(self.parent.cycles_completed):
-            line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
+            line_x_pos += self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
     def recenter_canvas(self):
-        """Restores the canvas to its default position and state of zoom."""
+        """Restore canvas to its default pan position and zoom state."""
         self.pan_x = self.border_left
         self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
@@ -398,12 +412,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render("Recenter canvas")
 
     def restore_canvas_on_open(self):
-        """Restores the state of the canvas when a new circuit definition file
+        """Restore the state of the canvas when a new circuit definition file
         is loaded using the gui method on_open().
 
         restore_canvas_on_open() should be called whenever the gui method
-        on_open() is called.
-        """
+        on_open() is called."""
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
@@ -481,7 +494,7 @@ class Gui(wx.Frame):
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
-        self.spin = wx.SpinCtrl(toolBar)
+        self.spin = wx.SpinCtrl(toolBar, value='10')
         toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon)
         toolBar.AddSeparator()
         toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
@@ -531,17 +544,51 @@ class Gui(wx.Frame):
         nb = wx.Notebook(self, size=(200, -1))
 
         # Create the tabs
-        tab1 = CustomTab(nb, ["mon" + str(i) for i in range(40)])
-        tab2 = CustomTab(nb, ["swi" + str(i) for i in range(40)])
-        tab1.set_on_item_selected_listener(self.set_monitor)
+        self.monitor_tab = CustomTab(nb)
+        self.switch_tab = CustomTab(nb)
+        self.monitor_tab.set_on_item_selected_listener(self.set_monitor)
+        self.switch_tab.set_on_item_selected_listener(self.set_switch)
 
-        nb.AddPage(tab1, "Monitors")
-        nb.AddPage(tab2, "Switches")
+        nb.AddPage(self.monitor_tab, "Monitors")
+        nb.AddPage(self.switch_tab, "Switches")
 
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
-    def set_monitor(self, monitor_id, is_active):
+    def printer(self, sig):
+        lst = [(self.devices.HIGH, 'HIGH'),
+               (self.devices.LOW, 'LOW'),
+               (self.devices.RISING, 'RISING'),
+               (self.devices.FALLING, 'FALLING'),
+               (self.devices.BLANK, 'BLANK')]
+        for (val, txt) in lst:
+            if val == sig:
+                return txt
+        return 'NONE'
+
+    def update_tabs(self):
+        """Update the tabs with new values."""
+
+        # Get monitor names
+        [mons, non_mons] = self.monitors.get_signal_names()
+
+        # Get switch names
+        switch_ids = self.devices.find_devices(self.devices.SWITCH)
+        switch_names = [self.names.get_name_string(sw_id) for sw_id in switch_ids]
+        switch_signals = [self.devices.get_device(sw_id).switch_state for sw_id in switch_ids]
+        switch_states = [True if sig in [self.devices.HIGH, self.devices.RISING] else False
+                         for sig in switch_signals]
+        self.log_message([self.printer(sw) for sw in switch_signals])
+        self.log_message(switch_ids)
+
+        # Reset tab elements
+        self.monitor_tab.clear()
+        self.monitor_tab.append(list(zip(mons, [True for i in mons])))
+        self.monitor_tab.append(list(zip(non_mons, [False for i in non_mons])))
+        self.switch_tab.clear()
+        self.switch_tab.append(list(zip(switch_names, switch_states)))
+
+    def set_monitor(self, monitor_name, is_active):
         """Activate or deactivate a monitor.
 
         Parameters
@@ -550,9 +597,46 @@ class Gui(wx.Frame):
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
-        self.log_message("Clicked monitor: {} state: {}".format(monitor_id, is_active))
+        # Split the monitor to device name and port name if it exists
+        splt = monitor_name.split('.')
+        self.log_message(str(splt))
+        if len(splt) == 1:
+            # No port given
+            device_id = self.names.query(splt[0])
+            port_id = None
+        elif len(splt) == 2:
+            # Port given
+            device_id = self.names.query(splt[0])
+            port_id = self.names.query(splt[1])
+        else:
+            # TODO: Print error
+            pass
 
-    def set_switch(self, switch_id, is_on):
+        if device_id is None:
+            # TODO: Reformat error text for consistency with parser
+            self.log_message("Error: Monitor {} not found.".format(monitor_name))
+            return
+        # Add/remove monitor
+        if is_active:
+            action = 'activated'
+            monitor_error = self.monitors.make_monitor(device_id, port_id,
+                                                        self.cycles_completed)
+            if monitor_error == self.monitors.NO_ERROR:
+                self.log_message("Monitor {} was {}.".format(monitor_name, action))
+            else:
+                #TODO: Print error
+                return
+        else:
+            action = 'deactivated'
+            if self.monitors.remove_monitor(device_id, port_id):
+                self.log_message("Monitor {} was {}.".format(monitor_name, action))
+            else:
+                #TODO: Print error
+                return
+        self.canvas.restore_canvas_on_open()
+        self.canvas.render('Monitor changed')
+
+    def set_switch(self, switch_name, is_on):
         """Turn a swtich on and off.
 
         Parameters
@@ -562,8 +646,26 @@ class Gui(wx.Frame):
                and False to turn off
 
         """
-        self.log_message("Switch")
+        # Get the switch id
+        switch_id = self.names.query(switch_name)
 
+        if switch_id is None:
+            # TODO: Reformat error text for consistency with parser
+            self.log_message("Error: Monitor {} not found.".format(monitor_name))
+            return
+        # Turn on/off the switch
+        if is_on:
+            switch_state = 1
+            state_text = 'ON'
+        else:
+            switch_state = 0
+            state_text = 'OFF'
+        if self.devices.set_switch(switch_id, switch_state):
+            self.log_message("Switch {} was switched {}".format(switch_name, state_text))
+        else:
+            #TODO: Print error
+            return
+ 
     def clear_log(self):
         """Clear the error log."""
         self.activity_log.Clear()
@@ -589,7 +691,7 @@ class Gui(wx.Frame):
                 self.log_message("Succesfully parsed network.")
             else:
                 self.log_message("Failed to parse network.")
-        self.log_message(captured_stdout.getvalue())
+                self.log_message(captured_stdout.getvalue())
 
     def on_open(self):
         text = "Open file dialog."
@@ -601,6 +703,7 @@ class Gui(wx.Frame):
             self.log_message("File opened: {}".format(file_path))
             self.run_parser(file_path)
             self.canvas.restore_canvas_on_open()
+            self.update_tabs()
 
 
     def run_network(self, cycles):
@@ -717,14 +820,6 @@ class Gui(wx.Frame):
         text = "".join(["New text box value: ", text_box_value])
         self.canvas.render(text)
 
-class CustomListCtrl(wx.CheckListBox, listmix.ListCtrlAutoWidthMixin):
-    """Docstring for CustomListCtrl. """
-
-    def __init__(self, parent, ID, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
-        """ TODO. """
-        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
-        listmix.ListCtrlAutoWidthMixin.__init__(self)
 
 class CustomTab(wx.Panel):
     """Configure the tabs added in the notebook.
@@ -742,7 +837,7 @@ class CustomTab(wx.Panel):
     TODO
     """
 
-    def __init__(self, parent, name_list):
+    def __init__(self, parent):
         """Attach parent to panel and create the list control widget."""
         wx.Panel.__init__(self, parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -759,31 +854,12 @@ class CustomTab(wx.Panel):
         self.on_item_selected_listener = None
 
         #Create ListCtrl
-        self.mon_list = dv.DataViewListCtrl(self, style=wx.dataview.DV_ROW_LINES)
-        self.mon_list.AppendIconTextColumn('Names', width=140, flags = 0)
-        self.mon_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
-        #self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
-        self.mon_list.Bind(dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.on_item_selected)
-        #mon_list.AppendColumn("Name")
-        #mon_list.AppendColumn("Status")
-        for cnt in range(len(name_list)):
-            #ic = wx.ArtProvider.GetIcon(wx.ART_ERROR)
-            #ic = wx.Icon('', type=wx.BITMAP_TYPE_ANY, desiredWidth=16, desiredHeight=16)
-            #TODO Convert from bitmap
-            i = name_list[cnt]
-            bmp = wx.Bitmap(16, 16)
-            ic = wx.Icon(bmp)
-            ic_l = [None] * 3
-            ic_l[1] = wx.Icon('res/empty_circle_w1.png')
-            ic_l[2] = wx.Icon('res/empty_circle_w2.png')
-            ic_l[0] = wx.Icon('res/empty_circle_w2x1.png')
-            ic = ic_l[cnt % 3]
-            it = dv.DataViewIconText(" " + i, ic)
-            self.mon_list.AppendItem([it, True])
-        #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
-        #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+        self.item_list = dv.DataViewListCtrl(self, style=wx.dataview.DV_ROW_LINES)
+        self.item_list.AppendIconTextColumn('Names', width=140, flags = 0)
+        self.item_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
+        self.item_list.Bind(dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.on_item_selected)
 
-        sizer.Add(self.mon_list, 1, wx.EXPAND)
+        sizer.Add(self.item_list, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
     def set_on_item_selected_listener(self, listener):
@@ -794,8 +870,20 @@ class CustomTab(wx.Panel):
         """Handle the event when the user changes the state of a monitor."""
         if self.on_item_selected_listener is None:
             return
-        row = self.mon_list.ItemToRow(event.GetItem())
-        name = self.mon_list.GetValue(row, self.TEXT_COLUMN).GetText()
-        state = self.mon_list.GetToggleValue(row, self.TOGGLE_COLUMN)
-        #self.gui.set_monitor(name, state)
+        row = self.item_list.ItemToRow(event.GetItem())
+        name = self.item_list.GetValue(row, self.TEXT_COLUMN).GetText()
+        state = self.item_list.GetToggleValue(row, self.TOGGLE_COLUMN)
         self.on_item_selected_listener(name, state)
+
+    def clear(self):
+        """Clears the items in the list."""
+        self.item_list.DeleteAllItems()
+
+    def append(self, name_list):
+        #ic = wx.Icon(wx.Bitmap(16, 16))
+        CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+        ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
+        for cnt in range(len(name_list)):
+            i, val = name_list[cnt]
+            it = dv.DataViewIconText("" + i, ic)
+            self.item_list.AppendItem([it, val])
