@@ -455,6 +455,10 @@ class Gui(wx.Frame):
         # Change window backround color and style
         #self.SetBackgroundColour(wx.Colour(9, 60, 142))
 
+        # Add fonts
+        self.NORMAL_FONT = wx.TextAttr()
+        self.MONOSPACE_FONT = wx.TextAttr('BLACK', font=wx.Font(wx.FontInfo(10).Family(wx.FONTFAMILY_TELETYPE)))
+
         # Add IDs for menu and toolbar items
         self.ID_OPEN = 1001;
         self.ID_CENTER = 1002;
@@ -578,8 +582,6 @@ class Gui(wx.Frame):
         switch_signals = [self.devices.get_device(sw_id).switch_state for sw_id in switch_ids]
         switch_states = [True if sig in [self.devices.HIGH, self.devices.RISING] else False
                          for sig in switch_signals]
-        self.log_message([self.printer(sw) for sw in switch_signals])
-        self.log_message(switch_ids)
 
         # Reset tab elements
         self.monitor_tab.clear()
@@ -599,7 +601,6 @@ class Gui(wx.Frame):
         """
         # Split the monitor to device name and port name if it exists
         splt = monitor_name.split('.')
-        self.log_message(str(splt))
         if len(splt) == 1:
             # No port given
             device_id = self.names.query(splt[0])
@@ -670,10 +671,13 @@ class Gui(wx.Frame):
         """Clear the error log."""
         self.activity_log.Clear()
 
-    def log_message(self, text):
+    def log_message(self, text, style=None):
         """Add message to the error log."""
+        if style is not None:
+            self.activity_log.SetDefaultStyle(style)
         self.activity_log.AppendText("\n" + str(text))
         self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
+        self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
 
     def run_parser(self, file_path):
         #clear all at the begging
@@ -691,7 +695,7 @@ class Gui(wx.Frame):
                 self.log_message("Succesfully parsed network.")
             else:
                 self.log_message("Failed to parse network.")
-                self.log_message(captured_stdout.getvalue())
+                self.log_message(captured_stdout.getvalue(), self.MONOSPACE_FONT)
 
     def on_open(self):
         text = "Open file dialog."
@@ -704,6 +708,7 @@ class Gui(wx.Frame):
             self.run_parser(file_path)
             self.canvas.restore_canvas_on_open()
             self.update_tabs()
+            self.canvas.render("Opened file")
 
 
     def run_network(self, cycles):
@@ -712,6 +717,9 @@ class Gui(wx.Frame):
         Return True if successful.
         """
         for _ in range(cycles):
+            if self.network is None:
+                self.log_message("Error! No file loaded.")
+                return False
             if self.network.execute_network():
                 self.monitors.record_signals()
             else:
@@ -734,6 +742,7 @@ class Gui(wx.Frame):
 
     def on_run(self):
         self.run_command()
+        self.canvas.recenter_canvas()
         self.canvas.render("RUN")
 
     def continue_command(self):
