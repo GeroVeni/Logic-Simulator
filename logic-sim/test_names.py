@@ -57,7 +57,7 @@ def test_query_raises_exceptions(filled_names):
     with pytest.raises(ValueError):
         filled_names.query('')
     with pytest.raises(ValueError):
-        filled_names.query('2hello') # identifiers should start with a letter
+        filled_names.query('2hello')  # identifiers should start with a letter
 
 
 def test_lookup_raises_exceptions(filled_names):
@@ -136,12 +136,14 @@ def test_lookup_new_names(new_names, sample_names_list):
 
 
 def test_lookup_filled_names(filled_names, sample_names_list):
-    """Test that existing names are not added and the correct IDs are returned."""
+    """Test that existing names are not added and the correct IDs are
+    returned."""
     assert filled_names.lookup(sample_names_list) == [0, 1, 2]
     assert filled_names.lookup(sample_names_list[::-1]) == [2, 1, 0]
     assert filled_names.lookup(["george", "george"]) == [0, 0]
     # test case for only a subset of input name strings already in list
     assert filled_names.lookup(["george", "andreas"]) == [0, 3]
+
 
 def test_lookup_empty_names_list(filled_names):
     """Test that an empty input list returns an empty output list."""
