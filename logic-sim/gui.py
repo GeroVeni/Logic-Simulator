@@ -422,6 +422,9 @@ class Gui(wx.Frame):
         self.network = Network(self.names, self.devices)
         self.monitors = Monitors(self.names, self.devices, self.network)
 
+        # Change window backround color and style
+        #self.SetBackgroundColour(wx.Colour(9, 60, 142))
+
         # Add IDs for menu and toolbar items
         self.ID_OPEN = 1001;
         self.ID_CENTER = 1002;
@@ -494,6 +497,7 @@ class Gui(wx.Frame):
         # Create the tabs
         tab1 = CustomTab(nb, ["mon" + str(i) for i in range(40)])
         tab2 = CustomTab(nb, ["swi" + str(i) for i in range(40)])
+        tab1.set_on_item_selected_listener(self.set_monitor)
 
         nb.AddPage(tab1, "Monitors")
         nb.AddPage(tab2, "Switches")
@@ -510,7 +514,7 @@ class Gui(wx.Frame):
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
-        self.log_message("Hey")
+        self.log_message("Clicked monitor: {} state: {}".format(monitor_id, is_active))
 
     def set_switch(self, switch_id, is_on):
         """Turn a swtich on and off.
@@ -522,7 +526,7 @@ class Gui(wx.Frame):
                and False to turn off
 
         """
-        return
+        self.log_message("Switch")
 
     def clear_log(self):
         """Clear the error log."""
@@ -666,23 +670,34 @@ class CustomTab(wx.Panel):
         #Constants
         self.LIST_WIDTH = 165
         self.LIST_STATUS_WIDTH = 90
+        self.TEXT_COLUMN = 0
+        self.TOGGLE_COLUMN = 1
 
         self.gui = parent.GetParent()
 
+        #Create Listener
+        self.on_item_selected_listener = None
+
         #Create ListCtrl
-        self.mon_list = dv.DataViewListCtrl(self)
+        self.mon_list = dv.DataViewListCtrl(self, style=wx.dataview.DV_ROW_LINES)
         self.mon_list.AppendIconTextColumn('Names', width=140, flags = 0)
         self.mon_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
         #self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
-        #self.mon_list.Bind(wx.EVT_CHECKLISTBOX, self.on_monitor_selected)
+        self.mon_list.Bind(dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.on_item_selected)
         #mon_list.AppendColumn("Name")
         #mon_list.AppendColumn("Status")
-        for i in name_list:
+        for cnt in range(len(name_list)):
             #ic = wx.ArtProvider.GetIcon(wx.ART_ERROR)
             #ic = wx.Icon('', type=wx.BITMAP_TYPE_ANY, desiredWidth=16, desiredHeight=16)
             #TODO Convert from bitmap
+            i = name_list[cnt]
             bmp = wx.Bitmap(16, 16)
             ic = wx.Icon(bmp)
+            ic_l = [None] * 3
+            ic_l[1] = wx.Icon('res/empty_circle_w1.png')
+            ic_l[2] = wx.Icon('res/empty_circle_w2.png')
+            ic_l[0] = wx.Icon('res/empty_circle_w2x1.png')
+            ic = ic_l[cnt % 3]
             it = dv.DataViewIconText(" " + i, ic)
             self.mon_list.AppendItem([it, True])
         #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
@@ -691,8 +706,16 @@ class CustomTab(wx.Panel):
         sizer.Add(self.mon_list, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
-    def on_monitor_selected(self, event):
+    def set_on_item_selected_listener(self, listener):
+        """Set the listener when an item state is changed."""
+        self.on_item_selected_listener = listener
+
+    def on_item_selected(self, event):
         """Handle the event when the user changes the state of a monitor."""
-        item_id = event.GetInt()
-        print("Clicked monitor: {} state: {}".format(item_id, self.mon_list.IsChecked(item_id)))
-        self.gui.set_monitor(item_id, self.mon_list.IsChecked(item_id))
+        if self.on_item_selected_listener is None:
+            return
+        row = self.mon_list.ItemToRow(event.GetItem())
+        name = self.mon_list.GetValue(row, self.TEXT_COLUMN).GetText()
+        state = self.mon_list.GetToggleValue(row, self.TOGGLE_COLUMN)
+        #self.gui.set_monitor(name, state)
+        self.on_item_selected_listener(name, state)
