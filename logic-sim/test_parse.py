@@ -54,7 +54,7 @@ def new_parser(filename):
     ("test_syntax_con_def_missing_comma.txt", False, [Parser.SYNTAX_ERROR]),
     ("test_syntax_con_def_missing_semicolon.txt", False, [Parser.SYNTAX_ERROR]),
     ("test_syntax_dev_def_missing_comma.txt", False, [Parser.SYNTAX_ERROR]),
-    ("test_syntax_dev_def_missing_parenthesis.txt", False, [Parser.SYNTAX_ERROR]),
+    ("test_syntax_dev_def_missing_parenthesis.txt", False, [Parser.SYNTAX_ERROR] * 2),
     ("test_syntax_dev_def_missing_semicolon.txt", False, [Parser.SYNTAX_ERROR]),
     ("test_syntax_invalid_argument.txt", False, [Parser.SYNTAX_ERROR]),
     ("test_syntax_invalid_device.txt", False, [Parser.SYNTAX_ERROR]),
