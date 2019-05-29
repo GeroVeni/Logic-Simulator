@@ -33,6 +33,7 @@ class Symbol:
         self.column = None # position on line
 
     def __repr__(self):
+        """Prints the attributes of the symbol instance to the terminal"""
         return "type: {}, id: {}, line: {}, column: {}".format(self.type, self.id, self.line, self.column)
 
 
