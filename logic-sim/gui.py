@@ -135,13 +135,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Draw specified text at position (10, 10)
-        self.render_text(text, 100, 10)
+        self.render_text(text, 10, 10)
 
         self.render_grid()
 
         # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
-            self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
+            self.margin_left = (self.parent.monitors.get_margin()*self.character_width + 10)
 
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
@@ -233,23 +233,23 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         allowable_pan_bottom = self.border_bottom
         allowable_pan_top = -(self.border_top - size.height/self.zoom)
         # print("bottom: {}, top: {}".format(allowable_pan_bottom, allowable_pan_top)) # TODO remove
-        print("left: {}, right: {}".format(allowable_pan_left, allowable_pan_right)) # TODO remove
+        # print("left: {}, right: {}".format(allowable_pan_left, allowable_pan_right)) # TODO remove
 
-        if allowable_pan_right < 0: # if true, some part of the signal traces is hidden (x dir)
-            if self.pan_x < allowable_pan_right: # fix
-                self.pan_x = allowable_pan_right
-        else:
-            if self.pan_x < 0:
-                self.pan_x = 0
+        # if allowable_pan_right < 0: # if true, some part of the signal traces is hidden (x dir)
+        #     if self.pan_x < allowable_pan_right: # fix
+        #         self.pan_x = allowable_pan_right
+        # else:
+        #     if self.pan_x < 0:
+        #         self.pan_x = 0
         if self.pan_x > allowable_pan_left:
             self.pan_x = allowable_pan_left
 
-        if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
-            if self.pan_y < allowable_pan_top: # fix
-                self.pan_y = allowable_pan_top
-        else:
-            if self.pan_y < 0:
-                self.pan_y = 0
+        # if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
+        #     if self.pan_y < allowable_pan_top: # fix
+        #         self.pan_y = allowable_pan_top
+        # else:
+        #     if self.pan_y < 0:
+        #         self.pan_y = 0
         if self.pan_y > allowable_pan_bottom:
             self.pan_y = allowable_pan_bottom
 
@@ -285,6 +285,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.border_right = (self.border_left + self.margin_left)/self.zoom + self.parent.cycles_completed * self.cycle_width
         if self.border_right <= self.border_left: # TODO remove error raising here
             raise ValueError("border_right must be larger than border_left")
+
+        print("border_right: {}".format(self.border_right)) # TODO remove
 
 
     def render_text(self, text, x_pos, y_pos):
@@ -335,6 +337,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 GL.glVertex2f(x_pos, y)
                 x_pos += self.cycle_width
                 GL.glVertex2f(x_pos, y)
+
+        print("final location of trace: {}".format(x_pos)) # TODO remove
         if currently_drawing:
             GL.glEnd()
             currently_drawing = False
@@ -819,4 +823,3 @@ class CustomTab(wx.Panel):
             i, val = name_list[cnt]
             it = dv.DataViewIconText(" " + i, ic)
             self.item_list.AppendItem([it, val])
-
