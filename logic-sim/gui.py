@@ -455,17 +455,20 @@ class Gui(wx.Frame):
         # Configure toolbar
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
+        centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        runIcon = wx.Bitmap("res/run.png")
+        continueIcon = wx.Bitmap("res/continue.png")
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
+        self.spin = wx.SpinCtrl(toolBar)
         toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
+        toolBar.AddTool(self.ID_CENTER, "Tool2", centerIcon)
         toolBar.AddSeparator()
         toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
         toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
         toolBar.AddTool(self.ID_HELP, "Tool5", openIcon)
-        toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
+        toolBar.AddControl(self.spin, "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
@@ -548,6 +551,7 @@ class Gui(wx.Frame):
 
     def run_parser(self, file_path):
         #clear all at the begging
+        self.cycles_completed = 0
         self.names = Names()
         self.devices = Devices(self.names)
         self.network = Network(self.names, self.devices)
@@ -556,9 +560,9 @@ class Gui(wx.Frame):
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
         if self.parser.parse_network():
-            self.log_message("Network parsed correctly")
+            self.log_message("Succesfully parsed network.")
         else:
-            self.log_message("Failed to parse network")
+            self.log_message("Failed to parse network.")
 
     def on_open(self):
         text = "Open file dialog."
@@ -588,24 +592,23 @@ class Gui(wx.Frame):
     def run_command(self):
         """Run the simulation from scratch."""
         self.cycles_completed = 0
-        cycles = 10 #this must get input from other box
+        cycles = self.spin.GetValue() #this must get input from other box
 
         if cycles is not None:  # if the number of cycles provided is valid
             self.monitors.reset_monitors()
             self.log_message("".join(["Running for ", str(cycles),
-                                      " cycles"]))
+                                      " cycles."]))
             self.devices.cold_startup()
             if self.run_network(cycles):
                 self.cycles_completed += cycles
 
     def on_run(self):
-        self.log_message("Run button pressed.")
         self.run_command()
         self.canvas.render("RUN")
 
     def continue_command(self):
         """Continue a previously run simulation."""
-        cycles = 10
+        cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
                 self.log_message("Error! Nothing to continue. Run first.")
@@ -615,7 +618,6 @@ class Gui(wx.Frame):
                         "cycles.", "Total:", str(self.cycles_completed)]))
 
     def on_continue(self):
-        self.log_message("Continue button pressed.")
         self.continue_command()
         self.canvas.render("Continue")
 
@@ -638,8 +640,8 @@ class Gui(wx.Frame):
         User Instructions:\n
         Use the Open file button to select the desired circuit defnition file.
         If the file contains no errors the error log at the bottom of the window
-        will read "Network parsed correctly". If there are errors, the error log
-        will read "Falied to parse network". \n
+        will read "Succesfully parsed network". If there are errors, the error log
+        will read "Failed to parse network".
 
         If the network was parsed correctly it can be ran. Use the arrows on the
         cycle selector to select the desired number of cycles for the simulation.
@@ -650,7 +652,7 @@ class Gui(wx.Frame):
         display the waveforms at the current monitor points.
 
         The canvas can be restored to its default state of position and zoomby
-        selecting the center button. 
+        selecting the center button.
 
         Different monitor points can be setted and zapped by first selecting the
         Monitors tab on the right panel, and then selecting the desired monitor
@@ -680,12 +682,6 @@ class Gui(wx.Frame):
             self.on_center()
         if Id == self.ID_HELP: # help button
             self.on_help()
-
-    def on_spin(self, event):
-        """Handle the event when the user changes the spin control value."""
-        spin_value = self.spin.GetValue()
-        text = "".join(["New spin control value: ", str(spin_value)])
-        self.canvas.render(text)
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
