@@ -275,7 +275,7 @@ class Parser:
                     return
             elif (self.current_device.id == self.scanner.SWITCH_ID):
                 # Set default value to 0 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 0
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.SWITCH,
@@ -286,7 +286,7 @@ class Parser:
                     return
             elif (self.current_device.id == self.scanner.CLOCK_ID):
                 # Set default value to 1 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 1
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.CLOCK,
@@ -300,7 +300,7 @@ class Parser:
             # TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
                 # Set default value to 2 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 2
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.NAND,
@@ -311,7 +311,7 @@ class Parser:
                     return
             elif (self.current_device.id == self.scanner.AND_ID):
                 # Set default value to 2 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 2
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.AND,
@@ -322,7 +322,7 @@ class Parser:
                     return
             elif (self.current_device.id == self.scanner.NOR_ID):
                 # Set default value to 2 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 2
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.NOR,
@@ -333,7 +333,7 @@ class Parser:
                     return
             elif (self.current_device.id == self.scanner.OR_ID):
                 # Set default value to 2 if no value specified
-                if (self.current_number.id is not None):
+                if (self.current_number.id is None):
                     self.current_number.id = 2
                 error = self.devices.make_device(identifier.id,
                                                  self.devices.OR,
@@ -584,10 +584,10 @@ class Parser:
                 # We must add the port .I1 as its id
                 # Equivalent to defining all the inputs at once.
                 # Check device has one input and no port specified
-                if (len(self.inputs_list) == 1 and out_port_id is not None):
+                if (len(self.inputs_list) == 1 and out_port_id is None):
                     device = self.devices.get_device(out_device_id)
                     # check_connection_error will raise undefined_device
-                    if (device is not None):
+                    if (device is None):
                         pass
                     # check_connection_error will raise OUTPUT_TO_OUTPUT
                     elif (len(device.inputs) != 1):
