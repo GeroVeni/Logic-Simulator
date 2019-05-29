@@ -183,7 +183,7 @@ class Parser:
             self.symbol = self.scanner.get_symbol()
         elif (stopping_symbol == "END"):
             while ((self.symbol.type != self.scanner.KEYWORD or
-                   self.symbol.id != self.scanner.END_ID) and
+                    self.symbol.id != self.scanner.END_ID) and
                    self.symbol.type != self.scanner.EOF):
                 self.symbol = self.scanner.get_symbol()
             if (self.symbol.type == self.scanner.EOF):
@@ -219,14 +219,14 @@ class Parser:
         """Parse an identifier."""
         # Only parse if recoverd from the error
         if (self.symbol.type == self.scanner.NAME and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.identifier_list.append(self.symbol)
             self.symbol = self.scanner.get_symbol()
         # If symbol is KEYWORD, DEVICE or PORT raise semantic error
-        elif((self.symbol.type == self.scanner.KEYWORD
-              or self.symbol.type == self.scanner.DEVICE
-              or self.symbol.type == self.scanner.PORT)
-             and self.recovered_from_definition_error):
+        elif((self.symbol.type == self.scanner.KEYWORD or
+              self.symbol.type == self.scanner.DEVICE or
+              self.symbol.type == self.scanner.PORT) and
+             self.recovered_from_definition_error):
             self.error(self.KEYWORD_ERROR, stopping_symbol=";")
         else:
             self.error(self.SYNTAX_ERROR, "identifier")
@@ -235,7 +235,7 @@ class Parser:
         """Parse a device."""
         # Only parse if recovered from an error
         if (self.symbol.type == self.scanner.DEVICE and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.current_device = self.symbol
             self.symbol = self.scanner.get_symbol()
         else:
@@ -245,7 +245,7 @@ class Parser:
         """Parse a number."""
         # Only parse if recovered from an error
         if (self.symbol.type == self.scanner.NUMBER and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.current_number = self.symbol
             self.symbol = self.scanner.get_symbol()
         else:
@@ -374,11 +374,11 @@ class Parser:
             self.symbol = self.scanner.get_symbol()
             self.identifier()
         if (self.symbol.type == self.scanner.DEVICE_DEF and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.device_type()
             if (self.symbol.type == self.scanner.BRACKET_LEFT and
-               self.recovered_from_definition_error):
+                    self.recovered_from_definition_error):
                 self.symbol = self.scanner.get_symbol()
                 self.number()
                 if(self.symbol.type == self.scanner.BRACKET_RIGHT and
@@ -396,7 +396,7 @@ class Parser:
                 # by default to an empty symbol.
                 self.current_number = Symbol()
             if (self.symbol.type == self.scanner.SEMICOLON and
-               self.recovered_from_definition_error):
+                    self.recovered_from_definition_error):
                 # Making devices does not break if errors have occured
                 # previously but not during device_definition
                 self.make_devices()
@@ -419,7 +419,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-           self.symbol.id == self.scanner.DEVICES_ID):
+                self.symbol.id == self.scanner.DEVICES_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -437,7 +437,7 @@ class Parser:
                 # Recovered from error as KEYWORD or EOF found
                 self.recovered_from_definition_error = True
                 if (self.symbol.id == self.scanner.END_ID and
-                   self.symbol.type == self.scanner.KEYWORD):
+                        self.symbol.type == self.scanner.KEYWORD):
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
                         self.symbol = self.scanner.get_symbol()
@@ -481,8 +481,8 @@ class Parser:
                 self.error(self.MONITOR_INPUT_ERROR)
         # Inputs cannot have output ports
         elif (self.symbol.type == self.scanner.PORT and
-              I_O_M == "I" and (self.symbol.id == self.scanner.Q_ID
-                                or self.symbol.id == self.scanner.QBAR_ID)):
+              I_O_M == "I" and (self.symbol.id == self.scanner.Q_ID or
+                                self.symbol.id == self.scanner.QBAR_ID)):
             self.error(self.OUTPUT_ERROR)
         # If its and I port save the number as the port
         elif (self.symbol.id == self.scanner.I_ID and
@@ -511,7 +511,7 @@ class Parser:
                or if it is a monitor port.
         """
         if (self.symbol.type == self.scanner.NAME and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.current_name = self.symbol
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.DOT):
@@ -620,8 +620,8 @@ class Parser:
                                                    device_inputs):
                         [in_device_id, in_port_id] = self.get_in(output)
                         error_type = self.network.make_connection(
-                                     in_device_id, in_port_id,
-                                     out_device_id, out_port_id)
+                            in_device_id, in_port_id,
+                            out_device_id, out_port_id)
                         self.check_connection_error(error_type)
                 else:
                     self.error(self.OUT_OF_BOUND_INPUTS_ERROR,
@@ -635,8 +635,8 @@ class Parser:
             for device_ip in self.inputs_list:
                 [out_device_id, out_port_id] = self.get_out(device_ip)
                 error_type = self.network.make_connection(
-                             in_device_id, in_port_id, out_device_id,
-                             out_port_id)
+                    in_device_id, in_port_id, out_device_id,
+                    out_port_id)
                 self.check_connection_error(error_type)
         # If the lengths dont match and the ip and op are not one
         # the nº of ip and nº ops dont match
@@ -660,7 +660,7 @@ class Parser:
             self.symbol = self.scanner.get_symbol()
             self.outputs_list.append(self.signal("O"))
         if (self.symbol.type == self.scanner.CONNECTION_DEF and
-           self.recovered_from_definition_error):
+                self.recovered_from_definition_error):
             self.symbol = self.scanner.get_symbol()
             self.clear_vars()
             self.inputs_list.append(self.signal("I"))
@@ -671,7 +671,7 @@ class Parser:
                 # The signals on the right hand side should be inputs
                 self.inputs_list.append(self.signal("I"))
             if (self.symbol.type == self.scanner.SEMICOLON and
-               self.recovered_from_definition_error):
+                    self.recovered_from_definition_error):
                 # Only make connection if there have been no errors
                 # or might through unexpected errors
                 if (self.error_count == 0):
@@ -698,7 +698,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-           self.symbol.id == self.scanner.CONNECTIONS_ID):
+                self.symbol.id == self.scanner.CONNECTIONS_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -715,13 +715,13 @@ class Parser:
                 # Recovered from error as KEYWORD or EOF found
                 self.recovered_from_definition_error = True
                 if (self.symbol.id == self.scanner.END_ID and
-                   self.symbol.type == self.scanner.KEYWORD):
+                        self.symbol.type == self.scanner.KEYWORD):
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.type == self.scanner.SEMICOLON):
                         # Only throw missing inputs if no errors occured
                         # previously as probably missing ip from errors.
                         if ((not self.network.check_network()) and
-                           self.error_count == 0):
+                                self.error_count == 0):
                             # TODO show the input that has no input
                             self.error(self.MISSING_INPUTS_ERROR,
                                        stopping_symbol=None)
@@ -763,7 +763,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-           self.symbol.id == self.scanner.MONITORS_ID):
+                self.symbol.id == self.scanner.MONITORS_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -782,7 +782,7 @@ class Parser:
                         self.make_monitors()
                     self.symbol = self.scanner.get_symbol()
                     if (self.symbol.id == self.scanner.END_ID and
-                       self.symbol.type == self.scanner.KEYWORD):
+                            self.symbol.type == self.scanner.KEYWORD):
                         self.symbol = self.scanner.get_symbol()
                         if (self.symbol.type == self.scanner.SEMICOLON):
                             self.symbol = self.scanner.get_symbol()
@@ -801,7 +801,7 @@ class Parser:
                     # Check that monitors has END; if error encountered
                     self.recovered_from_definition_error = True
                     if (self.symbol.id == self.scanner.END_ID and
-                       self.symbol.type == self.scanner.KEYWORD):
+                            self.symbol.type == self.scanner.KEYWORD):
                         self.symbol = self.scanner.get_symbol()
                         if (self.symbol.type == self.scanner.SEMICOLON):
                             self.symbol = self.scanner.get_symbol()
