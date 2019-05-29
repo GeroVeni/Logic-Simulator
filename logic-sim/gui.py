@@ -67,8 +67,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         self.parent = parent
 
-        self.cycles_completed = 0 # updated when the gui calls render() TODO initialize to 0
-
         # Text rendering settings
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
@@ -116,12 +114,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
-    def render(self, text, cycles=None):
+    def render(self, text):
         """Handle all drawing operations."""
-        # Update cycles_completed if required
-        if cycles is not None:
-            self.cycles_completed = cycles
-
+        self.update_borders()
         self.update_zoom_lower_bound()
         # self.bound_panning()
         self.bound_zooming()
@@ -139,14 +134,20 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_text(text, 10, 10)
 
         self.render_grid()
-        # Render signal traces
-        # TODO uncomment bottom line
+
+        # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
             self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
-        y_pos = self.margin_bottom
-        for device_id, output_id in self.parent.monitors.monitors_dictionary:
-            self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
-            y_pos += self.monitor_spacing
+            
+        # Render signal traces starting from the top of the canvas
+        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        if num_monitors > 0:
+            y_pos = self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
+
+            for device_id, output_id in self.parent.monitors.monitors_dictionary:
+                self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
+                y_pos -= self.monitor_spacing
+
 
         # Draw ruler components
         self.render_ruler_background()
@@ -223,14 +224,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """Makes sure the canvas is always panned within the bounds of the
         signal traces."""
         size = self.GetClientSize()
-        if self.pan_x < self.border_left:
+        pan_right_bound = -(self.border_right + (-size.width)/self.zoom)
+        pan_down_bound = -(self.border_top + (-size.height + self.character_height)/self.zoom)
+        pan_up_bound = self.border_bottom
+        # print("down: {}, up: {}, pan_y: {}".format(pan_down_bound, pan_up_bound, self.pan_y)) # TODO remove
+        # print("border_top: {}, up: {}, pan_y: {}".format(self.border_top, pan_up_bound, self.pan_y)) # TODO remove
+        if self.pan_x < pan_right_bound: # fix
+            self.pan_x = pan_right_bound
+        elif self.pan_x > self.border_left:
             self.pan_x = self.border_left
-        elif self.pan_x > self.border_right:
-            self.pan_x = self.border_right
-        if self.pan_y < self.border_bottom:
-            self.pan_y = self.border_bottom
-        elif self.pan_y > self.border_top:
-            self.pan_y = self.border_top
+        if self.pan_y < pan_down_bound: # fix
+            self.pan_y = pan_down_bound
+        if self.pan_y > pan_up_bound:
+            self.pan_y = pan_up_bound
 
     def bound_zooming(self):
         """Makes sure the zoom is bounded."""
@@ -251,6 +257,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
+
+    def update_borders(self):
+        """Updates the borders of the canvas depending on the number of monitors
+        and the number of cycles to be simulated."""
+        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        # self.border_top depends only on the number of monitors
+        self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
+        # self.border_right depends only on the number of cycles to be simulated
+        self.border_right = self.margin_left/self.zoom + self.parent.cycles_completed * self.cycle_width
+
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -322,11 +338,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def render_cycle_numbers(self):
         """Draw a ruler of cycle numbers at the top of the visible part of the
         canvas."""
-        if self.cycles_completed == 0:
+        if self.parent.cycles_completed == 0:
             return
 
         canvas_size = self.GetClientSize()
-        for cycle in range(self.cycles_completed):
+        for cycle in range(self.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
@@ -354,7 +370,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_grid(self, render_only_on_ruler = False):
         """Draw a grid for separating the different cycles in the traces."""
-        if self.cycles_completed == 0:
+        if self.parent.cycles_completed == 0:
             return
 
         canvas_size = self.GetClientSize()
@@ -368,14 +384,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         line_x_pos = self.margin_left/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
-        for cycle in range(self.cycles_completed):
+        for cycle in range(self.parent.cycles_completed):
             line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
     def recenter_canvas(self):
         """Restores the canvas to its default position and state of zoom."""
-        self.pan_x = 0
-        self.pan_y = 0
+        self.pan_x = self.border_left
+        self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
         self.init = False
         self.render("Recenter canvas")
@@ -431,6 +447,7 @@ class Gui(wx.Frame):
         self.ID_RUN = 1003;
         self.ID_CONTINUE = 1004;
         self.ID_CYCLES_CTRL = 1005;
+        self.ID_HELP = 1006;
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -440,22 +457,30 @@ class Gui(wx.Frame):
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
         fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
         fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
         # Configure toolbar
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
+        centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        runIcon = wx.Bitmap("res/run.png")
+        continueIcon = wx.Bitmap("res/continue.png")
+        infoIcon = wx.Bitmap("res/info.png")
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
-        toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
+        self.spin = wx.SpinCtrl(toolBar)
+        toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon)
         toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
-        toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
-        toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
+        toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
+        toolBar.AddSeparator()
+        toolBar.AddTool(self.ID_CENTER, "Tool3", centerIcon)
+        toolBar.AddSeparator()
+        toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
+        toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
+        toolBar.AddControl(self.spin, "SpinCtrl")
         self.SetToolBar(toolBar)
 
         # Canvas for drawing signals
@@ -463,7 +488,7 @@ class Gui(wx.Frame):
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
-        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
+        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
@@ -539,6 +564,7 @@ class Gui(wx.Frame):
 
     def run_parser(self, file_path):
         #clear all at the begging
+        self.cycles_completed = 0
         self.names = Names()
         self.devices = Devices(self.names)
         self.network = Network(self.names, self.devices)
@@ -547,9 +573,9 @@ class Gui(wx.Frame):
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
         if self.parser.parse_network():
-            self.log_message("Network parsed Correctly")
+            self.log_message("Succesfully parsed network.")
         else:
-            self.log_message("Failed to parse network")
+            self.log_message("Failed to parse network.")
 
     def on_open(self):
         text = "Open file dialog."
@@ -579,24 +605,23 @@ class Gui(wx.Frame):
     def run_command(self):
         """Run the simulation from scratch."""
         self.cycles_completed = 0
-        cycles = 10 #this must get input from other box
+        cycles = self.spin.GetValue() #this must get input from other box
 
         if cycles is not None:  # if the number of cycles provided is valid
             self.monitors.reset_monitors()
             self.log_message("".join(["Running for ", str(cycles),
-                                      " cycles"]))
+                                      " cycles."]))
             self.devices.cold_startup()
             if self.run_network(cycles):
                 self.cycles_completed += cycles
 
     def on_run(self):
-        self.log_message("Run button pressed.")
         self.run_command()
-        self.canvas.render("RUN", self.cycles_completed)
+        self.canvas.render("RUN")
 
     def continue_command(self):
         """Continue a previously run simulation."""
-        cycles = 10
+        cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
                 self.log_message("Error! Nothing to continue. Run first.")
@@ -606,9 +631,50 @@ class Gui(wx.Frame):
                         "cycles.", "Total:", str(self.cycles_completed)]))
 
     def on_continue(self):
-        self.log_message("Continue button pressed.")
         self.continue_command()
-        self.canvas.render("Continue", self.cycles_completed)
+        self.canvas.render("Continue")
+
+    def on_center(self):
+        """Centers the canvas to its default state of zoom and panning."""
+        self.log_message("Center canvas.")
+        self.canvas.recenter_canvas()
+
+    def on_help(self):
+        """Shows a help window with user instructions."""
+        help_title = "Help - Program controls "
+        help_content = '''
+        Shortcuts: \n
+        Ctrl + O: Open file
+        Ctrl + H: Help
+        Ctrl + R: Run
+        Ctrl + C: Continue
+
+        User Instructions:\n
+        Use the Open file button to select the desired circuit defnition file.
+        If the file contains no errors the message log at the bottom of the window
+        will read "Succesfully parsed network". If there are errors, the error log
+        will read "Failed to parse network".
+
+        If the network was parsed correctly it can be ran. Use the arrows on the
+        cycle selector to select the desired number of cycles for the simulation.
+        Press the Run button to run the simulator for the number of cycles
+        selected and display the waveforms at the current monitor points (from a
+        cold-startup of the circuit). Press the Continue button to run the simulator
+        for an additional number of cycles as selected in the cycle selector and
+        display the waveforms at the current monitor points.
+
+        The canvas can be restored to its default state of position and zoomby
+        selecting the center button.
+
+        Different monitor points can be setted and zapped by first selecting the
+        Monitors tab on the right panel, and then selecting the desired monitor
+        point from the list.
+
+        Switches can be operated by first selecting the Switches tab on the right
+        panel, and then selecting the desired switches.
+        '''
+        wx.MessageBox(help_content,
+                      help_title, wx.ICON_INFORMATION | wx.OK)
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -624,12 +690,10 @@ class Gui(wx.Frame):
             self.on_run()
         if Id == self.ID_CONTINUE: #continue button
             self.on_continue()
-
-    def on_spin(self, event):
-        """Handle the event when the user changes the spin control value."""
-        spin_value = self.spin.GetValue()
-        text = "".join(["New spin control value: ", str(spin_value)])
-        self.canvas.render(text)
+        if Id == self.ID_CENTER: # center button
+            self.on_center()
+        if Id == self.ID_HELP: # help button
+            self.on_help()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
