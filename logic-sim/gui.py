@@ -134,14 +134,20 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_text(text, 10, 10)
 
         self.render_grid()
-        # Render signal traces
-        # TODO uncomment bottom line
+
+        # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
             self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
-        y_pos = self.margin_bottom
-        for device_id, output_id in self.parent.monitors.monitors_dictionary:
-            self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
-            y_pos += self.monitor_spacing
+            
+        # Render signal traces starting from the top of the canvas
+        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        if num_monitors > 0:
+            y_pos = self.margin_bottom + (num_monitors - 1) * self.monitor_spacing
+
+            for device_id, output_id in self.parent.monitors.monitors_dictionary:
+                self.render_monitor(device_id, output_id, y_pos, y_pos + self.trace_height)
+                y_pos -= self.monitor_spacing
+
 
         # Draw ruler components
         self.render_ruler_background()
