@@ -284,7 +284,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # self.border_right depends only on the number of cycles to be simulated
         self.border_right = (self.border_left + self.margin_left)/self.zoom + self.parent.cycles_completed * self.cycle_width
         if self.border_right <= self.border_left: # TODO remove error raising here
-            raise ValueError("border_right must be larger than border_left")
+            #raise ValueError("border_right must be larger than border_left")
+            pass
 
         print("border_right: {}".format(self.border_right)) # TODO remove
 
@@ -562,6 +563,17 @@ class Gui(wx.Frame):
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
+    def printer(self, sig):
+        lst = [(self.devices.HIGH, 'HIGH'),
+               (self.devices.LOW, 'LOW'),
+               (self.devices.RISING, 'RISING'),
+               (self.devices.FALLING, 'FALLING'),
+               (self.devices.BLANK, 'BLANK')]
+        for (val, txt) in lst:
+            if val == sig:
+                return txt
+        return 'NONE'
+
     def update_tabs(self):
         """Update the tabs with new values."""
 
@@ -571,12 +583,18 @@ class Gui(wx.Frame):
         # Get switch names
         switch_ids = self.devices.find_devices(self.devices.SWITCH)
         switch_names = [self.names.get_name_string(sw_id) for sw_id in switch_ids]
+        switch_signals = [self.devices.get_device(sw_id).switch_state for sw_id in switch_ids]
+        switch_states = [True if sig in [self.devices.HIGH, self.devices.RISING] else False
+                         for sig in switch_signals]
+        self.log_message([self.printer(sw) for sw in switch_signals])
+        self.log_message(switch_ids)
 
+        # Reset tab elements
         self.monitor_tab.clear()
         self.monitor_tab.append(list(zip(mons, [True for i in mons])))
         self.monitor_tab.append(list(zip(non_mons, [False for i in non_mons])))
         self.switch_tab.clear()
-        self.switch_tab.append(list(zip(switch_names, [True for i in mons])))
+        self.switch_tab.append(list(zip(switch_names, switch_states)))
 
     def set_monitor(self, monitor_name, is_active):
         """Activate or deactivate a monitor.
@@ -614,15 +632,16 @@ class Gui(wx.Frame):
                 self.log_message("Monitor {} was {}.".format(monitor_name, action))
             else:
                 #TODO: Print error
-                pass
+                return
         else:
             action = 'deactivated'
             if self.monitors.remove_monitor(device_id, port_id):
                 self.log_message("Monitor {} was {}.".format(monitor_name, action))
             else:
                 #TODO: Print error
-                pass
+                return
         self.canvas.restore_canvas_on_open()
+        self.canvas.render('Monitor changed')
 
     def set_switch(self, switch_name, is_on):
         """Turn a swtich on and off.
@@ -633,12 +652,27 @@ class Gui(wx.Frame):
         is_on: The state of the monitor; True to turn on
                and False to turn off
         """
-        if is_on:
-            state = 'ON'
-        else:
-            state = 'OFF'
-        self.log_message("Switch {} was switched {}".format(switch_name, state))
+        # Get the switch id
+        switch_id = self.names.query(switch_name)
 
+        if switch_id is None:
+            # TODO: Reformat error text for consistency with parser
+            self.log_message("Error: Monitor {} not found.".format(monitor_name))
+            return
+        # Turn on/off the switch
+        if is_on:
+            switch_state = 1
+            state_text = 'ON'
+        else:
+            switch_state = 0
+            state_text = 'OFF'
+        if self.devices.set_switch(switch_id, switch_state):
+            self.log_message("Switch {} was switched {}".format(switch_name, state_text))
+        else:
+            #TODO: Print error
+            return
+
+ 
     def clear_log(self):
         """Clear the error log."""
         self.activity_log.Clear()
