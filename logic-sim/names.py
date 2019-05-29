@@ -83,9 +83,11 @@ class Names:
             if not isinstance(name_string, str):
                 raise TypeError('name_string_list must be a list of strings')
             if name_string == '':
-                raise ValueError('name_string_list cannot contain empty strings')
+                raise ValueError('name_string_list cannot contain \
+                        empty strings')
             if not name_string[0].isalpha():
-                raise ValueError('name_string_list items must start with a letter')
+                raise ValueError('name_string_list items must start \
+                        with a letter')
 
             name_id = self.query(name_string)
             if name_id is None:
