@@ -22,6 +22,9 @@ from monitors import Monitors
 from scanner import Scanner
 from parse import Parser
 
+from contextlib import redirect_stdout
+import io
+
 
 class MyGLCanvas(wxcanvas.GLCanvas):
     """Handle all drawing operations.
@@ -139,7 +142,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
             self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
-            
+
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
@@ -283,8 +286,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Draw monitor name and signal trace for a particular monitor."""
-        # TODO uncomment monitor_name
-        # monitor_name = "Device 1"
         monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
         signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
@@ -449,17 +450,26 @@ class Gui(wx.Frame):
         self.ID_CONTINUE = 1004;
         self.ID_CYCLES_CTRL = 1005;
         self.ID_HELP = 1006;
+        self.ID_CLEAR = 1007;
 
         # Configure the file menu
         fileMenu = wx.Menu()
+        viewMenu = wx.Menu()
+        runMenu = wx.Menu()
+        helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
-        fileMenu.Append(wx.ID_ABOUT, "&About")
-        fileMenu.Append(wx.ID_EXIT, "&Exit")
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
+        fileMenu.Append(wx.ID_EXIT, "&Exit")
+        viewMenu.Append(self.ID_CENTER, "&Center\tCtrl+E")
+        viewMenu.Append(self.ID_CLEAR, "&Clea Activity Log\tCtrl+L")
+        runMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
+        runMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+Shift+C") # This is how to associate a shortcut
+        helpMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
+        helpMenu.Append(wx.ID_ABOUT, "&About")
         menuBar.Append(fileMenu, "&File")
+        menuBar.Append(viewMenu, "&View")
+        menuBar.Append(runMenu, "&Simulation")
+        menuBar.Append(helpMenu, "&Help")
         self.SetMenuBar(menuBar)
 
         # Configure toolbar
@@ -489,7 +499,7 @@ class Gui(wx.Frame):
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
-        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
+        self.activity_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
@@ -500,8 +510,9 @@ class Gui(wx.Frame):
         right_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        left_sizer.Add(self.canvas, 2, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(wx.StaticText(self, label="Activity Log"), 0.2, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
         #right_sizer.Add(self.spin, 0, wx.ALL, 5)
         right_sizer = self.make_right_sizer()
@@ -573,12 +584,12 @@ class Gui(wx.Frame):
 
     def clear_log(self):
         """Clear the error log."""
-        self.error_log.Clear()
+        self.activity_log.Clear()
 
     def log_message(self, text):
         """Add message to the error log."""
-        self.error_log.AppendText("\n" + str(text))
-        self.error_log.ShowPosition(self.error_log.GetLastPosition())
+        self.activity_log.AppendText("\n" + str(text))
+        self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
 
     def run_parser(self, file_path):
         #clear all at the begging
@@ -590,10 +601,13 @@ class Gui(wx.Frame):
         self.scanner = Scanner(file_path, self.names)
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
-        if self.parser.parse_network():
-            self.log_message("Succesfully parsed network.")
-        else:
-            self.log_message("Failed to parse network.")
+        captured_stdout = io.StringIO()
+        with redirect_stdout(captured_stdout):
+            if self.parser.parse_network():
+                self.log_message("Succesfully parsed network.")
+            else:
+                self.log_message("Failed to parse network.")
+        self.log_message(captured_stdout.getvalue())
 
     def on_open(self):
         text = "Open file dialog."
@@ -670,14 +684,14 @@ class Gui(wx.Frame):
 
         User Instructions:\n
         Use the Open file button to select the desired circuit defnition file.
-        If the file contains no errors the message log at the bottom of the window
+        If the file contains no errors the activity log at the bottom of the window
         will read "Succesfully parsed network". If there are errors, the error log
         will read "Failed to parse network".
 
-        If the network was parsed correctly it can be ran. Use the arrows on the
-        cycle selector to select the desired number of cycles for the simulation.
-        Press the Run button to run the simulator for the number of cycles
-        selected and display the waveforms at the current monitor points (from a
+        If the network was parsed correctly it can be ran. Use the plus and minus on the
+        cycle selector to select the desired number of cycles for the simulation or
+        tyep in th desired number. Press the Run button to run the simulator for the number
+        of cycles selected and display the waveforms at the current monitor points (from a
         cold-startup of the circuit). Press the Continue button to run the simulator
         for an additional number of cycles as selected in the cycle selector and
         display the waveforms at the current monitor points.
@@ -700,19 +714,21 @@ class Gui(wx.Frame):
         Id = event.GetId()
         if Id == wx.ID_EXIT:
             self.Close(True)
-        if Id == wx.ID_ABOUT:
-            wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
+        elif Id == wx.ID_ABOUT:
+            wx.MessageBox("Logic Simulator\nCreated by Psylinders\n2019",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
-        if Id == self.ID_OPEN: # file dialog
+        elif Id == self.ID_OPEN: # file dialog
             self.on_open()
-        if Id == self.ID_RUN: # run button
+        elif Id == self.ID_RUN: # run button
             self.on_run()
-        if Id == self.ID_CONTINUE: #continue button
+        elif Id == self.ID_CONTINUE: #continue button
             self.on_continue()
-        if Id == self.ID_CENTER: # center button
+        elif Id == self.ID_CENTER: # center button
             self.on_center()
-        if Id == self.ID_HELP: # help button
+        elif Id == self.ID_HELP: # help button
             self.on_help()
+        elif Id == self.ID_CLEAR: # help button
+            self.clear_log()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
