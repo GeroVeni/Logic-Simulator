@@ -122,6 +122,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if cycles is not None:
             self.cycles_completed = cycles
 
+        self.update_borders()
         self.update_zoom_lower_bound()
         # self.bound_panning()
         self.bound_zooming()
@@ -223,14 +224,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         """Makes sure the canvas is always panned within the bounds of the
         signal traces."""
         size = self.GetClientSize()
-        if self.pan_x < self.border_left:
+        pan_right_bound = -(self.border_right + (-size.width)/self.zoom)
+        pan_down_bound = -(self.border_top + (-size.height + self.character_height)/self.zoom)
+        pan_up_bound = self.border_bottom
+        # print("down: {}, up: {}, pan_y: {}".format(pan_down_bound, pan_up_bound, self.pan_y)) # TODO remove
+        # print("border_top: {}, up: {}, pan_y: {}".format(self.border_top, pan_up_bound, self.pan_y)) # TODO remove
+        if self.pan_x < pan_right_bound: # fix
+            self.pan_x = pan_right_bound
+        elif self.pan_x > self.border_left:
             self.pan_x = self.border_left
-        elif self.pan_x > self.border_right:
-            self.pan_x = self.border_right
-        if self.pan_y < self.border_bottom:
-            self.pan_y = self.border_bottom
-        elif self.pan_y > self.border_top:
-            self.pan_y = self.border_top
+        if self.pan_y < pan_down_bound: # fix
+            self.pan_y = pan_down_bound
+        if self.pan_y > pan_up_bound:
+            self.pan_y = pan_up_bound
 
     def bound_zooming(self):
         """Makes sure the zoom is bounded."""
@@ -251,6 +257,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
+
+    def update_borders(self):
+        """Updates the borders of the canvas depending on the number of monitors
+        and the number of cycles to be simulated."""
+        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        # self.border_top depends only on the number of monitors
+        self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
+        # self.border_right depends only on the number of cycles to be simulated
+        self.border_right = self.margin_left/self.zoom + self.cycles_completed * self.cycle_width
+
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -374,8 +390,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def recenter_canvas(self):
         """Restores the canvas to its default position and state of zoom."""
-        self.pan_x = 0
-        self.pan_y = 0
+        self.pan_x = self.border_left
+        self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
         self.init = False
         self.render("Recenter canvas")
