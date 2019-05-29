@@ -976,5 +976,5 @@ class CustomTab(wx.Panel):
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
             i, val = name_list[cnt]
-            it = dv.DataViewIconText("" + i, ic)
+            it = dv.DataViewIconText("" + i)
             self.item_list.AppendItem([it, val])
