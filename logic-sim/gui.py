@@ -67,8 +67,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         self.parent = parent
 
-        self.cycles_completed = 0 # updated when the gui calls render() TODO initialize to 0
-
         # Text rendering settings
         self.font = GLUT.GLUT_BITMAP_9_BY_15
         self.character_width = 9
@@ -116,12 +114,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
-    def render(self, text, cycles=None):
+    def render(self, text):
         """Handle all drawing operations."""
-        # Update cycles_completed if required
-        if cycles is not None:
-            self.cycles_completed = cycles
-
         self.update_borders()
         self.update_zoom_lower_bound()
         # self.bound_panning()
@@ -265,7 +259,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # self.border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + num_monitors * self.monitor_spacing + self.ruler_height/self.zoom
         # self.border_right depends only on the number of cycles to be simulated
-        self.border_right = self.margin_left/self.zoom + self.cycles_completed * self.cycle_width
+        self.border_right = self.margin_left/self.zoom + self.parent.cycles_completed * self.cycle_width
 
 
     def render_text(self, text, x_pos, y_pos):
@@ -338,11 +332,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def render_cycle_numbers(self):
         """Draw a ruler of cycle numbers at the top of the visible part of the
         canvas."""
-        if self.cycles_completed == 0:
+        if self.parent.cycles_completed == 0:
             return
 
         canvas_size = self.GetClientSize()
-        for cycle in range(self.cycles_completed):
+        for cycle in range(self.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
@@ -370,7 +364,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_grid(self, render_only_on_ruler = False):
         """Draw a grid for separating the different cycles in the traces."""
-        if self.cycles_completed == 0:
+        if self.parent.cycles_completed == 0:
             return
 
         canvas_size = self.GetClientSize()
@@ -384,7 +378,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
         line_x_pos = self.margin_left/self.zoom
         self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
-        for cycle in range(self.cycles_completed):
+        for cycle in range(self.parent.cycles_completed):
             line_x_pos = self.margin_left/self.zoom + (cycle + 1) * self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
@@ -604,7 +598,7 @@ class Gui(wx.Frame):
     def on_run(self):
         self.log_message("Run button pressed.")
         self.run_command()
-        self.canvas.render("RUN", self.cycles_completed)
+        self.canvas.render("RUN")
 
     def continue_command(self):
         """Continue a previously run simulation."""
@@ -620,7 +614,7 @@ class Gui(wx.Frame):
     def on_continue(self):
         self.log_message("Continue button pressed.")
         self.continue_command()
-        self.canvas.render("Continue", self.cycles_completed)
+        self.canvas.render("Continue")
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
