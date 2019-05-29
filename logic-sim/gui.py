@@ -394,7 +394,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             num_digits = len(str(cycle + 1))
             # print cycle number
             text_x_pos = (self.border_left + self.margin_left - 0.5 *
-                          num_digits * self.character_width) / self.zoom + (cycle + 0.5) * self.cycle_width
+                          num_digits * self.character_width) / self.zoom +\
+                (cycle + 0.5) * self.cycle_width
             text_y_pos = (size.height - self.pan_y -
                           self.character_height) / self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
@@ -838,30 +839,43 @@ class Gui(wx.Frame):
         """Shows a help window with user instructions."""
         help_title = "Help - Program controls "
         help_content = ""\
-        "Shortcuts: \n"\
-        "Ctrl + O: Open file\n"\
-        "Ctrl + H: Help\n"\
-        "Ctrl + R: Run\n"\
-        "Ctrl + C: Continue\n\n"\
-        "User Instructions:\n"\
-        "Use the Open file button to select the desired circuit defnition file."\
-        "If the file contains no errors the activity log at the bottom of the window"\
-        "will read \"Succesfully parsed network\". If there are errors, the error log"\
-        "will read \"Failed to parse network\".\n\n"\
-        "If the network was parsed correctly it can be ran. Use the plus and minus on the"\
-        "cycle selector to select the desired number of cycles for the simulation or"\
-        "tyep in th desired number. Press the Run button to run the simulator for the number"\
-        "of cycles selected and display the waveforms at the current monitor points (from a"\
-        "cold-startup of the circuit). Press the Continue button to run the simulator"\
-        "for an additional number of cycles as selected in the cycle selector and"\
-        "display the waveforms at the current monitor points.\n\n"\
-        "The canvas can be restored to its default state of position and zoomby"\
-        "selecting the center button.\n\n"\
-        "Different monitor points can be setted and zapped by first selecting the"\
-        "Monitors tab on the right panel, and then selecting the desired monitor"\
-        "point from the list.\n\n"\
-        "Switches can be operated by first selecting the Switches tab on the right"\
-        "panel, and then selecting the desired switches."
+            "Shortcuts: \n"\
+            "Ctrl + O: Open file\n"\
+            "Ctrl + H: Help\n"\
+            "Ctrl + R: Run\n"\
+            "Ctrl + C: Continue\n\n"\
+            "User Instructions:\n"\
+            "Use the Open file button to select "\
+            "the desired circuit defnition file."\
+            "If the file contains no errors the activity"\
+            " log at the bottom of the window"\
+            "will read \"Succesfully parsed network\". "\
+            "If there are errors, the error log"\
+            "will read \"Failed to parse network\".\n\n"\
+            "If the network was parsed correctly it can be ran. "\
+            "Use the plus and minus on the"\
+            "cycle selector to select the desired number"\
+            " of cycles for the simulation or"\
+            "type in th desired number. Press the Run "\
+            "button to run the simulator for the number"\
+            "of cycles selected and display the waveforms "\
+            "at the current monitor points (from a"\
+            "cold-startup of the circuit). Press the "\
+            "Continue button to run the simulator"\
+            "for an additional number of cycles as selected "\
+            "in the cycle selector and"\
+            "display the waveforms at the current monitor points.\n\n"\
+            "The canvas can be restored to its default state "\
+            "of position and zoomby"\
+            "selecting the center button.\n\n"\
+            "Different monitor points can be setted "\
+            "and zapped by first selecting the"\
+            "Monitors tab on the right panel, and then "\
+            "selecting the desired monitor"\
+            "point from the list.\n\n"\
+            "Switches can be operated by first selecting "\
+            "the Switches tab on the right"\
+            "panel, and then selecting the desired switches."
 
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
