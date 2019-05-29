@@ -616,6 +616,11 @@ class Gui(wx.Frame):
         self.continue_command()
         self.canvas.render("Continue")
 
+    def on_center(self):
+        """Centers teh canvas to its default state of zoom and panning."""
+        self.log_message("Center canvas.")
+        self.canvas.recenter_canvas()
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -630,6 +635,8 @@ class Gui(wx.Frame):
             self.on_run()
         if Id == self.ID_CONTINUE: #continue button
             self.on_continue()
+        if Id == self.ID_CENTER: # center button
+            self.on_center()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
