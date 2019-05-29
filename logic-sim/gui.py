@@ -438,6 +438,7 @@ class Gui(wx.Frame):
         self.ID_RUN = 1003;
         self.ID_CONTINUE = 1004;
         self.ID_CYCLES_CTRL = 1005;
+        self.ID_HELP = 1006;
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -447,6 +448,7 @@ class Gui(wx.Frame):
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
         fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
         fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
+        fileMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
         menuBar.Append(fileMenu, "&File")
         self.SetMenuBar(menuBar)
 
@@ -462,6 +464,7 @@ class Gui(wx.Frame):
         toolBar.AddSeparator()
         toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
         toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
+        toolBar.AddTool(self.ID_HELP, "Tool5", openIcon)
         toolBar.AddControl(wx.SpinCtrl(toolBar), "SpinCtrl")
         self.SetToolBar(toolBar)
 
@@ -553,7 +556,7 @@ class Gui(wx.Frame):
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
         if self.parser.parse_network():
-            self.log_message("Network parsed Correctly")
+            self.log_message("Network parsed correctly")
         else:
             self.log_message("Failed to parse network")
 
@@ -617,9 +620,47 @@ class Gui(wx.Frame):
         self.canvas.render("Continue")
 
     def on_center(self):
-        """Centers teh canvas to its default state of zoom and panning."""
+        """Centers the canvas to its default state of zoom and panning."""
         self.log_message("Center canvas.")
         self.canvas.recenter_canvas()
+
+    def on_help(self):
+        """Shows a help window with user instructions."""
+        self.log_message("Help button pressed.")
+        help_title = "Help - Program controls "
+        help_content = '''
+        Shortcuts: \n
+        Ctrl + O: Open file
+        Ctrl + H: Help
+        Ctrl + R: Run
+        Ctrl + C: Continue
+
+        User Instructions:\n
+        Use the Open file button to select the desired circuit defnition file.
+        If the file contains no errors the error log at the bottom of the window
+        will read "Network parsed correctly". If there are errors, the error log
+        will read "Falied to parse network". \n
+
+        If the network was parsed correctly it can be ran. Use the arrows on the
+        cycle selector to select the desired number of cycles for the simulation.
+        Press the Run button to run the simulator for the number of cycles
+        selected and display the waveforms at the current monitor points (from a
+        cold-startup of the circuit). Press the Continue button to run the simulator
+        for an additional number of cycles as selected in the cycle selector and
+        display the waveforms at the current monitor points.
+
+        The canvas can be restored to its default state of position and zoomby
+        selecting the center button. 
+
+        Different monitor points can be setted and zapped by first selecting the
+        Monitors tab on the right panel, and then selecting the desired monitor
+        point from the list.
+
+        Switches can be operated by first selecting the Switches tab on the right
+        panel, and then selecting the desired switches.
+        '''
+        wx.MessageBox(help_content,
+                      help_title, wx.ICON_INFORMATION | wx.OK)
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -637,6 +678,8 @@ class Gui(wx.Frame):
             self.on_continue()
         if Id == self.ID_CENTER: # center button
             self.on_center()
+        if Id == self.ID_HELP: # help button
+            self.on_help()
 
     def on_spin(self, event):
         """Handle the event when the user changes the spin control value."""
