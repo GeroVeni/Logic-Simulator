@@ -138,7 +138,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # Set the left margin in the canvas
         if self.parent.monitors.get_margin() is not None:
             self.margin_left = max((self.parent.monitors.get_margin()*self.character_width + 10)/self.zoom, 100)
-            
+
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
@@ -449,14 +449,21 @@ class Gui(wx.Frame):
 
         # Configure the file menu
         fileMenu = wx.Menu()
+        viewMenu = wx.Menu()
+        runMenu = wx.Menu()
+        helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
-        fileMenu.Append(wx.ID_ABOUT, "&About")
-        fileMenu.Append(wx.ID_EXIT, "&Exit")
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
-        fileMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
+        fileMenu.Append(wx.ID_EXIT, "&Exit")
+        viewMenu.Append(self.ID_CENTER, "&Center\tCtrl+E")
+        runMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
+        runMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
+        helpMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
+        helpMenu.Append(wx.ID_ABOUT, "&About")
         menuBar.Append(fileMenu, "&File")
+        menuBar.Append(viewMenu, "&View")
+        menuBar.Append(runMenu, "&Simulation")
+        menuBar.Append(helpMenu, "&Help")
         self.SetMenuBar(menuBar)
 
         # Configure toolbar
@@ -649,14 +656,14 @@ class Gui(wx.Frame):
 
         User Instructions:\n
         Use the Open file button to select the desired circuit defnition file.
-        If the file contains no errors the message log at the bottom of the window
+        If the file contains no errors the activity log at the bottom of the window
         will read "Succesfully parsed network". If there are errors, the error log
         will read "Failed to parse network".
 
-        If the network was parsed correctly it can be ran. Use the arrows on the
-        cycle selector to select the desired number of cycles for the simulation.
-        Press the Run button to run the simulator for the number of cycles
-        selected and display the waveforms at the current monitor points (from a
+        If the network was parsed correctly it can be ran. Use the plus and minus on the
+        cycle selector to select the desired number of cycles for the simulation or
+        tyep in th desired number. Press the Run button to run the simulator for the number
+        of cycles selected and display the waveforms at the current monitor points (from a
         cold-startup of the circuit). Press the Continue button to run the simulator
         for an additional number of cycles as selected in the cycle selector and
         display the waveforms at the current monitor points.
@@ -680,7 +687,7 @@ class Gui(wx.Frame):
         if Id == wx.ID_EXIT:
             self.Close(True)
         if Id == wx.ID_ABOUT:
-            wx.MessageBox("Logic Simulator\nCreated by Mojisola Agboola\n2017",
+            wx.MessageBox("Logic Simulator\nCreated by Psylinders\n2019",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
         if Id == self.ID_OPEN: # file dialog
             self.on_open()
