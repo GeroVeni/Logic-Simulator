@@ -453,16 +453,18 @@ class Gui(wx.Frame):
         # Configure toolbar
         toolBar = self.CreateToolBar()
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        redoIcon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR)
+        centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        runIcon = wx.Bitmap("res/run.png")
+        continueIcon = wx.Bitmap("res/continue.png")
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
         self.spin = wx.SpinCtrl(toolBar)
         toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(self.ID_CENTER, "Tool2", redoIcon)
+        toolBar.AddTool(self.ID_CENTER, "Tool2", centerIcon)
         toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
-        toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
+        toolBar.AddTool(self.ID_RUN, "Tool3", runIcon)
+        toolBar.AddTool(self.ID_CONTINUE, "Tool4", continueIcon)
         toolBar.AddControl(self.spin, "SpinCtrl")
         self.SetToolBar(toolBar)
 
