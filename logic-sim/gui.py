@@ -843,7 +843,9 @@ class Gui(wx.Frame):
             "Ctrl + O: Open file\n"\
             "Ctrl + H: Help\n"\
             "Ctrl + R: Run\n"\
-            "Ctrl + C: Continue\n\n"\
+            "Ctrl + Shift + C: Continue\n"\
+            "Ctrl + E: Center canvas\n"\
+            "Ctrl + L: Clear activity log\n\n"\
             "User Instructions:\n"\
             "Use the Open file button to select "\
             "the desired circuit defnition file."\
