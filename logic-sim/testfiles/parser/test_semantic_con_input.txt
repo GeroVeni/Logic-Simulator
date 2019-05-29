@@ -1,0 +1,9 @@
+DEVICES:
+sw1, sw2 := SWITCH;
+and1 := AND;
+END;
+CONNECTIONS:
+and1.I1 => and1.I2;
+sw1 => and1.I1;
+END;
+

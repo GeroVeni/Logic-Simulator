@@ -1,0 +1,11 @@
+DEVICES:
+sw1, sw2, sw3:= SWITCH;
+and1 := AND;
+clk := CLOCK;
+dt := DTYPE;
+END;
+CONNECTIONS:
+sw1, sw3 => and1.I1, and1.I2;
+sw1, sw2, clk, and1 => dt;
+END;
+

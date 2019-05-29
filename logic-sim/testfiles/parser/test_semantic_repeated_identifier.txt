@@ -1,0 +1,8 @@
+DEVICES:
+sw1 := SWITCH;
+and1, and1 := AND;
+sw1 := SWITCH;
+END;
+CONNECTIONS:
+END;
+
