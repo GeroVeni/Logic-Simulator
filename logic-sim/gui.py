@@ -10,9 +10,11 @@ Gui - configures the main window and all the widgets.
 """
 import os
 import wx
+import wx.adv
 import wx.glcanvas as wxcanvas
 import wx.dataview as dv
 import wx.lib.mixins.listctrl as listmix
+from wx.lib.wordwrap import wordwrap
 from OpenGL import GL, GLUT
 
 from names import Names
@@ -768,37 +770,32 @@ class Gui(wx.Frame):
     def on_help(self):
         """Shows a help window with user instructions."""
         help_title = "Help - Program controls "
-        help_content = '''
-        Shortcuts: \n
-        Ctrl + O: Open file
-        Ctrl + H: Help
-        Ctrl + R: Run
-        Ctrl + C: Continue
+        help_content = ""\
+        "Shortcuts: \n"\
+        "Ctrl + O: Open file\n"\
+        "Ctrl + H: Help\n"\
+        "Ctrl + R: Run\n"\
+        "Ctrl + C: Continue\n\n"\
+        "User Instructions:\n"\
+        "Use the Open file button to select the desired circuit defnition file."\
+        "If the file contains no errors the activity log at the bottom of the window"\
+        "will read \"Succesfully parsed network\". If there are errors, the error log"\
+        "will read \"Failed to parse network\".\n\n"\
+        "If the network was parsed correctly it can be ran. Use the plus and minus on the"\
+        "cycle selector to select the desired number of cycles for the simulation or"\
+        "tyep in th desired number. Press the Run button to run the simulator for the number"\
+        "of cycles selected and display the waveforms at the current monitor points (from a"\
+        "cold-startup of the circuit). Press the Continue button to run the simulator"\
+        "for an additional number of cycles as selected in the cycle selector and"\
+        "display the waveforms at the current monitor points.\n\n"\
+        "The canvas can be restored to its default state of position and zoomby"\
+        "selecting the center button.\n\n"\
+        "Different monitor points can be setted and zapped by first selecting the"\
+        "Monitors tab on the right panel, and then selecting the desired monitor"\
+        "point from the list.\n\n"\
+        "Switches can be operated by first selecting the Switches tab on the right"\
+        "panel, and then selecting the desired switches."
 
-        User Instructions:\n
-        Use the Open file button to select the desired circuit defnition file.
-        If the file contains no errors the activity log at the bottom of the window
-        will read "Succesfully parsed network". If there are errors, the error log
-        will read "Failed to parse network".
-
-        If the network was parsed correctly it can be ran. Use the plus and minus on the
-        cycle selector to select the desired number of cycles for the simulation or
-        tyep in th desired number. Press the Run button to run the simulator for the number
-        of cycles selected and display the waveforms at the current monitor points (from a
-        cold-startup of the circuit). Press the Continue button to run the simulator
-        for an additional number of cycles as selected in the cycle selector and
-        display the waveforms at the current monitor points.
-
-        The canvas can be restored to its default state of position and zoomby
-        selecting the center button.
-
-        Different monitor points can be setted and zapped by first selecting the
-        Monitors tab on the right panel, and then selecting the desired monitor
-        point from the list.
-
-        Switches can be operated by first selecting the Switches tab on the right
-        panel, and then selecting the desired switches.
-        '''
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
 
