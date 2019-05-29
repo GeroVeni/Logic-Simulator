@@ -35,8 +35,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     Parameters
     ----------
     parent: parent window.
-    devices: instance of the devices.Devices() class.
-    monitors: instance of the monitors.Monitors() class.
 
     Public methods
     --------------
@@ -225,8 +223,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.Refresh()  # triggers the paint event
 
     def bound_panning(self):
-        """Makes sure the canvas is always panned within the bounds of the
-        signal traces."""
+        """Bound pan variables with respect to the signal traces."""
         size = self.GetClientSize()
         allowable_pan_right = -(self.border_right - size.width/self.zoom)
         allowable_pan_left = self.border_left
@@ -254,16 +251,15 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.pan_y = allowable_pan_bottom
 
     def bound_zooming(self):
-        """Makes sure the zoom is bounded."""
+        """Bound zoom."""
         if self.zoom > self.zoom_upper:
             self.zoom = self.zoom_upper
         elif self.zoom < self.zoom_lower:
             self.zoom = self.zoom_lower
 
     def update_zoom_lower_bound(self):
-        """Adjusts the zoom settings such that the user cannot zoom out further
-        than the amount of zoom that just lets all the monitors to be seen on
-        the canvas at once."""
+        """Adjust zoom lower bound when the canvas is resized or the number of
+        monitors changes."""
         size = self.GetClientSize()
 
         # Allow a max number of 9 monitors to be displayed at once
@@ -274,7 +270,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.zoom_lower = min(size.height/(visible_objects_height), self.zoom_upper)
 
     def update_borders(self):
-        """Updates the borders of the canvas depending on the number of monitors
+        """Update the borders of the canvas depending on the number of monitors
         and the number of cycles to be simulated."""
         num_monitors = len(self.parent.monitors.monitors_dictionary)
         # self.border_top depends only on the number of monitors
@@ -302,7 +298,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 GLUT.glutBitmapCharacter(self.font, ord(character))
 
     def render_monitor(self, device_id, output_id, y_min, y_max):
-        """Draw monitor name and signal trace for a particular monitor."""
+        """Handle monitor name and signal trace drawing for a single monitor."""
         monitor_name = self.parent.devices.get_signal_name(device_id, output_id)
         signal_list = self.parent.monitors.monitors_dictionary[(device_id, output_id)]
 
@@ -344,7 +340,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             currently_drawing = False
 
     def render_line(self, start_point, end_point):
-        """Renders a straight line on the canvas, with the given end points."""
+        """Render a straight line on the canvas, with the given end points."""
         if not (isinstance(start_point, tuple) and isinstance(end_point, tuple)):
             raise TypeError("start_point and end_point arguments must be of Type tuple")
         if (len(start_point) != 2  or len(end_point) != 2):
@@ -357,8 +353,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glEnd()
 
     def render_cycle_numbers(self):
-        """Draw a ruler of cycle numbers at the top of the visible part of the
-        canvas."""
+        """Handle cycle numbers drawing on the top of the canvas (ruler)."""
         if self.parent.cycles_completed == 0:
             return
 
@@ -372,9 +367,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
     def render_ruler_background(self):
-        """Draw a background for the ruler numbers at the top of the visible
-        part of the canvas.
-        """
+        """Draw a background for the ruler."""
         size = self.GetClientSize()
         ruler_color = [200/255, 230/255, 255/255]
         #Make sure our transformations don't affect any other transformations in other code
@@ -410,7 +403,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
             self.render_line((line_x_pos, line_y_pos_start),(line_x_pos, line_y_pos_end))
 
     def recenter_canvas(self):
-        """Restores the canvas to its default position and state of zoom."""
+        """Restore canvas to its default pan position and zoom state."""
         self.pan_x = self.border_left
         self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
@@ -418,12 +411,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render("Recenter canvas")
 
     def restore_canvas_on_open(self):
-        """Restores the state of the canvas when a new circuit definition file
+        """Restore the state of the canvas when a new circuit definition file
         is loaded using the gui method on_open().
 
         restore_canvas_on_open() should be called whenever the gui method
-        on_open() is called.
-        """
+        on_open() is called."""
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
@@ -578,66 +570,28 @@ class Gui(wx.Frame):
         self.switch_tab.clear()
         self.switch_tab.append(list(zip(switch_names, [True for i in mons])))
 
-    def set_monitor(self, monitor_name, is_active):
+    def set_monitor(self, monitor_id, is_active):
         """Activate or deactivate a monitor.
 
         Parameters
         ----------
-        monitor_name: The name of the monitor to change state
+        monitor_id: The id of the monitor to change state
         is_active: The state of the monitor; True to activate
                    and False to deactivate
         """
-        # Split the monitor to device name and port name if it exists
-        splt = monitor_name.split('.')
-        if len(splt) == 1:
-            # No port given
-            device_id = self.names.query(splt[0])
-            port_id = None
-        elif len(splt) == 2:
-            # Port given
-            device_id = self.names.query(splt[0])
-            port_id = self.names.query(splt[1])
-        else:
-            # TODO: Print error
-            pass
+        self.log_message("Clicked monitor: {} state: {}".format(monitor_id, is_active))
 
-        if device_id is None:
-            # TODO: Reformat error text for consistency with parser
-            self.log_message("Error: Monitor {} not found.".format(monitor_name))
-            return
-        # Add/remove monitor
-        if is_active:
-            action = 'activated'
-            monitor_error = self.monitors.make_monitor(device_id, port_id,
-                                                        self.cycles_completed)
-            if monitor_error == self.monitors.NO_ERROR:
-                self.log_message("Monitor {} was {}.".format(monitor_name, action))
-            else:
-                #TODO: Print error
-                pass
-        else:
-            action = 'deactivated'
-            if self.monitors.remove_monitor(device_id, port_id):
-                self.log_message("Monitor {} was {}.".format(monitor_name, action))
-            else:
-                #TODO: Print error
-                pass
-        self.canvas.restore_canvas_on_open()
-
-    def set_switch(self, switch_name, is_on):
+    def set_switch(self, switch_id, is_on):
         """Turn a swtich on and off.
 
         Parameters
         ----------
-        switch_name: The name of the switch to change output
+        switch_id: The id of the switch to change output
         is_on: The state of the monitor; True to turn on
                and False to turn off
+
         """
-        if is_on:
-            state = 'ON'
-        else:
-            state = 'OFF'
-        self.log_message("Switch {} was switched {}".format(switch_name, state))
+        self.log_message("Switch")
 
     def clear_log(self):
         """Clear the error log."""
@@ -854,9 +808,10 @@ class CustomTab(wx.Panel):
         self.item_list.DeleteAllItems()
 
     def append(self, name_list):
+        #ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
             i, val = name_list[cnt]
-            it = dv.DataViewIconText("" + i, ic)
+            it = dv.DataViewIconText(" " + i, ic)
             self.item_list.AppendItem([it, val])
