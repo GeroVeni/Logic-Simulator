@@ -481,7 +481,7 @@ class Gui(wx.Frame):
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
-        self.spin = wx.SpinCtrl(toolBar)
+        self.spin = wx.SpinCtrl(toolBar, value='10')
         toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon)
         toolBar.AddSeparator()
         toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
@@ -589,7 +589,7 @@ class Gui(wx.Frame):
                 self.log_message("Succesfully parsed network.")
             else:
                 self.log_message("Failed to parse network.")
-        self.log_message(captured_stdout.getvalue())
+                self.log_message(captured_stdout.getvalue())
 
     def on_open(self):
         text = "Open file dialog."
