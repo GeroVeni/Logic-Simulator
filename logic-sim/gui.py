@@ -8,6 +8,7 @@ Classes:
 MyGLCanvas - handles all canvas drawing operations.
 Gui - configures the main window and all the widgets.
 """
+import os
 import wx
 import wx.glcanvas as wxcanvas
 import wx.dataview as dv
@@ -531,15 +532,32 @@ class Gui(wx.Frame):
         nb = wx.Notebook(self, size=(200, -1))
 
         # Create the tabs
-        tab1 = CustomTab(nb, ["mon" + str(i) for i in range(40)])
-        tab2 = CustomTab(nb, ["swi" + str(i) for i in range(40)])
-        tab1.set_on_item_selected_listener(self.set_monitor)
+        self.monitor_tab = CustomTab(nb)
+        self.switch_tab = CustomTab(nb)
+        self.monitor_tab.set_on_item_selected_listener(self.set_monitor)
+        self.switch_tab.set_on_item_selected_listener(self.set_switch)
 
-        nb.AddPage(tab1, "Monitors")
-        nb.AddPage(tab2, "Switches")
+        nb.AddPage(self.monitor_tab, "Monitors")
+        nb.AddPage(self.switch_tab, "Switches")
 
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
+
+    def update_tabs(self):
+        """Update the tabs with new values."""
+
+        # Get monitor names
+        [mons, non_mons] = self.monitors.get_signal_names()
+
+        # Get switch names
+        switch_ids = self.devices.find_devices(self.devices.SWITCH)
+        switch_names = [self.names.get_name_string(sw_id) for sw_id in switch_ids]
+
+        self.monitor_tab.clear()
+        self.monitor_tab.append(list(zip(mons, [True for i in mons])))
+        self.monitor_tab.append(list(zip(non_mons, [False for i in non_mons])))
+        self.switch_tab.clear()
+        self.switch_tab.append(list(zip(switch_names, [True for i in mons])))
 
     def set_monitor(self, monitor_id, is_active):
         """Activate or deactivate a monitor.
@@ -601,6 +619,7 @@ class Gui(wx.Frame):
             self.log_message("File opened: {}".format(file_path))
             self.run_parser(file_path)
             self.canvas.restore_canvas_on_open()
+            self.update_tabs()
 
 
     def run_network(self, cycles):
@@ -717,14 +736,6 @@ class Gui(wx.Frame):
         text = "".join(["New text box value: ", text_box_value])
         self.canvas.render(text)
 
-class CustomListCtrl(wx.CheckListBox, listmix.ListCtrlAutoWidthMixin):
-    """Docstring for CustomListCtrl. """
-
-    def __init__(self, parent, ID, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
-        """ TODO. """
-        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
-        listmix.ListCtrlAutoWidthMixin.__init__(self)
 
 class CustomTab(wx.Panel):
     """Configure the tabs added in the notebook.
@@ -742,7 +753,7 @@ class CustomTab(wx.Panel):
     TODO
     """
 
-    def __init__(self, parent, name_list):
+    def __init__(self, parent):
         """Attach parent to panel and create the list control widget."""
         wx.Panel.__init__(self, parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -759,31 +770,12 @@ class CustomTab(wx.Panel):
         self.on_item_selected_listener = None
 
         #Create ListCtrl
-        self.mon_list = dv.DataViewListCtrl(self, style=wx.dataview.DV_ROW_LINES)
-        self.mon_list.AppendIconTextColumn('Names', width=140, flags = 0)
-        self.mon_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
-        #self.mon_list = wx.CheckListBox(self, size = (self.LIST_WIDTH, -1), style = wx.LB_SINGLE);
-        self.mon_list.Bind(dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.on_item_selected)
-        #mon_list.AppendColumn("Name")
-        #mon_list.AppendColumn("Status")
-        for cnt in range(len(name_list)):
-            #ic = wx.ArtProvider.GetIcon(wx.ART_ERROR)
-            #ic = wx.Icon('', type=wx.BITMAP_TYPE_ANY, desiredWidth=16, desiredHeight=16)
-            #TODO Convert from bitmap
-            i = name_list[cnt]
-            bmp = wx.Bitmap(16, 16)
-            ic = wx.Icon(bmp)
-            ic_l = [None] * 3
-            ic_l[1] = wx.Icon('res/empty_circle_w1.png')
-            ic_l[2] = wx.Icon('res/empty_circle_w2.png')
-            ic_l[0] = wx.Icon('res/empty_circle_w2x1.png')
-            ic = ic_l[cnt % 3]
-            it = dv.DataViewIconText(" " + i, ic)
-            self.mon_list.AppendItem([it, True])
-        #mon_list.SetColumnWidth(0, self.LIST_WIDTH - self.LIST_STATUS_WIDTH)
-        #mon_list.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+        self.item_list = dv.DataViewListCtrl(self, style=wx.dataview.DV_ROW_LINES)
+        self.item_list.AppendIconTextColumn('Names', width=140, flags = 0)
+        self.item_list.AppendToggleColumn('Status', width=60, align=wx.ALIGN_CENTER, flags = 0)
+        self.item_list.Bind(dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.on_item_selected)
 
-        sizer.Add(self.mon_list, 1, wx.EXPAND)
+        sizer.Add(self.item_list, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
     def set_on_item_selected_listener(self, listener):
@@ -794,8 +786,22 @@ class CustomTab(wx.Panel):
         """Handle the event when the user changes the state of a monitor."""
         if self.on_item_selected_listener is None:
             return
-        row = self.mon_list.ItemToRow(event.GetItem())
-        name = self.mon_list.GetValue(row, self.TEXT_COLUMN).GetText()
-        state = self.mon_list.GetToggleValue(row, self.TOGGLE_COLUMN)
+        row = self.item_list.ItemToRow(event.GetItem())
+        name = self.item_list.GetValue(row, self.TEXT_COLUMN).GetText()
+        state = self.item_list.GetToggleValue(row, self.TOGGLE_COLUMN)
         #self.gui.set_monitor(name, state)
         self.on_item_selected_listener(name, state)
+
+    def clear(self):
+        """Clears the items in the list."""
+        self.item_list.DeleteAllItems()
+
+    def append(self, name_list):
+        #ic = wx.Icon(wx.Bitmap(16, 16))
+        CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+        ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
+        for cnt in range(len(name_list)):
+            i, val = name_list[cnt]
+            it = dv.DataViewIconText(" " + i, ic)
+            self.item_list.AppendItem([it, val])
+
