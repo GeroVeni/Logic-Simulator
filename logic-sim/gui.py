@@ -458,16 +458,19 @@ class Gui(wx.Frame):
         centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
         runIcon = wx.Bitmap("res/run.png")
         continueIcon = wx.Bitmap("res/continue.png")
+        infoIcon = wx.Bitmap("res/info.png")
         #TODO Change names icons and event handling of tools
         #TODO Create matching options in the fileMenu and associate them
         #with shortcuts
         self.spin = wx.SpinCtrl(toolBar)
-        toolBar.AddTool(self.ID_OPEN, "Tool1", openIcon)
-        toolBar.AddTool(self.ID_CENTER, "Tool2", centerIcon)
+        toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon)
         toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_RUN, "Tool3", openIcon)
-        toolBar.AddTool(self.ID_CONTINUE, "Tool4", openIcon)
-        toolBar.AddTool(self.ID_HELP, "Tool5", openIcon)
+        toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
+        toolBar.AddSeparator()
+        toolBar.AddTool(self.ID_CENTER, "Tool3", centerIcon)
+        toolBar.AddSeparator()
+        toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
+        toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
         toolBar.AddControl(self.spin, "SpinCtrl")
         self.SetToolBar(toolBar)
 
@@ -476,7 +479,7 @@ class Gui(wx.Frame):
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Configure the widgets
-        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready.",
+        self.error_log = wx.TextCtrl(self, wx.ID_ANY, "Ready. Please load a file.",
                                     style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
@@ -628,7 +631,6 @@ class Gui(wx.Frame):
 
     def on_help(self):
         """Shows a help window with user instructions."""
-        self.log_message("Help button pressed.")
         help_title = "Help - Program controls "
         help_content = '''
         Shortcuts: \n
@@ -639,7 +641,7 @@ class Gui(wx.Frame):
 
         User Instructions:\n
         Use the Open file button to select the desired circuit defnition file.
-        If the file contains no errors the error log at the bottom of the window
+        If the file contains no errors the message log at the bottom of the window
         will read "Succesfully parsed network". If there are errors, the error log
         will read "Failed to parse network".
 
