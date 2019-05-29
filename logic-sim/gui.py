@@ -446,6 +446,7 @@ class Gui(wx.Frame):
         self.ID_CONTINUE = 1004;
         self.ID_CYCLES_CTRL = 1005;
         self.ID_HELP = 1006;
+        self.ID_CLEAR = 1007;
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -456,8 +457,9 @@ class Gui(wx.Frame):
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O") # This is how to associate a shortcut
         fileMenu.Append(wx.ID_EXIT, "&Exit")
         viewMenu.Append(self.ID_CENTER, "&Center\tCtrl+E")
+        viewMenu.Append(self.ID_CLEAR, "&Clea Activity Log\tCtrl+L")
         runMenu.Append(self.ID_RUN, "&Run\tCtrl+R") # This is how to associate a shortcut
-        runMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+C") # This is how to associate a shortcut
+        runMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+Shift+C") # This is how to associate a shortcut
         helpMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, "&About")
         menuBar.Append(fileMenu, "&File")
@@ -504,7 +506,8 @@ class Gui(wx.Frame):
         right_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        left_sizer.Add(self.canvas, 2, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
+        left_sizer.Add(wx.StaticText(self, label="Activity Log"), 0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.error_log, 1, wx.EXPAND | wx.ALL, 5)
 
         #right_sizer.Add(self.spin, 0, wx.ALL, 5)
@@ -686,19 +689,21 @@ class Gui(wx.Frame):
         Id = event.GetId()
         if Id == wx.ID_EXIT:
             self.Close(True)
-        if Id == wx.ID_ABOUT:
+        elif Id == wx.ID_ABOUT:
             wx.MessageBox("Logic Simulator\nCreated by Psylinders\n2019",
                           "About Logsim", wx.ICON_INFORMATION | wx.OK)
-        if Id == self.ID_OPEN: # file dialog
+        elif Id == self.ID_OPEN: # file dialog
             self.on_open()
-        if Id == self.ID_RUN: # run button
+        elif Id == self.ID_RUN: # run button
             self.on_run()
-        if Id == self.ID_CONTINUE: #continue button
+        elif Id == self.ID_CONTINUE: #continue button
             self.on_continue()
-        if Id == self.ID_CENTER: # center button
+        elif Id == self.ID_CENTER: # center button
             self.on_center()
-        if Id == self.ID_HELP: # help button
+        elif Id == self.ID_HELP: # help button
             self.on_help()
+        elif Id == self.ID_CLEAR: # help button
+            self.clear_log()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
