@@ -1,0 +1,12 @@
+DEVICES:
+    sw1 := SWITCH;
+    nand1 := NAND(1);
+END;
+
+CONNECTIONS:
+    sw1 => nand1;
+END;
+
+MONITORS:
+    sw1, nand1;
+END;

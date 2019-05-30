@@ -18,8 +18,9 @@ def new_names():
 
 @pytest.fixture
 def new_file():
-    """" Creates a temporary file to store the data to be scanned and returns
-    the names of the file.
+    """" Creates a temporary file to store the data to be scanned.
+
+    Returns the names of the file created.
     """
     def _file(string):
         f = NamedTemporaryFile(mode='w+', suffix='.txt', delete=False)
@@ -50,6 +51,7 @@ def new_Scanner():
 
 
 def test_constructor_raises_exception(new_Scanner):
+    """Test scanner constructurs raises the correct errors."""
     with pytest.raises(TypeError):
         new_Scanner(7)
     with pytest.raises(TypeError):
@@ -60,6 +62,7 @@ def test_constructor_raises_exception(new_Scanner):
 
 
 def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
+    """Test get_error_line() raises the correct errors."""
     empty_file = new_file("")
     with pytest.raises(TypeError):
         new_Scanner(empty_file).get_error_line("not symbol")
@@ -72,6 +75,7 @@ def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
 
 
 def test_get_symbol_emptyfile(new_Scanner, new_names):
+    """ Test if get_symbol returns EOF for empty files or whitespace only."""
     scanner = new_Scanner("testfiles/scanner/test_empty_file.txt")
     assert scanner.get_symbol().type == scanner.EOF
     scanner = new_Scanner("testfiles/scanner/test_only_white_space.txt")
@@ -79,6 +83,7 @@ def test_get_symbol_emptyfile(new_Scanner, new_names):
 
 
 def test_get_symbol_types(new_Scanner, new_file):
+    """ Test if get_symbol recognizes all the different types of symbols"""
     types = new_file("MONITORS AND Q PYSLINDERS 12345 : ; , := ( ) => . %")
     scanner = new_Scanner(types)
     current_symbol = scanner.get_symbol()
@@ -90,6 +95,7 @@ def test_get_symbol_types(new_Scanner, new_file):
 
 
 def test_get_symbol_keywords(new_Scanner, new_file):
+    """ Test if get_symbol recognizes all the different keywords."""
     keywords = new_file("CONNECTIONS DEVICES MONITORS END")
     scanner = new_Scanner(keywords)
     current_symbol = scanner.get_symbol()
@@ -99,6 +105,7 @@ def test_get_symbol_keywords(new_Scanner, new_file):
 
 
 def test_get_symbol_devices(new_Scanner, new_file):
+    """ Test if get_symbol recognizes all the different devices."""
     devices = new_file("NAND AND NOR OR XOR DTYPE CLOCK SWITCH")
     scanner = new_Scanner(devices)
     current_symbol = scanner.get_symbol()
@@ -108,6 +115,7 @@ def test_get_symbol_devices(new_Scanner, new_file):
 
 
 def test_get_symbol_ports(new_Scanner, new_file):
+    """ Test if get_symbol recognizes all the different ports."""
     ports = new_file("Q QBAR DATA CLK SET CLEAR I")
     scanner = new_Scanner(ports)
     current_symbol = scanner.get_symbol()
@@ -117,6 +125,7 @@ def test_get_symbol_ports(new_Scanner, new_file):
 
 
 def test_get_symbol_comments(new_Scanner, new_file):
+    """ Test if get_symbol recognizes different types of comments"""
     valid_comment = new_file("//this is a valid comment")
     scanner = new_Scanner(valid_comment)
     assert scanner.get_symbol().type == scanner.EOF
@@ -124,6 +133,7 @@ def test_get_symbol_comments(new_Scanner, new_file):
     scanner = new_Scanner(same_line_comment)
     assert scanner.get_symbol().type == scanner.NAME
     assert scanner.get_symbol().type == scanner.EOF
+    # test as well invalid comments
     invalid_comment = new_file("/this is a wrong comment \n 123")
     scanner = new_Scanner(invalid_comment)
     assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
@@ -152,12 +162,13 @@ def test_get_symbol_comments(new_Scanner, new_file):
     ("Lets()try:again", 6),
     ("DEVICES:=just,I.N&case", 9),
 ])
-# TODO append what you expect to get
+# TODO append what symbol you expect not only length
 def test_get_symbol_no_spaces(
         new_Scanner,
         new_file,
         example_string,
         number_symbols):
+    """Test if get_symbol works with no spaces at all."""
     no_spaces_string = new_file(example_string)
     scanner = new_Scanner(no_spaces_string)
     symbol_list = []
@@ -167,10 +178,9 @@ def test_get_symbol_no_spaces(
         current_symbol = scanner.get_symbol()
     assert len(symbol_list) == number_symbols
 
-# TODO also test for the types expected in the files instead of only number
-
 
 def test_get_symbol_ignore_white_spaces(new_Scanner):
+    """ Test if get_symbol ignores all types of whitespaces."""
     scanner = new_Scanner("testfiles/scanner/test_ignore_white_spaces.txt")
     symbol_list = []
     current_symbol = scanner.get_symbol()
@@ -179,10 +189,9 @@ def test_get_symbol_ignore_white_spaces(new_Scanner):
         current_symbol = scanner.get_symbol()
     assert len(symbol_list) == 7
 
-# TODO as above
-
 
 def test_get_symbol_one_per_line(new_Scanner):
+    """Test if get symbol works with each symbol in a new line."""
     scanner = new_Scanner("testfiles/scanner/test_one_symbol_per_line.txt")
     symbol_list = []
     current_symbol = scanner.get_symbol()
@@ -202,6 +211,7 @@ def test_get_symbol_one_per_line(new_Scanner):
     ("}"),
 ])
 def test_get_symbols_invalid_symbols(new_Scanner, new_file, invalid_symbol):
+    """Test get_symbol returns invalid symbol for chararacters not in EBNF."""
     invalid = new_file(invalid_symbol)
     scanner = new_Scanner(invalid)
     assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
@@ -214,6 +224,7 @@ def test_get_symbols_invalid_symbols(new_Scanner, new_file, invalid_symbol):
 ])
 def test_get_symbol_invalid_valid_string(
         new_Scanner, new_file, invalid_valid_string):
+    """Test get_symbol behaviour when using invalid_symbols with valid ones."""
     invalid_valid_symbols = new_file(invalid_valid_string)
     scanner = new_Scanner(invalid_valid_symbols)
     assert scanner.get_symbol().type == scanner.INVALID_SYMBOL
@@ -227,6 +238,7 @@ def test_get_symbol_invalid_valid_string(
 ])
 def test_get_symbol_invalid_valid_string(
         new_Scanner, new_file, valid_invalid_string):
+    """Test get_symbol behaviour when using valid symbols with invalid ones."""
     valid_invalid_symbols = new_file(valid_invalid_string)
     scanner = new_Scanner(valid_invalid_symbols)
     assert scanner.get_symbol().type != scanner.INVALID_SYMBOL
@@ -239,6 +251,7 @@ def test_get_symbol_invalid_valid_string(
     ("123asd123asd"),
 ])
 def test_get_symbol_numbers_names(new_Scanner, new_file, number_name_string):
+    """ Test get_symbol recognizes difference between string and number."""
     number_name = new_file(number_name_string)
     scanner = new_Scanner(number_name)
     assert scanner.get_symbol().type == scanner.NUMBER
@@ -257,6 +270,7 @@ def test_get_symbol_numbers_names(new_Scanner, new_file, number_name_string):
 ])
 def test_get_symbol_names_with_numbers_and_underscores_and_grouped_keyowrds(
         new_Scanner, new_file, complex_name):
+    """Test get_symbol accepts names including numbers and underscores."""
     name = new_file(complex_name)
     scanner = new_Scanner(name)
     assert scanner.get_symbol().type == scanner.NAME
@@ -264,6 +278,7 @@ def test_get_symbol_names_with_numbers_and_underscores_and_grouped_keyowrds(
 
 
 def test_get_symbol_correct_name_id(new_Scanner, new_names, new_file):
+    """Test get_symbol returns the correct ids"""
     names = new_names
     names.lookup(["george", "jorge", "dimitris"])
     names_file = new_file("george jorge dimitris")
@@ -282,6 +297,7 @@ def test_get_symbol_correct_name_id(new_Scanner, new_names, new_file):
     ("\n\n3\n4\n5\n\n\n8", [3, 4, 5, 8]),
 ])
 def test_get_symbol_correct_line(new_Scanner, new_file, lines, actual_lines):
+    """Test get_symbol returns the correct line numbers"""
     lines_file = new_file(lines)
     scanner = new_Scanner(lines_file)
     for line in actual_lines:
@@ -298,6 +314,7 @@ def test_get_symbol_correct_column(
         new_file,
         column_data,
         actual_columns):
+    """Test get_symbol returns the correct column numbers"""
     columns = new_file(column_data)
     scanner = new_Scanner(columns)
     for column in actual_columns:
@@ -313,6 +330,7 @@ def test_get_symbol_correct_column(
 ])
 def test_get_symbol_correct_line_and_column(
         new_Scanner, new_file, data, lines_columns):
+    """Test get_symbol returns the correct line and column numbers"""
     data_file = new_file(data)
     scanner = new_Scanner(data_file)
     for line, column in lines_columns:
@@ -326,6 +344,7 @@ def test_get_symbol_correct_line_and_column(
 
 
 def test_get_symbol_port_inputs(new_Scanner, new_file):
+    """Test get_ssymbol can deal with port I correctly"""
     port_inputs = new_file("I14 I 3 I_3 hello I3hello")
     scanner = new_Scanner(port_inputs)
     expected_output = [
