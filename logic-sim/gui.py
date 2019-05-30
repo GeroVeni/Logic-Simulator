@@ -575,13 +575,8 @@ class Gui(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
         left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(
-            wx.StaticText(
-                self,
-                label="Activity Log"),
-            0.2,
-            wx.EXPAND | wx.ALL,
-            5)
+        left_sizer.Add(wx.StaticText(self, label="Activity Log"),
+                       0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
         # right_sizer.Add(self.spin, 0, wx.ALL, 5)
@@ -746,6 +741,10 @@ class Gui(wx.Frame):
         self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
 
     def run_parser(self, file_path):
+        """Call parse_network() from path specified
+
+        To do so first reinitzialize all modules and cycles_completed.
+        """
         # clear all at the begging
         self.cycles_completed = 0
         self.names = Names()
@@ -755,17 +754,19 @@ class Gui(wx.Frame):
         self.scanner = Scanner(file_path, self.names)
         self.parser = Parser(self.names, self.devices, self.network,
                              self.monitors, self.scanner)
+        # Capture the stdout from parse_network()
         captured_stdout = io.StringIO()
         with redirect_stdout(captured_stdout):
             if self.parser.parse_network():
                 self.log_message("Succesfully parsed network.")
             else:
                 self.log_message("Failed to parse network.")
-                self.log_message(
-                    captured_stdout.getvalue(),
-                    self.MONOSPACE_FONT)
+                # Show error messages captured in activity log
+                self.log_message(captured_stdout.getvalue(),
+                                 self.MONOSPACE_FONT)
 
     def on_open(self):
+        """Open the file browser and parse the file chosen."""
         text = "Open file dialog."
         openFileDialog = wx.FileDialog(
             self,
@@ -811,6 +812,7 @@ class Gui(wx.Frame):
                 self.cycles_completed += cycles
 
     def on_run(self):
+        """Run the run_command when run button pressed."""
         self.run_command()
         self.canvas.recenter()
         self.canvas.render("RUN")
@@ -827,6 +829,7 @@ class Gui(wx.Frame):
                     cycles), "cycles.", "Total:", str(self.cycles_completed)]))
 
     def on_continue(self):
+        """Run the continue_command when run button pressed."""
         self.continue_command()
         self.canvas.render("Continue")
 

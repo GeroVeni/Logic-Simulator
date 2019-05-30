@@ -1,0 +1,27 @@
+DEVICES:
+    SW1, SW2 := SWITCH(1);
+    //Equivalent switch definition at 0
+    SW3, SW4 := SWITCH; SW5, SW6 := SWITCH(0);
+    //Equivalent definitions for XOR
+    A := XOR(2); B := XOR;
+    C = AND(4);
+    D := OR;
+    E := NOR 3);
+
+END;
+
+CONNECTIONS:
+    SW1 => A.I;
+    common_clock => A.I2;
+    B => A.I3;
+    //Simultaneous definition of all inputs
+    SW2 common_clock, A => B;
+    //Multiple definition of connections
+	SW3, SW4, common_clock => D.SET, D.CLEAR, D.CLK;
+    A => D.DATA;
+    D.QBAR, B => C;
+END
+
+MONITORS:
+	A, B, D.QI, C;
+END;

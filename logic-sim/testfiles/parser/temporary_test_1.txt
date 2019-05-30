@@ -1,0 +1,17 @@
+DEVICES:
+    s := DTYPE;
+    rs, s1 := CLOCK(12);
+    sw2 := NAND;
+    sw3 := NOR;
+    I_3 := OR;
+    sw4 := XOR;
+END;
+
+CONNECTIONS:
+    sw2 => O.I1;
+    sw1 => rs;
+END;
+
+MONITORS:
+    sw1.Q, sw3.I1, sw3, sw4.QBAR;
+END;
