@@ -304,10 +304,16 @@ class MyGLCanvas_3D():
 
         # Draw monitor name
         GL.glColor3f(1.0, 1.0, 1.0)  # text is white
-        self.render_text("D1.QBAR", x_pos, 0, z_pos)
+        self.render_text(monitor_name, x_pos, 0, z_pos)
 
     def restore_state(self):
         pass
 
     def recenter(self):
-        pass
+        """Restore canvas to its default pan position and zoom state."""
+        self.pan_x = 0
+        self.pan_y = 0
+        self.zoom = 1
+        self.init = False
+        self.render("Recenter canvas")
+        # TODO restore rotation of axis as as well
