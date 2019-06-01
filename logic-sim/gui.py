@@ -809,6 +809,10 @@ class Gui(wx.Frame):
         self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
         self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
 
+    #################
+    # author: Jorge #
+    #################
+
     def run_parser(self, file_path):
         """Call parse_network() from path specified
 
@@ -902,6 +906,10 @@ class Gui(wx.Frame):
         self.continue_command()
         self.canvas.render("Continue")
 
+    ####################
+    # author: Dimitris #
+    ####################
+
     def on_center(self):
         """Centers the canvas to its default state of zoom and panning."""
         self.log_message("Center canvas.")
@@ -954,9 +962,15 @@ class Gui(wx.Frame):
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
 
+
     def  on_toggle_3d_vew(self):
         """Toggle 3D view."""
         self.canvas.toggle_drawing_mode()
+
+    ##################
+    # author: George #
+    ##################
+
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""

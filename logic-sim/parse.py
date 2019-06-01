@@ -91,6 +91,7 @@ class Parser:
         # TODO change how I use message parameter
         # TODO change names of errors raised (NameError) e.g ConnectionError
         # TODO add line and column number print message in parser errors
+        # TODO Make sure caret prints at correct points
         if (error_type == self.SYNTAX_ERROR):
             self.scanner.get_error_line(self.symbol)
             print("***SyntaxError: invalid syntax. Expected", message)
@@ -103,6 +104,7 @@ class Parser:
                   "are reserved and cannot be used as identifiers.")
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(message)
+        # TODO display correct carret
         # TODO display the other identifier using id in lookup names
             print("***NameError: An identifier was repeated. "
                   "All identifiers must have unique names.")
@@ -245,7 +247,7 @@ class Parser:
         """Parse a number."""
         # Only parse if recovered from an error
         if (self.symbol.type == self.scanner.NUMBER and
-                self.recovered_from_definition_error):
+            self.recovered_from_definition_error):
             self.current_number = self.symbol
             self.symbol = self.scanner.get_symbol()
         else:
@@ -356,6 +358,18 @@ class Parser:
                 if (error == self.devices.QUALIFIER_PRESENT):
                     self.error(self.DEVICE_VALUE_ERROR,
                                "XOR gates can only have 2 inputs", None)
+                    return
+            elif (self.current_device.id == self.scanner.SIGGEN_ID):
+                error = self.devices.make_device(identifier.id,
+                                                 self.devices.SIGGEN,
+                                                 self.current_number.id)
+                if (error == self.devices.NO_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                               "SIGGEN requires a parameter to be specified.", None)
+                    return
+                if (error == self.devices.INVALID_QUALIFIER):
+                    self.error(self.DEVICE_VALUE_ERROR,
+                               "SIGGEN requiress a 8 followed by a binary number", None)
                     return
 
     def device_definition(self):

@@ -92,12 +92,12 @@ class Scanner:
         # split syntax reserved words into keywords, devices and ports
         self.keywords_list = ["DEVICES", "CONNECTIONS", "MONITORS", "END"]
         self.devices_list = ["NAND", "AND", "NOR", "OR", "XOR", "DTYPE",
-                             "CLOCK", "SWITCH"]
+                             "CLOCK", "SWITCH", "SIGGEN"]
         self.ports_list = ["Q", "QBAR", "DATA", "CLK", "SET", "CLEAR", "I"]
         [self.DEVICES_ID, self.CONNECTIONS_ID, self.MONITORS_ID, self.END_ID] \
             = self.names.lookup(self.keywords_list)
         [self.NAND_ID, self.AND_ID, self.NOR_ID, self.OR_ID, self.XOR_ID,
-            self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID] \
+            self.DTYPE_ID, self.CLOCK_ID, self.SWITCH_ID, self.SIGGEN_ID] \
             = self.names.lookup(self.devices_list)
         [self.Q_ID, self.QBAR_ID, self.DATA_ID, self.CLK_ID, self.SET_ID,
             self.CLEAR_ID, self.I_ID] = self.names.lookup(self.ports_list)
