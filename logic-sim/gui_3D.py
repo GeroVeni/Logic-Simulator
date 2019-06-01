@@ -5,7 +5,7 @@ or adjust the network properties.
 
 Classes:
 --------
-MyGLCanvas - handles all canvas drawing operations.
+MyGLCanvas_3D - handles all canvas drawing operations.
 Gui - configures the main window and all the widgets.
 """
 import wx
@@ -22,7 +22,7 @@ from scanner import Scanner
 from parse import Parser
 
 
-class MyGLCanvas(wxcanvas.GLCanvas):
+class MyGLCanvas_3D():
     """Handle all drawing operations.
 
     This class contains functions for drawing onto the canvas. It
@@ -31,8 +31,6 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     Parameters
     ----------
     parent: parent window.
-    devices: instance of the devices.Devices() class.
-    monitors: instance of the monitors.Monitors() class.
 
     Public methods
     --------------
@@ -50,15 +48,19 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                                                   operations.
     """
 
-    def __init__(self, parent, devices, monitors):
+    def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
-        super().__init__(parent, -1,
-                         attribList=[wxcanvas.WX_GL_RGBA,
-                                     wxcanvas.WX_GL_DOUBLEBUFFER,
-                                     wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
-        GLUT.glutInit()
+        # super().__init__(parent, -1,
+        #                  attribList=[wxcanvas.WX_GL_RGBA,
+        #                              wxcanvas.WX_GL_DOUBLEBUFFER,
+        #                              wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
+        # GLUT.glutInit()
+
+        # keep reference to wrapper class
+        self.parent = parent
+
         self.init = False
-        self.context = wxcanvas.GLContext(self)
+        # self.context = wxcanvas.GLContext(self)
 
         # Constants for OpenGL materials and lights
         self.mat_diffuse = [0.0, 0.0, 0.0, 1.0]
@@ -91,18 +93,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.depth_offset = 1000
 
         # Bind events to the canvas
-        self.Bind(wx.EVT_PAINT, self.on_paint)
-        self.Bind(wx.EVT_SIZE, self.on_size)
-        self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
+        # self.Bind(wx.EVT_PAINT, self.on_paint)
+        # self.Bind(wx.EVT_SIZE, self.on_size)
+        # self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
-        size = self.GetClientSize()
-        self.SetCurrent(self.context)
-
-        GL.glRotatef(45, 1, -1, 0)
-        GL.glMultMatrixf(self.scene_rotate)
-        GL.glGetFloatv(GL.GL_MODELVIEW_MATRIX, self.scene_rotate)
+        size = self.parent.GetClientSize()
+        self.parent.SetCurrent(self.parent.context)
 
         GL.glViewport(0, 0, size.width, size.height)
 
@@ -148,9 +146,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glMultMatrixf(self.scene_rotate)
         GL.glScalef(self.zoom, self.zoom, self.zoom)
 
-    def render(self):
+    def render(self, text=""):
         """Handle all drawing operations."""
-        self.SetCurrent(self.context)
+        self.parent.SetCurrent(self.parent.context)
         if not self.init:
             # Configure the OpenGL rendering context
             self.init_gl()
@@ -175,7 +173,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
         GL.glFlush()
-        self.SwapBuffers()
+        self.parent.SwapBuffers()
 
     def draw_cuboid(self, x_pos, z_pos, half_width, half_depth, height):
         """Draw a cuboid.
@@ -218,13 +216,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def on_paint(self, event):
         """Handle the paint event."""
-        self.SetCurrent(self.context)
+        self.parent.SetCurrent(self.parent.context)
         if not self.init:
             # Configure the OpenGL rendering context
             self.init_gl()
             self.init = True
 
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
         text = "".join(["Canvas redrawn on paint event, size is ",
                         str(size.width), ", ", str(size.height)])
         self.render()
@@ -237,7 +235,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def on_mouse(self, event):
         """Handle mouse events."""
-        self.SetCurrent(self.context)
+        self.parent.SetCurrent(self.parent.context)
 
         if event.ButtonDown():
             self.last_mouse_x = event.GetX()
@@ -271,7 +269,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 event.GetWheelRotation() / (20 * event.GetWheelDelta())))
             self.init = False
 
-        self.Refresh()  # triggers the paint event
+        self.parent.Refresh()  # triggers the paint event
 
     def render_text(self, text, x_pos, y_pos, z_pos):
         """Handle text drawing operations."""
@@ -287,6 +285,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 GLUT.glutBitmapCharacter(font, ord(character))
 
         GL.glEnable(GL.GL_LIGHTING)
+
+    def restore_state(self):
+        pass
+
+    def recenter(self):
+        pass
 
 
 class Gui(wx.Frame):
@@ -325,7 +329,7 @@ class Gui(wx.Frame):
         self.SetMenuBar(menuBar)
 
         # Canvas for drawing signals
-        self.canvas = MyGLCanvas(self, devices, monitors)
+        self.canvas = MyGLCanvas_3D(self)
 
         # Configure the widgets
         self.text = wx.StaticText(self, wx.ID_ANY, "Cycles")

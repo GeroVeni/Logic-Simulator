@@ -5,7 +5,7 @@ or adjust the network properties.
 
 Classes:
 --------
-MyGLCanvas - handles all canvas drawing operations.
+MyGLCanvas_2D - handles all canvas drawing operations.
 Gui - configures the main window and all the widgets.
 """
 import os
@@ -23,12 +23,81 @@ from network import Network
 from monitors import Monitors
 from scanner import Scanner
 from parse import Parser
+from gui_3D import MyGLCanvas_3D
 
 from contextlib import redirect_stdout
 import io
 
+class GLCanvasWrapper(wxcanvas.GLCanvas):
+    def __init__(self, parent):
+        """Initialise canvas properties and useful variables."""
+        super().__init__(parent, -1,
+                         attribList=[wxcanvas.WX_GL_RGBA,
+                                     wxcanvas.WX_GL_DOUBLEBUFFER,
+                                     wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
+        GLUT.glutInit()
+        self.context = wxcanvas.GLContext(self)
 
-class MyGLCanvas(wxcanvas.GLCanvas):
+        # keep reference to parent
+        self.parent = parent
+
+        self.draw_2D = MyGLCanvas_2D(self) # default mode
+        self.draw_3D = MyGLCanvas_3D(self)
+
+        self.current_mode = self.draw_2D
+
+        # Bind events to the canvas
+        self.Bind(wx.EVT_PAINT, self.current_mode.on_paint)
+        self.Bind(wx.EVT_SIZE, self.current_mode.on_size)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.current_mode.on_mouse)
+
+    def toggle_drawing_mode(self):
+        """Toggles between 2D and 3D drawing mode."""
+        # Unbind events from the canvas
+        # TODO handle cases when they cannot unbind events from the canvas
+        self.Unbind(wx.EVT_PAINT)
+        self.Unbind(wx.EVT_SIZE)
+        self.Unbind(wx.EVT_MOUSE_EVENTS)
+
+        if isinstance(self.current_mode, MyGLCanvas_2D):
+            self.current_mode = self.draw_3D
+        else:
+            self.current_mode = self.draw_2D
+
+        # Bind events to the canvas
+        self.Bind(wx.EVT_PAINT, self.current_mode.on_paint)
+        self.Bind(wx.EVT_SIZE, self.current_mode.on_size)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.current_mode.on_mouse)
+
+        self.current_mode.init = False
+
+        # Initialise variables for panning
+        self.current_mode.pan_x = 0
+        self.current_mode.pan_y = 0
+        self.current_mode.last_mouse_x = 0  # previous mouse x position
+        self.current_mode.last_mouse_y = 0  # previous mouse y position
+
+        self.current_mode.zoom = 1
+
+        self.render("Toggled drawing mode")
+
+    def render(self, text):
+        """Interface method for the render() fn in MyGLCanvas_2D and
+        MyGLCanvas_3D."""
+        self.current_mode.render(text)
+
+    def restore_state(self):
+        """Interface method for the restore_state() fn in MyGLCanvas_2D and
+        MyGLCanvas_3D."""
+        self.current_mode.restore_state()
+
+    def recenter(self):
+        """Interface method for the recenter() fn in MyGLCanvas_2D and
+        MyGLCanvas_3D."""
+        self.current_mode.recenter()
+
+
+class MyGLCanvas_2D():
     """Handle all drawing operations.
 
     This class contains functions for drawing onto the canvas. It
@@ -62,18 +131,18 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
-        super().__init__(parent, -1,
-                         attribList=[wxcanvas.WX_GL_RGBA,
-                                     wxcanvas.WX_GL_DOUBLEBUFFER,
-                                     wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
-        GLUT.glutInit()
+        # super().__init__(parent, -1,
+        #                  attribList=[wxcanvas.WX_GL_RGBA,
+        #                              wxcanvas.WX_GL_DOUBLEBUFFER,
+        #                              wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
+        # GLUT.glutInit()
         self.init = False
-        self.context = wxcanvas.GLContext(self)
+        # self.context = wxcanvas.GLContext(self)
 
         # Bind events to the canvas
-        self.Bind(wx.EVT_PAINT, self.on_paint)
-        self.Bind(wx.EVT_SIZE, self.on_size)
-        self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
+        # self.Bind(wx.EVT_PAINT, self.on_paint)
+        # self.Bind(wx.EVT_SIZE, self.on_size)
+        # self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
         # keep reference to parent
         self.parent = parent
@@ -111,8 +180,8 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
-        size = self.GetClientSize()
-        self.SetCurrent(self.context)
+        size = self.parent.GetClientSize()
+        self.parent.SetCurrent(self.parent.context)
         GL.glDrawBuffer(GL.GL_BACK)
         GL.glClearColor(1.0, 1.0, 1.0, 0.0)
         GL.glViewport(0, 0, size.width, size.height)
@@ -121,6 +190,16 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glOrtho(0, size.width, 0, size.height, -1, 1)
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadIdentity()
+
+        # Disable 3D open Gl
+        GL.glDisable(GL.GL_COLOR_MATERIAL)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glDisable(GL.GL_LIGHTING)
+        GL.glDisable(GL.GL_LIGHT0)
+        GL.glDisable(GL.GL_LIGHT1)
+        GL.glDisable(GL.GL_NORMALIZE)
+
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
@@ -132,7 +211,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.update_borders()
         self.bound_panning()
 
-        self.SetCurrent(self.context)
+        self.parent.SetCurrent(self.parent.context)
         if not self.init:
             # Configure the viewport, modelview and projection matrices
             self.init_gl()
@@ -142,12 +221,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Enable line below only when debugging the canvas
-        # self.render_text(text, 10, 10)
+        self.render_text(text, 10, 10)
 
         # Set the left margin for the canvas
-        if self.parent.monitors.get_margin() is not None:
+        if self.parent.parent.monitors.get_margin() is not None:
             self.margin_left = (
-                self.parent.monitors.get_margin() *
+                self.parent.parent.monitors.get_margin() *
                 self.character_width +
                 10)
 
@@ -155,13 +234,12 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         self.render_grid()
 
         # Render signal traces starting from the top of the canvas
-        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
             y_pos = self.border_bottom + self.margin_bottom + \
                 (num_monitors - 1) * self.monitor_spacing
 
-            for device_id, output_id in self.parent\
-                    .monitors.monitors_dictionary:
+            for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
                 self.render_monitor(
                     device_id,
                     output_id,
@@ -178,17 +256,17 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
         GL.glFlush()
-        self.SwapBuffers()
+        self.parent.SwapBuffers()
 
     def on_paint(self, event):
         """Handle the paint event."""
-        self.SetCurrent(self.context)
+        self.parent.SetCurrent(self.parent.context)
         if not self.init:
             # Configure the viewport, modelview and projection matrices
             self.init_gl()
             self.init = True
 
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
         text = "".join(["Canvas redrawn on paint event, size is ",
                         str(size.width), ", ", str(size.height)])
         self.render(text)
@@ -239,11 +317,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         if text:
             self.render(text)
         else:
-            self.Refresh()  # triggers the paint event
+            self.parent.Refresh()  # triggers the paint event
 
     def bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
         allowable_pan_right = -(self.border_right - size.width / self.zoom)
         allowable_pan_left = self.border_left
         allowable_pan_bottom = self.border_bottom
@@ -278,10 +356,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def update_zoom_lower_bound(self):
         """Adjust zoom lower bound when the canvas is resized or the number of
         monitors changes."""
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
 
         # Allow a max number of 9 monitors to be displayed at once
-        num_monitors = min(9, len(self.parent.monitors.monitors_dictionary))
+        num_monitors = min(9, len(self.parent.parent.monitors.monitors_dictionary))
 
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + \
@@ -294,14 +372,14 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def update_borders(self):
         """Update the borders of the canvas depending on the number of monitors
         and the number of cycles to be simulated."""
-        num_monitors = len(self.parent.monitors.monitors_dictionary)
+        num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         # self.border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + \
             num_monitors * self.monitor_spacing + self.ruler_height / self.zoom
         # self.border_right depends only on the number of cycles to be
         # simulated
         self.border_right = (self.border_left + self.margin_left) / \
-            self.zoom + self.parent.cycles_completed * self.cycle_width
+            self.zoom + self.parent.parent.cycles_completed * self.cycle_width
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -318,9 +396,9 @@ class MyGLCanvas(wxcanvas.GLCanvas):
     def render_monitor(self, device_id, output_id, y_min, y_max):
         """Handle monitor name and signal trace drawing for a single
         monitor."""
-        monitor_name = self.parent.devices.get_signal_name(
+        monitor_name = self.parent.parent.devices.get_signal_name(
             device_id, output_id)
-        signal_list = self.parent.monitors.monitors_dictionary[(
+        signal_list = self.parent.parent.monitors.monitors_dictionary[(
             device_id, output_id)]
 
         # Draw monitor name
@@ -336,7 +414,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
         for signal in signal_list:
-            if signal == self.parent.devices.BLANK:
+            if signal == self.parent.parent.devices.BLANK:
                 if currently_drawing:
                     GL.glEnd()
                     currently_drawing = False
@@ -345,13 +423,13 @@ class MyGLCanvas(wxcanvas.GLCanvas):
                 if not currently_drawing:
                     GL.glBegin(GL.GL_LINE_STRIP)
                     currently_drawing = True
-                if signal == self.parent.devices.HIGH:
+                if signal == self.parent.parent.devices.HIGH:
                     y = y_max
-                if signal == self.parent.devices.LOW:
+                if signal == self.parent.parent.devices.LOW:
                     y = y_min
-                if signal == self.parent.devices.RISING:
+                if signal == self.parent.parent.devices.RISING:
                     y = y_max
-                if signal == self.parent.devices.FALLING:
+                if signal == self.parent.parent.devices.FALLING:
                     y = y_min
                 GL.glVertex2f(x_pos, y)
                 x_pos += self.cycle_width
@@ -385,11 +463,11 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_cycle_numbers(self):
         """Handle cycle numbers drawing at the top of the canvas (ruler)."""
-        if self.parent.cycles_completed == 0:
+        if self.parent.parent.cycles_completed == 0:
             return
 
-        size = self.GetClientSize()
-        for cycle in range(self.parent.cycles_completed):
+        size = self.parent.GetClientSize()
+        for cycle in range(self.parent.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
@@ -402,7 +480,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_ruler_background(self):
         """Draw a background for the ruler."""
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
         ruler_color = [200 / 255, 230 / 255, 255 / 255]
         # Make sure transformations don't affect other renderings
         GL.glPushMatrix()
@@ -418,10 +496,10 @@ class MyGLCanvas(wxcanvas.GLCanvas):
 
     def render_grid(self, render_only_on_ruler=False):
         """Draw a grid for separating the different cycles in the traces."""
-        if self.parent.cycles_completed == 0:
+        if self.parent.parent.cycles_completed == 0:
             return
 
-        size = self.GetClientSize()
+        size = self.parent.GetClientSize()
         line_y_pos_end = self.border_bottom + \
             (- self.pan_y + size.height) / self.zoom
 
@@ -435,7 +513,7 @@ class MyGLCanvas(wxcanvas.GLCanvas):
         line_x_pos = (self.border_left + self.margin_left) / self.zoom
         self.render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
-        for cycle in range(self.parent.cycles_completed):
+        for cycle in range(self.parent.parent.cycles_completed):
             line_x_pos += self.cycle_width
             self.render_line((line_x_pos, line_y_pos_start),
                              (line_x_pos, line_y_pos_end))
@@ -509,6 +587,7 @@ class Gui(wx.Frame):
         self.ID_CYCLES_CTRL = 1005
         self.ID_HELP = 1006
         self.ID_CLEAR = 1007
+        self.ID_TOGGLE_3D = 1008
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -553,11 +632,12 @@ class Gui(wx.Frame):
         toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
         toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
         toolBar.AddControl(self.spin, "SpinCtrl")
+        toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", infoIcon)
         self.SetToolBar(toolBar)
 
-        # Canvas for drawing signals
-        self.canvas = MyGLCanvas(self)
         self.cycles_completed = 0  # number of simulation cycles completed
+        # Canvas for drawing signals
+        self.canvas = GLCanvasWrapper(self)
 
         # Configure the widgets
         self.activity_log = wx.TextCtrl(
@@ -885,6 +965,10 @@ class Gui(wx.Frame):
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
 
+    def  on_toggle_3d_vew(self):
+        """Toggle 3D view."""
+        self.canvas.toggle_drawing_mode()
+
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
         Id = event.GetId()
@@ -905,6 +989,8 @@ class Gui(wx.Frame):
             self.on_help()
         elif Id == self.ID_CLEAR:  # help button
             self.clear_log()
+        elif Id == self.ID_TOGGLE_3D: # togge 3D view button
+            self.on_toggle_3d_vew()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
