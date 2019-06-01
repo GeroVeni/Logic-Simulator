@@ -70,6 +70,13 @@ class MyGLCanvas_3D():
         self.full_specular = [0.5, 0.5, 0.5, 1.0]
         self.no_specular = [0.0, 0.0, 0.0, 1.0]
 
+        # 3D rendering settings
+        self.cycle_depth = 20  # equivalent to cycle_width for 2D class
+        self.trace_height = 10
+        self.trace_width = 10
+        self.monitor_spacing = self.trace_width + 10  # from centerline
+        self.margin = 10
+
         # Initialise variables for panning
         self.pan_x = 0
         self.pan_y = 0
@@ -145,18 +152,14 @@ class MyGLCanvas_3D():
         # Clear everything
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        # Draw a sample signal trace, make sure its centre of gravity
-        # is at the scene origin
-        GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
-        for i in range(-10, 10):
-            z = i * 20
-            if i % 2 == 0:
-                self.draw_cuboid(0, z, 5, 10, 1)
-            else:
-                self.draw_cuboid(0, z, 5, 10, 11)
+        # Draw signal traces
+        num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
+        if num_monitors > 0:
+            x_pos = 0
 
-        GL.glColor3f(1.0, 1.0, 1.0)  # text is white
-        self.render_text("D1.QBAR", 0, 0, 210)
+            for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
+                self.render_monitor(device_id, output_id, x_pos)
+                x_pos += self.monitor_spacing
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -273,6 +276,35 @@ class MyGLCanvas_3D():
                 GLUT.glutBitmapCharacter(font, ord(character))
 
         GL.glEnable(GL.GL_LIGHTING)
+
+    def render_monitor(self, device_id, output_id, x_pos):
+        """Hndle monitor name and signal trace drawing for a single monitor."""
+        monitor_name = self.parent.parent.devices.get_signal_name(
+            device_id, output_id)
+        signal_list = self.parent.parent.monitors.monitors_dictionary[(
+            device_id, output_id)]
+
+        # Draw a signal trace, make sure its centre of gravity
+        # is at the scene origin
+        z_pos = 0
+        GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
+
+        for signal in signal_list:
+            if signal != self.parent.parent.devices.BLANK:
+                if signal == self.parent.parent.devices.HIGH:
+                    height = self.trace_height
+                elif signal == self.parent.parent.devices.LOW:
+                    height = 0
+                elif signal == self.parent.parent.devices.RISING:
+                    height = self.trace_height
+                elif signal == self.parent.parent.devices.FALLING:
+                    height = 0
+                self.draw_cuboid(x_pos, z_pos, self.trace_width/2, self.cycle_depth/2, height + 1)
+            z_pos += self.cycle_depth
+
+        # Draw monitor name
+        GL.glColor3f(1.0, 1.0, 1.0)  # text is white
+        self.render_text("D1.QBAR", x_pos, 0, z_pos)
 
     def restore_state(self):
         pass

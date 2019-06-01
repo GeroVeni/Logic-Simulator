@@ -44,7 +44,7 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
         self.draw_2D = MyGLCanvas_2D(self) # default mode
         self.draw_3D = MyGLCanvas_3D(self)
 
-        self.current_mode = self.draw_2D
+        self.current_mode = self.draw_3D
 
         # Bind events to the canvas
         self.Bind(wx.EVT_PAINT, self.current_mode.on_paint)
@@ -141,7 +141,7 @@ class MyGLCanvas_2D():
         self.character_width = 9
         self.character_height = 15
 
-        # Canvas rendering settings
+        # 2D rendering settings
         self.border_left = 10  # constant
         self.border_right = 400
         self.border_top = 200
