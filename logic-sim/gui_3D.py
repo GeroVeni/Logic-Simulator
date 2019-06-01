@@ -85,6 +85,7 @@ class MyGLCanvas_3D():
         # Offset between viewpoint and origin of the scene
         self.depth_offset = 1000
 
+
     def init_gl(self):
         """Configure and initialise the OpenGL context."""
         size = self.parent.GetClientSize()
@@ -149,7 +150,6 @@ class MyGLCanvas_3D():
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
             x_pos = 0
-
             for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
                 self.render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
@@ -308,5 +308,12 @@ class MyGLCanvas_3D():
         self.pan_y = 0
         self.zoom = 1
         self.init = False
+
+        # Restore initial viewing angle
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
+        GL.glRotatef(20, 1, 0, 0)
+        GL.glRotatef(20, 0, 1, 0)
+        GL.glGetFloatv(GL.GL_MODELVIEW_MATRIX, self.scene_rotate)
+
         self.render("Recenter canvas")
-        # TODO restore rotation of axis as as well
