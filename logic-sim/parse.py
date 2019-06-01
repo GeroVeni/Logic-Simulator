@@ -91,6 +91,7 @@ class Parser:
         # TODO change how I use message parameter
         # TODO change names of errors raised (NameError) e.g ConnectionError
         # TODO add line and column number print message in parser errors
+        # TODO Make sure caret prints at correct points
         if (error_type == self.SYNTAX_ERROR):
             self.scanner.get_error_line(self.symbol)
             print("***SyntaxError: invalid syntax. Expected", message)
@@ -103,6 +104,7 @@ class Parser:
                   "are reserved and cannot be used as identifiers.")
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(message)
+        # TODO display correct carret
         # TODO display the other identifier using id in lookup names
             print("***NameError: An identifier was repeated. "
                   "All identifiers must have unique names.")

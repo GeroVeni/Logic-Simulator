@@ -5,6 +5,10 @@ from tempfile import NamedTemporaryFile
 from scanner import Scanner, Symbol
 from names import Names
 
+#################
+# author: Jorge #
+#################
+
 ############
 # FIXTURES #
 ############
@@ -106,7 +110,7 @@ def test_get_symbol_keywords(new_Scanner, new_file):
 
 def test_get_symbol_devices(new_Scanner, new_file):
     """ Test if get_symbol recognizes all the different devices."""
-    devices = new_file("NAND AND NOR OR XOR DTYPE CLOCK SWITCH")
+    devices = new_file("NAND AND NOR OR XOR DTYPE CLOCK SWITCH SIGGEN")
     scanner = new_Scanner(devices)
     current_symbol = scanner.get_symbol()
     while current_symbol.type != scanner.EOF:
