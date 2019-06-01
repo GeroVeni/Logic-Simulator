@@ -22,7 +22,8 @@ from monitors import Monitors
 from scanner import Scanner
 from parse import Parser
 from userint import UserInterface
-from gui import Gui
+# from gui import Gui
+from gui_3D import Gui
 
 
 def main(arg_list):
@@ -64,7 +65,8 @@ def main(arg_list):
 
         # Initialise an instance of the gui.Gui() class
         app = wx.App()
-        gui = Gui("Logic Simulator")
+        # gui = Gui("Logic Simulator")
+        gui = Gui("Logic Simulator", None, names, devices, network, monitors)
         gui.Show(True)
         app.MainLoop()
 
