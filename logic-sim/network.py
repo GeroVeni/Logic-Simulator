@@ -345,6 +345,31 @@ class Network:
                     device.outputs[None] = self.devices.RISING
             device.clock_counter += 1
 
+    def execute_siggen(self, device_id):
+        """Simulate a signal specified by the waveform attirbute.
+
+        Return True if successful.
+        """
+        device = self.devices.get_device(device_id)
+
+        # Update and store the new signal
+        signal = self.get_output_signal(device_id, None)
+        target = device.siggen_waveform[device.siggen_counter]
+        updated_signal = self.update_signal(signal, target)
+        if updated_signal is None:  # if the update is unsuccessful
+            return False
+        device.outputs[None] = updated_signal
+        return True
+
+    def update_siggens(self):
+        siggen_devices = self.devices.find_devices(self.devices.SIGGEN)
+        for device_id in siggen_devices:
+            device = self.devices.get_device(device_id)
+            if (device.siggen_counter == len(device.siggen_waveform) - 1):
+                device.siggen_counter = 0
+            else:
+                device.siggen_counter += 1
+
     def execute_network(self):
         """Execute all the devices in the network for one simulation cycle.
 
@@ -358,9 +383,12 @@ class Network:
         nand_devices = self.devices.find_devices(self.devices.NAND)
         nor_devices = self.devices.find_devices(self.devices.NOR)
         xor_devices = self.devices.find_devices(self.devices.XOR)
+        siggen_devices = self.devices.find_devices(self.devices.SIGGEN)
 
         # This sets clock signals to RISING or FALLING, where necessary
         self.update_clocks()
+
+        self.update_siggens()
 
         # Number of iterations to wait for the signals to settle before
         # declaring the network unstable
@@ -400,6 +428,9 @@ class Network:
                     return False
             for device_id in xor_devices:  # execute XOR devices
                 if not self.execute_gate(device_id, None, None):
+                    return False
+            for device_id in siggen_devices:
+                if not self.execute_siggen(device_id):
                     return False
             if self.steady_state:
                 break
