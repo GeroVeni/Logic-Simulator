@@ -131,18 +131,7 @@ class MyGLCanvas_2D():
 
     def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
-        # super().__init__(parent, -1,
-        #                  attribList=[wxcanvas.WX_GL_RGBA,
-        #                              wxcanvas.WX_GL_DOUBLEBUFFER,
-        #                              wxcanvas.WX_GL_DEPTH_SIZE, 16, 0])
-        # GLUT.glutInit()
         self.init = False
-        # self.context = wxcanvas.GLContext(self)
-
-        # Bind events to the canvas
-        # self.Bind(wx.EVT_PAINT, self.on_paint)
-        # self.Bind(wx.EVT_SIZE, self.on_size)
-        # self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
 
         # keep reference to parent
         self.parent = parent
