@@ -8,7 +8,9 @@ Classes:
 MyGLCanvas_2D - handles all canvas drawing operations.
 Gui - configures the main window and all the widgets.
 """
+import sys
 import os
+
 import wx
 import wx.adv
 import wx.glcanvas as wxcanvas
@@ -27,6 +29,23 @@ from gui_3D import MyGLCanvas_3D
 
 from contextlib import redirect_stdout
 import io
+
+# Constants for internationalization
+import app_const as appC
+
+# Install a custom displayhook to keep Python from setting the global
+# _ (underscore) to the value of the last evaluated expression.  If
+# we don't do this, our mapping of _ to gettext can get overwritten.
+# This is useful/needed in interactive debugging with PyShell.
+
+def _displayHook(obj):
+    if obj is not None:
+        print (repr(obj))
+
+# add translation macro to builtin similar to what gettext does
+import builtins
+builtins.__dict__['_'] = wx.GetTranslation
+
 
 class GLCanvasWrapper(wxcanvas.GLCanvas):
     def __init__(self, parent):
@@ -558,8 +577,14 @@ class Gui(wx.Frame):
         self.network = Network(self.names, self.devices)
         self.monitors = Monitors(self.names, self.devices, self.network)
 
-        # Change window backround color and style
-        # self.SetBackgroundColour(wx.Colour(9, 60, 142))
+        # work around for Python stealing "_"
+        sys.displayhook = _displayHook
+
+        # Add locale path and update the language 
+        self.locale = None
+        wx.Locale.AddCatalogLookupPathPrefix('locale')
+        #self.updateLanguage(self.appConfig.Read(u"Language"))
+        self.updateLanguage(wx.LANGUAGE_GREEK)
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -657,7 +682,6 @@ class Gui(wx.Frame):
         self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
 
-    # Sizer helper functions
     def make_right_sizer(self):
         """Helper function that creates the right sizer"""
         right_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -677,17 +701,36 @@ class Gui(wx.Frame):
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
-    def printer(self, sig):
-        lst = [(self.devices.HIGH, 'HIGH'),
-               (self.devices.LOW, 'LOW'),
-               (self.devices.RISING, 'RISING'),
-               (self.devices.FALLING, 'FALLING'),
-               (self.devices.BLANK, 'BLANK')]
-        for (val, txt) in lst:
-            if val == sig:
-                return txt
-        return 'NONE'
-
+    def updateLanguage(self, lang):
+        """
+        Update the language to the requested one.
+        
+        Make *sure* any existing locale is deleted before the new
+        one is created.  The old C++ object needs to be deleted
+        before the new one is created, and if we just assign a new
+        instance to the old Python variable, the old C++ locale will
+        not be destroyed soon enough, likely causing a crash.
+        
+        :param string `lang`: one of the supported language codes
+        
+        """
+        # if an unsupported language is requested default to English
+        if lang in appC.supLang:
+            selLang = appC.supLang[lang]
+        else:
+            selLang = wx.LANGUAGE_ENGLISH
+            
+        if self.locale:
+            assert sys.getrefcount(self.locale) <= 2
+            del self.locale
+        
+        # create a locale object for this language
+        self.locale = wx.Locale(selLang)
+        if self.locale.IsOk():
+            self.locale.AddCatalog(appC.langDomain)
+        else:
+            self.locale = None
+            
     def update_tabs(self):
         """Update the tabs with new values."""
 
