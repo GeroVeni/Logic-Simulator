@@ -114,7 +114,7 @@ class MyGLCanvas_3D():
                         self.mat_diffuse)
         GL.glColorMaterial(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE)
 
-        GL.glClearColor(0.0, 0.0, 0.0, 0.0)
+        GL.glClearColor(0.2, 0.2, 0.2, 0.0)
         GL.glDepthFunc(GL.GL_LEQUAL)
         GL.glShadeModel(GL.GL_SMOOTH)
         GL.glDrawBuffer(GL.GL_BACK)
@@ -150,12 +150,13 @@ class MyGLCanvas_3D():
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
             x_pos = -(num_monitors - 1)*self.monitor_spacing/2
+            self.render_cycle_numbers(x_pos - self.monitor_spacing)
             for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
                 self.render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
 
-        # Draw cycle numbers
-        self.render_cycle_numbers(0)
+            self.render_cycle_numbers(x_pos)
+
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -305,11 +306,11 @@ class MyGLCanvas_3D():
 
     def render_cycle_numbers(self, x_pos):
         """Handle rendering cycle numbers over the signal traces."""
-        GL.glColor3f(0.0, 1.0, 0.0)  # text is white
+        GL.glColor3f(0.0, 0.0, 1.0)  # text is white
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles-1) * self.cycle_depth
         for cycle in range(1, cycles + 1):
-            self.render_text(str(cycle), x_pos, 2*self.trace_height, z_pos)
+            self.render_text(str(cycle), x_pos, self.trace_height, z_pos)
             z_pos += self.cycle_depth
 
 
