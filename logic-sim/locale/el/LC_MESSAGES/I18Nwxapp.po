@@ -1,0 +1,375 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2019-06-02 04:50+0300\n"
+"PO-Revision-Date: 2019-06-02 04:52+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 2.2.3\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:613
+msgid "&Open"
+msgstr "&Άνοιγμα"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:614
+msgid "&Exit"
+msgstr "&Έξοδος"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:615
+msgid "&Center"
+msgstr "Επαναφο&ρά στο κέντρο"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:616
+msgid "&Clear Activity Log"
+msgstr "&Καθαρισμός λίστας ενεργειών"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:618
+msgid "&Run"
+msgstr "Εκ&τέλεση"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:620
+msgid "&Continue"
+msgstr "Σ&υνέχεια εκτέλεσης"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:621
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:626
+msgid "&Help"
+msgstr "&Βοήθεια"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:622
+msgid "&About"
+msgstr "&Σχετικά"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:623
+msgid "&File"
+msgstr "Α&ρχείο"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:624
+msgid "&View"
+msgstr "&Προβολή"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:625
+msgid "&Simulation"
+msgstr "Πρ&οσομοίωση"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:660
+msgid "Ready. Please load a file."
+msgstr "Έτοιμο. Παρακαλώ φορτώστε ένα αρχείο."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:672
+msgid "Activity Log"
+msgstr "Λίστα ενεργειών"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:698
+msgid "Monitors"
+msgstr "Ελεγκτές"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:699
+msgid "Switches"
+msgstr "Διακόπτες"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:784
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:826
+msgid "Error: Monitor {} not found."
+msgstr "Σφάλμα: Ο ελεγκτής {} δεν βρέθηκε."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:788
+msgid "activated"
+msgstr "ενεργοποιήθηκε"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:793
+msgid "Monitor {} was {}."
+msgstr "Ο ελεγκτής {} {}."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:799
+msgid "deactivated"
+msgstr "απενεργοποιήθηκε"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:808
+msgid "Monitor changed"
+msgstr "Αλλαγή κατάστασης ελεγκτή"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:831
+msgid "ON"
+msgstr "άνοιξε"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:834
+msgid "OFF"
+msgstr "έκλεισε"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:837
+msgid "Switch {} was switched {}"
+msgstr "Ο διακόπτης {} {}."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:873
+msgid "Succesfully parsed network."
+msgstr "Η συντακτική ανάλυση ήταν επιτυχής."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:875
+msgid "Failed to parse network."
+msgstr "Η συντακτική ανάλυση απέτυχε."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:882
+msgid "Open file dialog."
+msgstr "Άνοιγμα αρχείου."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:885
+msgid "Open"
+msgstr "Άνοιγμα"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:891
+msgid "File opened: {}"
+msgstr "Άνοιγμα αρχείου: {}"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:895
+msgid "Opened file"
+msgstr "Άνοιγμα αρχείου"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:904
+msgid "Error! No file loaded."
+msgstr "Σφάλμα! Δεν έχει φορτωθεί αρχείο."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:909
+msgid "Error! Network oscillating."
+msgstr "Σφάλμα! Το σύστημα πάλλεται."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:920
+msgid "Running for {} cycles"
+msgstr "Εκτέλεση για {} κύκλους"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:929
+msgid "RUN"
+msgstr "Εκτέλεση"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:936
+msgid "Error! Nothing to continue. Run first."
+msgstr "Σφάλμα! Δεν έχει εκτελεστεί αρχείο. Εκτελέστε πρώτα."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:939
+msgid "Continuing for {} cycles. Total: {}"
+msgstr "Συνέχιση εκτέλεσης για {} κύκλους. Συνολικά: {}"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:944
+msgid "Continue"
+msgstr "Συνέχεια εκτέλεσης"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:948
+msgid "Center canvas."
+msgstr "Επαναφορά στο κέντρο."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:953
+msgid "Help - Program controls "
+msgstr "Βοήθεια - Οδηγίες προγράμματος "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:956
+msgid "Shortcuts: \n"
+msgstr "Συντομεύσεις:\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:957
+msgid "Ctrl + O: Open file\n"
+msgstr "Ctrl + O: Άνοιγμα αρχείου\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:958
+msgid "Ctrl + H: Help\n"
+msgstr "Ctrl + H: Βοήθεια\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:959
+msgid "Ctrl + R: Run\n"
+msgstr "Ctrl + R: Εκτέλεση\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:960
+msgid "Ctrl + Shift + C: Continue\n"
+msgstr "Ctrl + Shift + C: Συνέχεια εκτέλεσης\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:961
+msgid "Ctrl + E: Center canvas\n"
+msgstr "Ctrl + E: Επαναφορά στο κέντρο\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:962
+msgid ""
+"Ctrl + L: Clear activity log\n"
+"\n"
+msgstr ""
+"Ctrl + L: Καθαρισμός λίστας ενεργειών\n"
+"\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:963
+msgid "User Instructions:\n"
+msgstr "Οδηγίες προς τον χρήστη:\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:964
+msgid "Use the Open file button to select "
+msgstr "Χρησιμοποιήστε το κουμπί \"Άνοιγμα αρχείου\" για να επιλέξετε "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:965
+msgid "the desired circuit defnition file."
+msgstr "το επιθυμητό αρχείο κυκλώματος."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:966
+msgid "If the file contains no errors the activity"
+msgstr "Αν το αρχείο δεν περιέχει σφάλματα, η λίστα"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:967
+msgid " log at the bottom of the window"
+msgstr " ενεργειών στο κάτω μέρος του παραθύρου"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:968
+msgid "will read \"Succesfully parsed network\". "
+msgstr "θα δείξει \"Η συντακτική ανάλυση ήταν επιτυχής\". "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:969
+msgid "If there are errors, the error log"
+msgstr "Αν υπάρχουν σφάλματα, η λίστα ενεργειών"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:970
+msgid ""
+"will read \"Failed to parse network\".\n"
+"\n"
+msgstr "θα δείξει \"Η συντακτική ανάλυση απέτυχε\".\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:971
+msgid "If the network was parsed correctly it can be ran. "
+msgstr ""
+"Αν η συντακτική ανάλυση ήταν επιτυχής, το σύστημα μπορεί να εκτελεστεί. "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:972
+msgid "Use the plus and minus on the"
+msgstr "Χρησιμοποιήστε τα κουμπιά συν και πλην πάνω στον δείκτη"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:973
+msgid "cycle selector to select the desired number"
+msgstr "των κύκλων για να επιλέξετε τον επιθυμητό αριθμό"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:974
+msgid " of cycles for the simulation or"
+msgstr " κύκλων για την προσομοίωση ή"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:975
+msgid "type in th desired number. Press the Run "
+msgstr "πληκτρολογίστε τον στο πλάισιο. Πατήστε το εικονίδιο \"Εκτέλεση\" "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:976
+msgid "button to run the simulator for the number"
+msgstr "για να εκτελέσετε την προσομοίωση για τον αριθμό"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:977
+msgid "of cycles selected and display the waveforms "
+msgstr ""
+"των κύκλων που αναγράφεται στον αντίστοιχο δείκτη και θα εμφανίσετε τα "
+"σήματα "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:978
+msgid "at the current monitor points (from a"
+msgstr "που αντιστοιχούν στους επιλεγμένους ελεγκτές (ξεκινώντας"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:979
+msgid "cold-startup of the circuit). Press the "
+msgstr "από ένα cold-startup του κυκλώματος). Πατήστε το "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:980
+msgid "Continue button to run the simulator"
+msgstr "εικονίδιο \"Συνέχεια εκτέλεσης\" για να εκτελέσετε την προσομοίωση"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:981
+msgid "for an additional number of cycles as selected "
+msgstr "για έναν επιπλέον αριθμό κύκλων, όπως έχουν επιλεγεί "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:982
+msgid "in the cycle selector and"
+msgstr "στον δείκτη κύκλων και"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:983
+msgid ""
+"display the waveforms at the current monitor points.\n"
+"\n"
+msgstr ""
+"θα εμφανίσετε τα σήματα που αντιστοιχούν στους επιλεγμένους ελεγκτές.\n"
+"\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:984
+msgid "The canvas can be restored to its default state "
+msgstr "Η περιοχή σχεδίασης μπορεί να επαναφερθεί στην αρχική της κατάσταση "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:985
+msgid "of position and zoomby"
+msgstr "θέσης και μεγέθυνσης"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:986
+msgid ""
+"selecting the center button.\n"
+"\n"
+msgstr ""
+"επιλέγοντας το εικονίδιο \"Επαναφορά στο κέντρο\".\n"
+"\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:987
+msgid "Different monitor points can be set "
+msgstr "Διαφορετικοί ελεγκτές μπορούν να προστεθούν "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:988
+msgid "and zapped by first selecting the"
+msgstr "και να αφαιρεθούν επιλέγοντας πρώτα την"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:989
+msgid "Monitors tab on the right panel, and then "
+msgstr "καρτέλα \"Ελεγκτές\" στο δεξί μέρος της οθόνης, και έπειτα "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:990
+msgid "selecting the desired monitor"
+msgstr "επιλέγοντας τον επιθυμητό ελεγκτή"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:991
+msgid ""
+"point from the list.\n"
+"\n"
+msgstr ""
+"από τη λίστα.\n"
+"\n"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:992
+msgid "Switches can be operated by first selecting "
+msgstr "Οι διακόπτες μπορούν να αλλάξουν κατάσταση επιλέγοντας πρώτα "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:993
+msgid "the Switches tab on the right"
+msgstr "την καρτέλα \"Διακόπτες\" στο δεξί μέρος"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:994
+msgid "panel, and then selecting the desired switches."
+msgstr "της οθόνης, και έπειτα επιλέγοντας τους επιθυμητούς διακόπτες."
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1010
+msgid ""
+"Logic Simulator\n"
+"Created by Psylinders\n"
+"2019"
+msgstr ""
+"Logic Simulator\n"
+"Δημιουργήθηκε από τους Psylinders\n"
+"2019"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1011
+msgid "About Logsim"
+msgstr "Σχετικά με το Logsim"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1031
+msgid "New text box value: "
+msgstr "Νέα τιμή πεδίου κειμένου: "
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1070
+msgid "Names"
+msgstr "Όνομα"
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1072
+msgid "Status"
+msgstr "Κατάσταση"
