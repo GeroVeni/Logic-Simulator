@@ -1,0 +1,367 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2019-06-02 04:50+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:613
+msgid "&Open"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:614
+msgid "&Exit"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:615
+msgid "&Center"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:616
+msgid "&Clear Activity Log"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:618
+msgid "&Run"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:620
+msgid "&Continue"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:621
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:626
+msgid "&Help"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:622
+msgid "&About"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:623
+msgid "&File"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:624
+msgid "&View"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:625
+msgid "&Simulation"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:660
+msgid "Ready. Please load a file."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:672
+msgid "Activity Log"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:698
+msgid "Monitors"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:699
+msgid "Switches"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:784
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:826
+msgid "Error: Monitor {} not found."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:788
+msgid "activated"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:793
+msgid "Monitor {} was {}."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:799
+msgid "deactivated"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:808
+msgid "Monitor changed"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:831
+msgid "ON"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:834
+msgid "OFF"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:837
+msgid "Switch {} was switched {}"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:873
+msgid "Succesfully parsed network."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:875
+msgid "Failed to parse network."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:882
+msgid "Open file dialog."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:885
+msgid "Open"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:891
+msgid "File opened: {}"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:895
+msgid "Opened file"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:904
+msgid "Error! No file loaded."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:909
+msgid "Error! Network oscillating."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:920
+msgid "Running for {} cycles"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:929
+msgid "RUN"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:936
+msgid "Error! Nothing to continue. Run first."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:939
+msgid "Continuing for {} cycles. Total: {}"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:944
+msgid "Continue"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:948
+msgid "Center canvas."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:953
+msgid "Help - Program controls "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:956
+msgid ""
+"Shortcuts: \n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:957
+msgid ""
+"Ctrl + O: Open file\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:958
+msgid ""
+"Ctrl + H: Help\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:959
+msgid ""
+"Ctrl + R: Run\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:960
+msgid ""
+"Ctrl + Shift + C: Continue\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:961
+msgid ""
+"Ctrl + E: Center canvas\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:962
+msgid ""
+"Ctrl + L: Clear activity log\n"
+"\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:963
+msgid ""
+"User Instructions:\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:964
+msgid "Use the Open file button to select "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:965
+msgid "the desired circuit defnition file."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:966
+msgid "If the file contains no errors the activity"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:967
+msgid " log at the bottom of the window"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:968
+msgid "will read \"Succesfully parsed network\". "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:969
+msgid "If there are errors, the error log"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:970
+msgid ""
+"will read \"Failed to parse network\".\n"
+"\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:971
+msgid "If the network was parsed correctly it can be ran. "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:972
+msgid "Use the plus and minus on the"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:973
+msgid "cycle selector to select the desired number"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:974
+msgid " of cycles for the simulation or"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:975
+msgid "type in th desired number. Press the Run "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:976
+msgid "button to run the simulator for the number"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:977
+msgid "of cycles selected and display the waveforms "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:978
+msgid "at the current monitor points (from a"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:979
+msgid "cold-startup of the circuit). Press the "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:980
+msgid "Continue button to run the simulator"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:981
+msgid "for an additional number of cycles as selected "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:982
+msgid "in the cycle selector and"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:983
+msgid ""
+"display the waveforms at the current monitor points.\n"
+"\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:984
+msgid "The canvas can be restored to its default state "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:985
+msgid "of position and zoomby"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:986
+msgid ""
+"selecting the center button.\n"
+"\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:987
+msgid "Different monitor points can be set "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:988
+msgid "and zapped by first selecting the"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:989
+msgid "Monitors tab on the right panel, and then "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:990
+msgid "selecting the desired monitor"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:991
+msgid ""
+"point from the list.\n"
+"\n"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:992
+msgid "Switches can be operated by first selecting "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:993
+msgid "the Switches tab on the right"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:994
+msgid "panel, and then selecting the desired switches."
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1010
+msgid ""
+"Logic Simulator\n"
+"Created by Psylinders\n"
+"2019"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1011
+msgid "About Logsim"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1031
+msgid "New text box value: "
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1070
+msgid "Names"
+msgstr ""
+
+#: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1072
+msgid "Status"
+msgstr ""
+
