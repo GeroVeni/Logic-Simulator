@@ -149,7 +149,7 @@ class MyGLCanvas_3D():
         # Draw signal traces
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
-            x_pos = 0
+            x_pos = -(num_monitors - 1)*self.monitor_spacing/2
             for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
                 self.render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing

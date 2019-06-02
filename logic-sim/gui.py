@@ -79,7 +79,7 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
 
         self.current_mode.zoom = 1
 
-        self.render("Toggled drawing mode")
+        self.recenter()
 
     def render(self, text):
         """Interface method for the render() fn in MyGLCanvas_2D and
