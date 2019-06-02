@@ -326,6 +326,7 @@ class MyGLCanvas_2D():
         # else:
         #     if self.pan_x < 0:
         #         self.pan_x = 0
+
         if self.pan_x > allowable_pan_left:
             self.pan_x = allowable_pan_left
 
@@ -335,6 +336,7 @@ class MyGLCanvas_2D():
         # else:
         #     if self.pan_y < 0:
         #         self.pan_y = 0
+
         if self.pan_y > allowable_pan_bottom:
             self.pan_y = allowable_pan_bottom
 
@@ -370,8 +372,7 @@ class MyGLCanvas_2D():
             num_monitors * self.monitor_spacing + self.ruler_height / self.zoom
         # self.border_right depends only on the number of cycles to be
         # simulated
-        self.border_right = (self.border_left + self.margin_left) / \
-            self.zoom + self.parent.parent.cycles_completed * self.cycle_width
+        self.border_right = self.parent.parent.cycles_completed * self.cycle_width
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -591,7 +592,8 @@ class Gui(wx.Frame):
         fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O")
         fileMenu.Append(wx.ID_EXIT, "&Exit")
         viewMenu.Append(self.ID_CENTER, "&Center\tCtrl+E")
-        viewMenu.Append(self.ID_CLEAR, "&Clea Activity Log\tCtrl+L")
+        viewMenu.Append(self.ID_TOGGLE_3D, "&Toggle 2D/3D vew\tCtrl+T")
+        viewMenu.Append(self.ID_CLEAR, "&Clear Activity Log\tCtrl+L")
         # This is how to associate a shortcut
         runMenu.Append(self.ID_RUN, "&Run\tCtrl+R")
         # This is how to associate a shortcut
