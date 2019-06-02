@@ -281,8 +281,6 @@ class MyGLCanvas_3D():
         signal_list = self.parent.parent.monitors.monitors_dictionary[(
             device_id, output_id)]
 
-        # Draw a signal trace, make sure its centre of gravity
-        # is at the scene origin
         GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles - 1) * self.cycle_depth
