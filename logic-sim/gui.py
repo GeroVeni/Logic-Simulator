@@ -584,7 +584,7 @@ class Gui(wx.Frame):
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
         #self.updateLanguage(self.appConfig.Read(u"Language"))
-        self.updateLanguage(wx.LANGUAGE_GREEK)
+        self.updateLanguage(u"el")
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -610,20 +610,20 @@ class Gui(wx.Frame):
         helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
         # This is how to associate a shortcut
-        fileMenu.Append(self.ID_OPEN, "&Open\tCtrl+O")
-        fileMenu.Append(wx.ID_EXIT, "&Exit")
-        viewMenu.Append(self.ID_CENTER, "&Center\tCtrl+E")
-        viewMenu.Append(self.ID_CLEAR, "&Clea Activity Log\tCtrl+L")
+        fileMenu.Append(self.ID_OPEN, _("&Open") + "\tCtrl+O")
+        fileMenu.Append(wx.ID_EXIT, _("&Exit"))
+        viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
+        viewMenu.Append(self.ID_CLEAR, _("&Clea Activity Log") + "\tCtrl+L")
         # This is how to associate a shortcut
-        runMenu.Append(self.ID_RUN, "&Run\tCtrl+R")
+        runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         # This is how to associate a shortcut
-        runMenu.Append(self.ID_CONTINUE, "&Continue\tCtrl+Shift+C")
-        helpMenu.Append(self.ID_HELP, "&Help\tCtrl+H")
-        helpMenu.Append(wx.ID_ABOUT, "&About")
-        menuBar.Append(fileMenu, "&File")
-        menuBar.Append(viewMenu, "&View")
-        menuBar.Append(runMenu, "&Simulation")
-        menuBar.Append(helpMenu, "&Help")
+        runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
+        helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
+        helpMenu.Append(wx.ID_ABOUT, _("&About"))
+        menuBar.Append(fileMenu, _("&File"))
+        menuBar.Append(viewMenu, _("&View"))
+        menuBar.Append(runMenu, _("&Simulation"))
+        menuBar.Append(helpMenu, _("&Help"))
         self.SetMenuBar(menuBar)
 
         # Configure toolbar
@@ -657,7 +657,7 @@ class Gui(wx.Frame):
         self.activity_log = wx.TextCtrl(
             self,
             wx.ID_ANY,
-            "Ready. Please load a file.",
+            _("Ready. Please load a file."),
             style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # Bind events to widgets
@@ -669,7 +669,7 @@ class Gui(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
         left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(wx.StaticText(self, label="Activity Log"),
+        left_sizer.Add(wx.StaticText(self, label=_("Activity Log")),
                        0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -695,8 +695,8 @@ class Gui(wx.Frame):
         self.monitor_tab.set_on_item_selected_listener(self.set_monitor)
         self.switch_tab.set_on_item_selected_listener(self.set_switch)
 
-        nb.AddPage(self.monitor_tab, "Monitors")
-        nb.AddPage(self.switch_tab, "Switches")
+        nb.AddPage(self.monitor_tab, _("Monitors"))
+        nb.AddPage(self.switch_tab, _("Switches"))
 
         right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
@@ -781,22 +781,22 @@ class Gui(wx.Frame):
         if device_id is None:
             # TODO: Reformat error text for consistency with parser
             self.log_message(
-                "Error: Monitor {} not found.".format(monitor_name))
+                _("Error: Monitor {} not found.").format(monitor_name))
             return
         # Add/remove monitor
         if is_active:
-            action = 'activated'
+            action = _("activated")
             monitor_error = self.monitors.make_monitor(device_id, port_id,
                                                        self.cycles_completed)
             if monitor_error == self.monitors.NO_ERROR:
                 self.log_message(
-                    "Monitor {} was {}.".format(
+                    _("Monitor {} was {}.").format(
                         monitor_name, action))
             else:
                 # TODO: Print error
                 return
         else:
-            action = 'deactivated'
+            action = _("deactivated")
             if self.monitors.remove_monitor(device_id, port_id):
                 self.log_message(
                     "Monitor {} was {}.".format(
@@ -805,7 +805,7 @@ class Gui(wx.Frame):
                 # TODO: Print error
                 return
         self.canvas.restore_state()
-        self.canvas.render('Monitor changed')
+        self.canvas.render(_("Monitor changed"))
 
     def set_switch(self, switch_name, is_on):
         """Turn a swtich on and off.
@@ -823,18 +823,18 @@ class Gui(wx.Frame):
         if switch_id is None:
             # TODO: Reformat error text for consistency with parser
             self.log_message(
-                "Error: Monitor {} not found.".format(monitor_name))
+                _("Error: Monitor {} not found.").format(monitor_name))
             return
         # Turn on/off the switch
         if is_on:
             switch_state = 1
-            state_text = 'ON'
+            state_text = _("ON")
         else:
             switch_state = 0
-            state_text = 'OFF'
+            state_text = _("OFF")
         if self.devices.set_switch(switch_id, switch_state):
             self.log_message(
-                "Switch {} was switched {}".format(
+                _("Switch {} was switched {}").format(
                     switch_name, state_text))
         else:
             # TODO: Print error
@@ -870,29 +870,29 @@ class Gui(wx.Frame):
         captured_stdout = io.StringIO()
         with redirect_stdout(captured_stdout):
             if self.parser.parse_network():
-                self.log_message("Succesfully parsed network.")
+                self.log_message(_("Succesfully parsed network."))
             else:
-                self.log_message("Failed to parse network.")
+                self.log_message(_("Failed to parse network."))
                 # Show error messages captured in activity log
                 self.log_message(captured_stdout.getvalue(),
                                  self.MONOSPACE_FONT)
 
     def on_open(self):
         """Open the file browser and parse the file chosen."""
-        text = "Open file dialog."
+        text = _("Open file dialog.")
         openFileDialog = wx.FileDialog(
             self,
-            "Open",
+            _("Open"),
             wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
             file_path = openFileDialog.GetPath()
-            self.log_message("File opened: {}".format(file_path))
+            self.log_message(_("File opened: {}").format(file_path))
             self.run_parser(file_path)
             self.canvas.restore_state()
             self.update_tabs()
-            self.canvas.render("Opened file")
+            self.canvas.render(_("Opened file"))
 
     def run_network(self, cycles):
         """Run the network for the specified number of simulation cycles.
@@ -901,12 +901,12 @@ class Gui(wx.Frame):
         """
         for _ in range(cycles):
             if self.network is None:
-                self.log_message("Error! No file loaded.")
+                self.log_message(_("Error! No file loaded."))
                 return False
             if self.network.execute_network():
                 self.monitors.record_signals()
             else:
-                self.log_message("Error! Network oscillating.")
+                self.log_message(_("Error! Network oscillating."))
                 return False
         return True
 
@@ -917,8 +917,7 @@ class Gui(wx.Frame):
 
         if cycles is not None:  # if the number of cycles provided is valid
             self.monitors.reset_monitors()
-            self.log_message("".join(["Running for ", str(cycles),
-                                      " cycles."]))
+            self.log_message(_("Running for {} cycles").format(cycles))
             self.devices.cold_startup()
             if self.run_network(cycles):
                 self.cycles_completed += cycles
@@ -927,72 +926,73 @@ class Gui(wx.Frame):
         """Run the run_command when run button pressed."""
         self.run_command()
         self.canvas.recenter()
-        self.canvas.render("RUN")
+        self.canvas.render(_("RUN"))
 
     def continue_command(self):
         """Continue a previously run simulation."""
         cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
-                self.log_message("Error! Nothing to continue. Run first.")
+                self.log_message(_("Error! Nothing to continue. Run first."))
             elif self.run_network(cycles):
                 self.cycles_completed += cycles
-                self.log_message(" ".join(["Continuing for", str(
-                    cycles), "cycles.", "Total:", str(self.cycles_completed)]))
+                self.log_message(_("Continuing for {} cycles. Total: {}").format(cycles, self.cycles_completed))
 
     def on_continue(self):
         """Run the continue_command when run button pressed."""
         self.continue_command()
-        self.canvas.render("Continue")
+        self.canvas.render(_("Continue"))
 
     def on_center(self):
         """Centers the canvas to its default state of zoom and panning."""
-        self.log_message("Center canvas.")
+        self.log_message(_("Center canvas."))
         self.canvas.recenter()
 
     def on_help(self):
         """Shows a help window with user instructions."""
-        help_title = "Help - Program controls "
-        help_content = ""\
-            "Shortcuts: \n"\
-            "Ctrl + O: Open file\n"\
-            "Ctrl + H: Help\n"\
-            "Ctrl + R: Run\n"\
-            "Ctrl + Shift + C: Continue\n"\
-            "Ctrl + E: Center canvas\n"\
-            "Ctrl + L: Clear activity log\n\n"\
-            "User Instructions:\n"\
-            "Use the Open file button to select "\
-            "the desired circuit defnition file."\
-            "If the file contains no errors the activity"\
-            " log at the bottom of the window"\
-            "will read \"Succesfully parsed network\". "\
-            "If there are errors, the error log"\
-            "will read \"Failed to parse network\".\n\n"\
-            "If the network was parsed correctly it can be ran. "\
-            "Use the plus and minus on the"\
-            "cycle selector to select the desired number"\
-            " of cycles for the simulation or"\
-            "type in th desired number. Press the Run "\
-            "button to run the simulator for the number"\
-            "of cycles selected and display the waveforms "\
-            "at the current monitor points (from a"\
-            "cold-startup of the circuit). Press the "\
-            "Continue button to run the simulator"\
-            "for an additional number of cycles as selected "\
-            "in the cycle selector and"\
-            "display the waveforms at the current monitor points.\n\n"\
-            "The canvas can be restored to its default state "\
-            "of position and zoomby"\
-            "selecting the center button.\n\n"\
-            "Different monitor points can be setted "\
-            "and zapped by first selecting the"\
-            "Monitors tab on the right panel, and then "\
-            "selecting the desired monitor"\
-            "point from the list.\n\n"\
-            "Switches can be operated by first selecting "\
-            "the Switches tab on the right"\
-            "panel, and then selecting the desired switches."
+        help_title = _("Help - Program controls ")
+        # TODO Find a more elegant way to provide localisation for this text
+        help_content = ("" +
+            _("Shortcuts: \n") +
+            _("Ctrl + O: Open file\n") +
+            _("Ctrl + H: Help\n") +
+            _("Ctrl + R: Run\n") +
+            _("Ctrl + Shift + C: Continue\n") +
+            _("Ctrl + E: Center canvas\n") +
+            _("Ctrl + L: Clear activity log\n\n") +
+            _("User Instructions:\n") +
+            _("Use the Open file button to select ") +
+            _("the desired circuit defnition file.") +
+            _("If the file contains no errors the activity") +
+            _(" log at the bottom of the window") +
+            _("will read \")Succesfully parsed network\". ") +
+            _("If there are errors, the error log") +
+            _("will read \")Failed to parse network\".\n\n") +
+            _("If the network was parsed correctly it can be ran. ") +
+            _("Use the plus and minus on the") +
+            _("cycle selector to select the desired number") +
+            _(" of cycles for the simulation or") +
+            _("type in th desired number. Press the Run ") +
+            _("button to run the simulator for the number") +
+            _("of cycles selected and display the waveforms ") +
+            _("at the current monitor points (from a") +
+            _("cold-startup of the circuit). Press the ") +
+            _("Continue button to run the simulator") +
+            _("for an additional number of cycles as selected ") +
+            _("in the cycle selector and") +
+            _("display the waveforms at the current monitor points.\n\n") +
+            _("The canvas can be restored to its default state ") +
+            _("of position and zoomby") +
+            _("selecting the center button.\n\n") +
+            _("Different monitor points can be set ") +
+            _("and zapped by first selecting the") +
+            _("Monitors tab on the right panel, and then ") +
+            _("selecting the desired monitor") +
+            _("point from the list.\n\n") +
+            _("Switches can be operated by first selecting ") +
+            _("the Switches tab on the right") +
+            _("panel, and then selecting the desired switches.")
+        )
 
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
@@ -1007,8 +1007,8 @@ class Gui(wx.Frame):
         if Id == wx.ID_EXIT:
             self.Close(True)
         elif Id == wx.ID_ABOUT:
-            wx.MessageBox("Logic Simulator\nCreated by Psylinders\n2019",
-                          "About Logsim", wx.ICON_INFORMATION | wx.OK)
+            wx.MessageBox(_("Logic Simulator\nCreated by Psylinders\n2019"),
+                          _("About Logsim"), wx.ICON_INFORMATION | wx.OK)
         elif Id == self.ID_OPEN:  # file dialog
             self.on_open()
         elif Id == self.ID_RUN:  # run button
@@ -1026,8 +1026,9 @@ class Gui(wx.Frame):
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
+        # TODO Remove ?
         text_box_value = self.text_box.GetValue()
-        text = "".join(["New text box value: ", text_box_value])
+        text = "".join([_("New text box value: "), text_box_value])
         self.canvas.render(text)
 
 
@@ -1066,9 +1067,9 @@ class CustomTab(wx.Panel):
         # Create ListCtrl
         self.item_list = dv.DataViewListCtrl(
             self, style=wx.dataview.DV_ROW_LINES)
-        self.item_list.AppendIconTextColumn('Names', width=140, flags=0)
+        self.item_list.AppendIconTextColumn(_("Names"), width=140, flags=0)
         self.item_list.AppendToggleColumn(
-            'Status', width=60, align=wx.ALIGN_CENTER, flags=0)
+            _("Status"), width=60, align=wx.ALIGN_CENTER, flags=0)
         self.item_list.Bind(
             dv.EVT_DATAVIEW_ITEM_VALUE_CHANGED,
             self.on_item_selected)
