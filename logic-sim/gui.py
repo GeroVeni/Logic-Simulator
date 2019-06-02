@@ -613,7 +613,7 @@ class Gui(wx.Frame):
         fileMenu.Append(self.ID_OPEN, _("&Open") + "\tCtrl+O")
         fileMenu.Append(wx.ID_EXIT, _("&Exit"))
         viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
-        viewMenu.Append(self.ID_CLEAR, _("&Clea Activity Log") + "\tCtrl+L")
+        viewMenu.Append(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
         # This is how to associate a shortcut
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         # This is how to associate a shortcut
@@ -965,9 +965,9 @@ class Gui(wx.Frame):
             _("the desired circuit defnition file.") +
             _("If the file contains no errors the activity") +
             _(" log at the bottom of the window") +
-            _("will read \")Succesfully parsed network\". ") +
+            _("will read \"Succesfully parsed network\". ") +
             _("If there are errors, the error log") +
-            _("will read \")Failed to parse network\".\n\n") +
+            _("will read \"Failed to parse network\".\n\n") +
             _("If the network was parsed correctly it can be ran. ") +
             _("Use the plus and minus on the") +
             _("cycle selector to select the desired number") +
