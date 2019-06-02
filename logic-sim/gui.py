@@ -16,6 +16,7 @@ import wx.adv
 import wx.glcanvas as wxcanvas
 import wx.dataview as dv
 import wx.lib.mixins.listctrl as listmix
+import wx.lib.langlistctrl as langlc
 from wx.lib.wordwrap import wordwrap
 from OpenGL import GL, GLUT
 
@@ -606,6 +607,7 @@ class Gui(wx.Frame):
         self.ID_HELP = 1006
         self.ID_CLEAR = 1007
         self.ID_TOGGLE_3D = 1008
+        self.ID_LANG = 1009
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -613,49 +615,60 @@ class Gui(wx.Frame):
         runMenu = wx.Menu()
         helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
-        # This is how to associate a shortcut
 
         fileMenu.Append(self.ID_OPEN, _("&Open") + "\tCtrl+O")
         fileMenu.Append(wx.ID_EXIT, _("&Exit"))
+
         viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
         viewMenu.Append(self.ID_TOGGLE_3D, _("&Toggle 2D/3D vew") + "\tCtrl+T")
         viewMenu.Append(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
+        viewMenu.Append(self.ID_LANG, _("Change &Language"))
 
-        # This is how to associate a shortcut
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
-        # This is how to associate a shortcut
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
+        
         helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, _("&About"))
+
         menuBar.Append(fileMenu, _("&File"))
         menuBar.Append(viewMenu, _("&View"))
         menuBar.Append(runMenu, _("&Simulation"))
         menuBar.Append(helpMenu, _("&Help"))
         self.SetMenuBar(menuBar)
 
-        # Configure toolbar
-        toolBar = self.CreateToolBar()
+        # Load icons
         openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
         runIcon = wx.Bitmap("res/run.png")
         continueIcon = wx.Bitmap("res/continue.png")
         infoIcon = wx.Bitmap("res/info.png")
+        self.layout2dIcon = wx.Bitmap("res/layout2d-01.png")
+        self.layout3dIcon = wx.Bitmap("res/layout3d-01.png")
+        flagIcon = langlc.GetLanguageFlag(wx.LANGUAGE_ENGLISH)
+
+        # Configure toolbar
+        # Keep a reference to the toolBar to update its icons
+        self.toolBar = self.CreateToolBar()
         # TODO Change names icons and event handling of tools
+        # TODO Add Shorthelp option to tools (i.e. tooltip)
         # TODO Create matching options in the fileMenu and associate them
         # with shortcuts
-        self.spin = wx.SpinCtrl(toolBar, value='10')
-        toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon)
-        toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
-        toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_CENTER, "Tool3", centerIcon)
-        toolBar.AddSeparator()
-        toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
-        toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
-        toolBar.AddControl(self.spin, "SpinCtrl")
-        toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", infoIcon)
-        self.SetToolBar(toolBar)
+        self.spin = wx.SpinCtrl(self.toolBar, value='10')
+        self.toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
+        self.toolBar.AddSeparator()
+        self.toolBar.AddTool(self.ID_CENTER, "Tool3", centerIcon)
+        self.toolBar.AddSeparator()
+        self.toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
+        self.toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
+        self.toolBar.AddControl(self.spin, "SpinCtrl")
+        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout2dIcon)
+        self.toolBar.AddSeparator()
+        self.toolBar.AddTool(self.ID_LANG, "Tool7", flagIcon)
+        self.toolBar.AddSeparator()
+        self.toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon, shortHelp=_("Help"))
+        self.SetToolBar(self.toolBar)
 
+        self.canvas_mode = '2d' # current display mode of canvas
         self.cycles_completed = 0  # number of simulation cycles completed
         # Canvas for drawing signals
         self.canvas = GLCanvasWrapper(self)
@@ -1015,6 +1028,12 @@ class Gui(wx.Frame):
 
     def  on_toggle_3d_vew(self):
         """Toggle 3D view."""
+        if self.canvas_mode == '2d':
+            self.canvas_mode = '3d'
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
+        else:
+            self.canvas_mode = '2d'
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
         self.canvas.toggle_drawing_mode()
 
     ##################
@@ -1044,6 +1063,8 @@ class Gui(wx.Frame):
             self.clear_log()
         elif Id == self.ID_TOGGLE_3D: # togge 3D view button
             self.on_toggle_3d_vew()
+        elif Id == self.ID_LANG:
+            self.on_lang_change()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
