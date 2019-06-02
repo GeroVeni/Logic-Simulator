@@ -227,7 +227,7 @@ class MyGLCanvas_2D():
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Enable line below only when debugging the canvas
-        # self.render_text(text, 0, 10)
+        # self.render_text(text, 200, 10)
 
         # Set the left margin for the canvas
         if self.parent.parent.monitors.get_margin() is not None:
@@ -289,6 +289,7 @@ class MyGLCanvas_2D():
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
+        self.render("")
 
     def on_mouse(self, event):
         """Handle mouse events."""
@@ -333,28 +334,29 @@ class MyGLCanvas_2D():
     def bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.parent.GetClientSize()
-        allowable_pan_right = -(self.border_right - size.width / self.zoom)
+        # allowable_pan_right = -(self.border_right - size.width / self.zoom)
+        allowable_pan_right = -self.border_right*self.zoom + size.width
         allowable_pan_left = self.border_left
         allowable_pan_bottom = self.border_bottom
-        allowable_pan_top = -(self.border_top - size.height / self.zoom)
+        allowable_pan_top = -(self.border_top * self.zoom) + size.height
 
         # if true, some part of the signal traces is hidden (x dir)
-        # if allowable_pan_right < 0:
-        #     if self.pan_x < allowable_pan_right: # fix
-        #         self.pan_x = allowable_pan_right
-        # else:
-        #     if self.pan_x < 0:
-        #         self.pan_x = 0
+        if allowable_pan_right < 0:
+            if self.pan_x < allowable_pan_right: # fix
+                self.pan_x = allowable_pan_right
+        else:
+            if self.pan_x < 0:
+                self.pan_x = 0
 
         if self.pan_x > allowable_pan_left:
             self.pan_x = allowable_pan_left
 
-        # if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
-        #     if self.pan_y < allowable_pan_top: # fix
-        #         self.pan_y = allowable_pan_top
-        # else:
-        #     if self.pan_y < 0:
-        #         self.pan_y = 0
+        if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
+            if self.pan_y < allowable_pan_top: # fix
+                self.pan_y = allowable_pan_top
+        else:
+            if self.pan_y < 0:
+                self.pan_y = 0
 
         if self.pan_y > allowable_pan_bottom:
             self.pan_y = allowable_pan_bottom
@@ -548,6 +550,7 @@ class MyGLCanvas_2D():
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
+        self.render("")
 
 
 class Gui(wx.Frame):
@@ -584,7 +587,7 @@ class Gui(wx.Frame):
         # work around for Python stealing "_"
         sys.displayhook = _displayHook
 
-        # Add locale path and update the language 
+        # Add locale path and update the language
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
         #self.updateLanguage(self.appConfig.Read(u"Language"))
@@ -711,33 +714,33 @@ class Gui(wx.Frame):
     def updateLanguage(self, lang):
         """
         Update the language to the requested one.
-        
+
         Make *sure* any existing locale is deleted before the new
         one is created.  The old C++ object needs to be deleted
         before the new one is created, and if we just assign a new
         instance to the old Python variable, the old C++ locale will
         not be destroyed soon enough, likely causing a crash.
-        
+
         :param string `lang`: one of the supported language codes
-        
+
         """
         # if an unsupported language is requested default to English
         if lang in appC.supLang:
             selLang = appC.supLang[lang]
         else:
             selLang = wx.LANGUAGE_ENGLISH
-            
+
         if self.locale:
             assert sys.getrefcount(self.locale) <= 2
             del self.locale
-        
+
         # create a locale object for this language
         self.locale = wx.Locale(selLang)
         if self.locale.IsOk():
             self.locale.AddCatalog(appC.langDomain)
         else:
             self.locale = None
-            
+
     def update_tabs(self):
         """Update the tabs with new values."""
 
