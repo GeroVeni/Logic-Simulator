@@ -44,7 +44,7 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
         self.draw_2D = MyGLCanvas_2D(self) # default mode
         self.draw_3D = MyGLCanvas_3D(self)
 
-        self.current_mode = self.draw_3D
+        self.current_mode = self.draw_2D
 
         # Bind events to the canvas
         self.Bind(wx.EVT_PAINT, self.current_mode.on_paint)
@@ -62,6 +62,14 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
         if isinstance(self.current_mode, MyGLCanvas_2D):
             self.current_mode = self.draw_3D
         else:
+            # Disable 3D open Gl
+            GL.glDisable(GL.GL_COLOR_MATERIAL)
+            GL.glDisable(GL.GL_CULL_FACE)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+            GL.glDisable(GL.GL_LIGHTING)
+            GL.glDisable(GL.GL_LIGHT0)
+            GL.glDisable(GL.GL_LIGHT1)
+            GL.glDisable(GL.GL_NORMALIZE)
             self.current_mode = self.draw_2D
 
         # Bind events to the canvas
@@ -142,7 +150,7 @@ class MyGLCanvas_2D():
         self.character_height = 15
 
         # 2D rendering settings
-        self.border_left = 10  # constant
+        self.border_left = 1  # constant
         self.border_right = 400
         self.border_top = 200
         self.border_bottom = 0  # constant
@@ -173,22 +181,12 @@ class MyGLCanvas_2D():
         self.parent.SetCurrent(self.parent.context)
         GL.glDrawBuffer(GL.GL_BACK)
         GL.glClearColor(1.0, 1.0, 1.0, 0.0)
-        GL.glViewport(0, 0, size.width, size.height)
+        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         GL.glOrtho(0, size.width, 0, size.height, -1, 1)
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadIdentity()
-
-        # Disable 3D open Gl
-        GL.glDisable(GL.GL_COLOR_MATERIAL)
-        GL.glDisable(GL.GL_CULL_FACE)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glDisable(GL.GL_LIGHTING)
-        GL.glDisable(GL.GL_LIGHT0)
-        GL.glDisable(GL.GL_LIGHT1)
-        GL.glDisable(GL.GL_NORMALIZE)
-
         GL.glTranslated(self.pan_x, self.pan_y, 0.0)
         GL.glScaled(self.zoom, self.zoom, self.zoom)
 
@@ -210,7 +208,7 @@ class MyGLCanvas_2D():
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Enable line below only when debugging the canvas
-        self.render_text(text, 10, 10)
+        self.render_text(text, 0, 10)
 
         # Set the left margin for the canvas
         if self.parent.parent.monitors.get_margin() is not None:
@@ -219,8 +217,10 @@ class MyGLCanvas_2D():
                 self.character_width +
                 10)
 
+        size = self.parent.GetClientSize()
+
         # Render canvas canvas components
-        self.render_grid()
+        self.render_grid(size)
 
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
@@ -234,13 +234,15 @@ class MyGLCanvas_2D():
                     output_id,
                     y_pos,
                     y_pos +
-                    self.trace_height)
+                    self.trace_height, size)
                 y_pos -= self.monitor_spacing
 
         # Render ruler components
-        self.render_ruler_background()
-        self.render_cycle_numbers()
-        self.render_grid(render_only_on_ruler=True)
+        GL.glViewport(0, 0, size.width, size.height)
+        self.render_ruler_background(size)
+        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+        self.render_cycle_numbers(size)
+        self.render_grid(size, render_only_on_ruler=True)
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -382,7 +384,7 @@ class MyGLCanvas_2D():
             else:
                 GLUT.glutBitmapCharacter(self.font, ord(character))
 
-    def render_monitor(self, device_id, output_id, y_min, y_max):
+    def render_monitor(self, device_id, output_id, y_min, y_max, size):
         """Handle monitor name and signal trace drawing for a single
         monitor."""
         monitor_name = self.parent.parent.devices.get_signal_name(
@@ -391,14 +393,18 @@ class MyGLCanvas_2D():
             device_id, output_id)]
 
         # Draw monitor name
-        text_x_pos = self.border_left / self.zoom
+        GL.glViewport(0, 0, self.margin_left, size.height)
+        # text_x_pos = self.border_left / self.zoom
+        text_x_pos = -self.pan_x/self.zoom
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
+        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
 
         # Draw signal trace
-        x_pos = (self.border_left + self.margin_left) / \
-            self.zoom  # correct for zooming
+        # x_pos = (self.border_left + self.margin_left) / \
+            # self.zoom  # correct for zooming
+        x_pos = 0
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
         GL.glLineWidth(1)
@@ -450,26 +456,26 @@ class MyGLCanvas_2D():
         GL.glVertex2f(end_point[0], end_point[1])
         GL.glEnd()
 
-    def render_cycle_numbers(self):
+    def render_cycle_numbers(self, size):
         """Handle cycle numbers drawing at the top of the canvas (ruler)."""
         if self.parent.parent.cycles_completed == 0:
             return
 
-        size = self.parent.GetClientSize()
         for cycle in range(self.parent.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
-            text_x_pos = (self.border_left + self.margin_left - 0.5 *
-                          num_digits * self.character_width) / self.zoom +\
+            # text_x_pos = (self.border_left + self.margin_lef - 0.5 *
+            #               num_digits * self.character_width) / self.zoom +\
+            #     (cycle + 0.5) * self.cycle_width
+            text_x_pos = - 0.5 * num_digits * self.character_width/self.zoom +\
                 (cycle + 0.5) * self.cycle_width
             text_y_pos = (size.height - self.pan_y -
                           self.character_height) / self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
-    def render_ruler_background(self):
+    def render_ruler_background(self, size):
         """Draw a background for the ruler."""
-        size = self.parent.GetClientSize()
         ruler_color = [200 / 255, 230 / 255, 255 / 255]
         # Make sure transformations don't affect other renderings
         GL.glPushMatrix()
@@ -483,12 +489,11 @@ class MyGLCanvas_2D():
         GL.glEnd()
         GL.glPopMatrix()
 
-    def render_grid(self, render_only_on_ruler=False):
+    def render_grid(self, size, render_only_on_ruler=False):
         """Draw a grid for separating the different cycles in the traces."""
         if self.parent.parent.cycles_completed == 0:
             return
 
-        size = self.parent.GetClientSize()
         line_y_pos_end = self.border_bottom + \
             (- self.pan_y + size.height) / self.zoom
 
@@ -499,7 +504,8 @@ class MyGLCanvas_2D():
             line_y_pos_start = self.border_bottom - self.pan_y / self.zoom
 
         # render vertical lines
-        line_x_pos = (self.border_left + self.margin_left) / self.zoom
+        # line_x_pos = (self.border_left + self.margin_left) / self.zoom
+        line_x_pos = 0
         self.render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
         for cycle in range(self.parent.parent.cycles_completed):
