@@ -154,6 +154,9 @@ class MyGLCanvas_3D():
                 self.render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
 
+        # Draw cycle numbers
+        self.render_cycle_numbers(0)
+
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
         GL.glFlush()
@@ -271,7 +274,7 @@ class MyGLCanvas_3D():
         GL.glEnable(GL.GL_LIGHTING)
 
     def render_monitor(self, device_id, output_id, x_pos):
-        """Hndle monitor name and signal trace drawing for a single monitor."""
+        """Handle monitor name and signal trace drawing for a single monitor."""
         monitor_name = self.parent.parent.devices.get_signal_name(
             device_id, output_id)
         signal_list = self.parent.parent.monitors.monitors_dictionary[(
@@ -279,8 +282,9 @@ class MyGLCanvas_3D():
 
         # Draw a signal trace, make sure its centre of gravity
         # is at the scene origin
-        z_pos = 0
         GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
+        cycles = self.parent.parent.cycles_completed
+        z_pos = -0.5 * (cycles - 1) * self.cycle_depth
 
         for signal in signal_list:
             if signal != self.parent.parent.devices.BLANK:
@@ -298,6 +302,16 @@ class MyGLCanvas_3D():
         # Draw monitor name
         GL.glColor3f(1.0, 1.0, 1.0)  # text is white
         self.render_text(monitor_name, x_pos, 0, z_pos)
+
+    def render_cycle_numbers(self, x_pos):
+        """Handle rendering cycle numbers over the signal traces."""
+        GL.glColor3f(0.0, 1.0, 0.0)  # text is white
+        cycles = self.parent.parent.cycles_completed
+        z_pos = -0.5 * (cycles-1) * self.cycle_depth
+        for cycle in range(1, cycles + 1):
+            self.render_text(str(cycle), x_pos, 2*self.trace_height, z_pos)
+            z_pos += self.cycle_depth
+
 
     def restore_state(self):
         pass
