@@ -208,7 +208,7 @@ class MyGLCanvas_2D():
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Enable line below only when debugging the canvas
-        self.render_text(text, 0, 10)
+        # self.render_text(text, 0, 10)
 
         # Set the left margin for the canvas
         if self.parent.parent.monitors.get_margin() is not None:
@@ -238,6 +238,7 @@ class MyGLCanvas_2D():
                 y_pos -= self.monitor_spacing
 
         # Render ruler components
+        # Ruler background rendered across the whole width of the canvas
         GL.glViewport(0, 0, size.width, size.height)
         self.render_ruler_background(size)
         GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
@@ -393,17 +394,17 @@ class MyGLCanvas_2D():
             device_id, output_id)]
 
         # Draw monitor name
+        # Render on different viewport
         GL.glViewport(0, 0, self.margin_left, size.height)
-        # text_x_pos = self.border_left / self.zoom
         text_x_pos = -self.pan_x/self.zoom
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
+        self.render_line((text_x_pos, y_min),(text_x_pos + size.width/self.zoom, y_min))
+        self.render_line((text_x_pos, y_max),(text_x_pos + size.width/self.zoom, y_max))
         GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
 
         # Draw signal trace
-        # x_pos = (self.border_left + self.margin_left) / \
-            # self.zoom  # correct for zooming
         x_pos = 0
         currently_drawing = False
         GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
@@ -465,9 +466,6 @@ class MyGLCanvas_2D():
             # count number of digits in number
             num_digits = len(str(cycle + 1))
             # print cycle number
-            # text_x_pos = (self.border_left + self.margin_lef - 0.5 *
-            #               num_digits * self.character_width) / self.zoom +\
-            #     (cycle + 0.5) * self.cycle_width
             text_x_pos = - 0.5 * num_digits * self.character_width/self.zoom +\
                 (cycle + 0.5) * self.cycle_width
             text_y_pos = (size.height - self.pan_y -
@@ -504,7 +502,6 @@ class MyGLCanvas_2D():
             line_y_pos_start = self.border_bottom - self.pan_y / self.zoom
 
         # render vertical lines
-        # line_x_pos = (self.border_left + self.margin_left) / self.zoom
         line_x_pos = 0
         self.render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
