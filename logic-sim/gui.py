@@ -343,7 +343,7 @@ class MyGLCanvas_2D():
 
         # if true, some part of the signal traces is hidden (x dir)
         if allowable_pan_right < 0:
-            if self.pan_x < allowable_pan_right: # fix
+            if self.pan_x < allowable_pan_right:
                 self.pan_x = allowable_pan_right
         else:
             if self.pan_x < 0:
@@ -353,7 +353,7 @@ class MyGLCanvas_2D():
             self.pan_x = allowable_pan_left
 
         if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
-            if self.pan_y < allowable_pan_top: # fix
+            if self.pan_y < allowable_pan_top:
                 self.pan_y = allowable_pan_top
         else:
             if self.pan_y < 0:
@@ -419,7 +419,7 @@ class MyGLCanvas_2D():
         # Draw monitor name
         # Render on different viewport
         GL.glViewport(0, 0, self.margin_left, size.height)
-        text_x_pos = -self.pan_x/self.zoom
+        text_x_pos = -self.pan_x/self.zoom + 4
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
@@ -631,7 +631,7 @@ class Gui(wx.Frame):
 
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
-        
+
         helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, _("&About"))
 
@@ -756,7 +756,7 @@ class Gui(wx.Frame):
             self.locale.AddCatalog(appC.langDomain)
         else:
             self.locale = None
-    
+
     def update_texts(self):
         """Updates the text fields around the application after a change
         of locale.
@@ -789,7 +789,7 @@ class Gui(wx.Frame):
 
         menuBar.SetLabel(self.ID_HELP, _("&Help") + "\tCtrl+H")
         menuBar.SetLabel(wx.ID_ABOUT, _("&About"))
-        
+
         # Update toolbar tooltips
         # TODO
 
@@ -805,7 +805,7 @@ class Gui(wx.Frame):
 
         # Update static texts
         self.activity_log_label.SetLabel(_("Activity Log"))
-            
+
     def update_tabs(self):
         """Update the tabs with new values."""
 
