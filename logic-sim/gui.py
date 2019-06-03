@@ -591,15 +591,9 @@ class Gui(wx.Frame):
         # Add locale path and update the language
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
-<<<<<<< HEAD
-        #self.updateLanguage(self.appConfig.Read(u"Language"))
-        self.updateLanguage(u"en")
-=======
-        #self.update_language(self.appConfig.Read(u"Language"))
         sys_lang = wx.Locale.GetSystemLanguage()
         lang_name = wx.Locale.GetLanguageCanonicalName(sys_lang)
         self.update_language(lang_name[:2])
->>>>>>> 0dde7b9f6a3db841d3b2cba71584cc58704fed27
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -647,8 +641,10 @@ class Gui(wx.Frame):
         self.SetMenuBar(menuBar)
 
         # Load icons
-        openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
+        #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        openIcon = wx.Bitmap("res/run.png")
+        centerIcon = wx.Bitmap("res/run.png")
         runIcon = wx.Bitmap("res/run.png")
         continueIcon = wx.Bitmap("res/continue.png")
         infoIcon = wx.Bitmap("res/info.png")
@@ -671,7 +667,7 @@ class Gui(wx.Frame):
         self.toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
         self.toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
         self.toolBar.AddControl(self.spin, "SpinCtrl")
-        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout2dIcon)
+        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout3dIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_LANG, "Tool7", flagIcon)
         self.toolBar.AddSeparator()
@@ -803,6 +799,7 @@ class Gui(wx.Frame):
         self.GetToolBar().SetToolNormalBitmap(self.ID_LANG, flagIcon)
 
         # Update right panel
+        print(self.locale.GetCanonicalName())
         self.notebook.SetPageText(0, _("Monitors"))
         self.notebook.SetPageText(1, _("Switches"))
         self.monitor_tab.update_texts()
@@ -968,7 +965,7 @@ class Gui(wx.Frame):
             self,
             _("Open"),
             wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST )
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
             file_path = openFileDialog.GetPath()
@@ -1089,10 +1086,10 @@ class Gui(wx.Frame):
         """Toggle 3D view."""
         if self.canvas_mode == '2d':
             self.canvas_mode = '3d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
         else:
             self.canvas_mode = '2d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
         self.canvas.toggle_drawing_mode()
 
     ##################
