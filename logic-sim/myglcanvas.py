@@ -190,7 +190,7 @@ class MyGLCanvas_2D():
         self.zoom_lower = 0.8
         self.zoom_upper = 5
         # self.zoom = 1
-        self.update_zoom_lower_bound()
+        self._update_zoom_lower_bound()
         self.zoom = self.zoom_lower
 
     def init_gl(self):
@@ -212,10 +212,10 @@ class MyGLCanvas_2D():
     def render(self, text):
         """Handle all drawing operations."""
         # Update pan and zoom variables
-        self.update_zoom_lower_bound()
-        self.bound_zooming()
-        self.update_borders()
-        self.bound_panning()
+        self._update_zoom_lower_bound()
+        self._bound_zooming()
+        self._update_borders()
+        self._bound_panning()
 
         self.parent.SetCurrent(self.parent.context)
         if not self.init:
@@ -239,7 +239,7 @@ class MyGLCanvas_2D():
         size = self.parent.GetClientSize()
 
         # Render canvas canvas components
-        self.render_grid(size)
+        self._render_grid(size)
 
         # Render signal traces starting from the top of the canvas
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
@@ -248,7 +248,7 @@ class MyGLCanvas_2D():
                 (num_monitors - 1) * self.monitor_spacing
             for device_id, output_id in self.parent.parent.monitors.\
                 monitors_dictionary:
-                self.render_monitor(
+                self._render_monitor(
                     device_id,
                     output_id,
                     y_pos,
@@ -259,11 +259,11 @@ class MyGLCanvas_2D():
         # Render ruler components
         # Render ruler background across the whole width of the canvas
         GL.glViewport(0, 0, size.width, size.height)
-        self.render_ruler_background(size)
+        self._render_ruler_background(size)
         GL.glViewport(self.margin_left, 0, size.width-self.margin_left,
                 size.height)
-        self.render_cycle_numbers(size)
-        self.render_grid(size, render_only_on_ruler=True)
+        self._render_cycle_numbers(size)
+        self._render_grid(size, render_only_on_ruler=True)
 
         # We have been drawing to the back buffer, flush the graphics pipeline
         # and swap the back buffer to the front
@@ -288,10 +288,10 @@ class MyGLCanvas_2D():
         # Forces reconfiguration of the viewport, modelview and projection
         # matrices on the next paint event
         self.init = False
-        self.update_zoom_lower_bound()
+        self._update_zoom_lower_bound()
         self.zoom = self.zoom_lower
-        self.update_borders()
-        self.bound_panning()
+        self._update_borders()
+        self._bound_panning()
 
     def on_mouse(self, event):
         """Handle mouse events."""
@@ -333,7 +333,7 @@ class MyGLCanvas_2D():
         else:
             self.parent.Refresh()  # triggers the paint event
 
-    def bound_panning(self):
+    def _bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.parent.GetClientSize()
         # Calculate allowable pan values
@@ -364,14 +364,14 @@ class MyGLCanvas_2D():
         if self.pan_y > allowable_pan_bottom:
             self.pan_y = allowable_pan_bottom
 
-    def bound_zooming(self):
+    def _bound_zooming(self):
         """Bound zoom."""
         if self.zoom > self.zoom_upper:
             self.zoom = self.zoom_upper
         elif self.zoom < self.zoom_lower:
             self.zoom = self.zoom_lower
 
-    def update_zoom_lower_bound(self):
+    def _update_zoom_lower_bound(self):
         """Adjust zoom lower bound when the canvas is resized or the number of
         monitors changes."""
         size = self.parent.GetClientSize()
@@ -388,7 +388,7 @@ class MyGLCanvas_2D():
             (visible_objects_height),
             self.zoom_upper)
 
-    def update_borders(self):
+    def _update_borders(self):
         """Update the borders of the canvas depending on the number of monitors
         and the number of cycles to be simulated."""
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
@@ -411,7 +411,7 @@ class MyGLCanvas_2D():
             else:
                 GLUT.glutBitmapCharacter(self.font, ord(character))
 
-    def render_monitor(self, device_id, output_id, y_min, y_max, size):
+    def _render_monitor(self, device_id, output_id, y_min, y_max, size):
         """Handle monitor name and signal trace drawing for a single
         monitor."""
         monitor_name = self.parent.parent.devices.get_signal_name(
@@ -436,7 +436,7 @@ class MyGLCanvas_2D():
         for signal in signal_list:
             if (signal == self.parent.parent.devices.HIGH) \
                 or (signal == self.parent.parent.devices.RISING):
-                self.render_rectangle((x_pos, y_min), \
+                self._render_rectangle((x_pos, y_min), \
                                       (x_pos + self.cycle_width, y_max))
                 GL.glBegin(GL.GL_LINE_STRIP)
                 GL.glVertex2f(x_pos, y_min)
@@ -476,7 +476,7 @@ class MyGLCanvas_2D():
             GL.glEnd()
             currently_drawing = False
 
-    def render_line(self, start_point, end_point):
+    def _render_line(self, start_point, end_point):
         """Render a straight line on the canvas, with the given end points."""
         # check validity of arguments
         if not (
@@ -497,7 +497,7 @@ class MyGLCanvas_2D():
         GL.glVertex2f(end_point[0], end_point[1])
         GL.glEnd()
 
-    def render_rectangle(self, bottom_left_point, top_right_point):
+    def _render_rectangle(self, bottom_left_point, top_right_point):
         """Render a rectangle on the canvas, with the given end points."""
         # check validity of arguments
         if not (
@@ -520,7 +520,7 @@ class MyGLCanvas_2D():
         GL.glVertex2f(bottom_left_point[0], top_right_point[1])
         GL.glEnd()
 
-    def render_cycle_numbers(self, size):
+    def _render_cycle_numbers(self, size):
         """Handle cycle numbers drawing at the top of the canvas (ruler)."""
         if self.parent.parent.cycles_completed == 0:
             return
@@ -535,7 +535,7 @@ class MyGLCanvas_2D():
                           self.character_height) / self.zoom
             self.render_text(str(cycle + 1), text_x_pos, text_y_pos)
 
-    def render_ruler_background(self, size):
+    def _render_ruler_background(self, size):
         """Draw a background for the ruler."""
         ruler_color = [200 / 255, 230 / 255, 255 / 255]
         # Make sure transformations don't affect other renderings
@@ -550,7 +550,7 @@ class MyGLCanvas_2D():
         GL.glEnd()
         GL.glPopMatrix()
 
-    def render_grid(self, size, render_only_on_ruler=False):
+    def _render_grid(self, size, render_only_on_ruler=False):
         """Draw a grid for separating the different cycles in the traces."""
         if self.parent.parent.cycles_completed == 0:
             return
@@ -567,11 +567,11 @@ class MyGLCanvas_2D():
         # render vertical lines
         GL.glColor3f(0.9, 0.9, 0.9)  # light grey color
         line_x_pos = 0
-        self.render_line((line_x_pos, line_y_pos_start),
+        self._render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
         for cycle in range(self.parent.parent.cycles_completed):
             line_x_pos += self.cycle_width
-            self.render_line((line_x_pos, line_y_pos_start),
+            self._render_line((line_x_pos, line_y_pos_start),
                              (line_x_pos, line_y_pos_end))
 
     def recenter(self, pan_to_end = False):
@@ -581,7 +581,7 @@ class MyGLCanvas_2D():
         self.zoom = self.zoom_lower
         self.pan_y = self.border_bottom
         if pan_to_end: # if true pan to the end of the signal trace
-            self.update_borders()
+            self._update_borders()
             size = self.parent.GetClientSize()
             allowable_pan_right = -self.border_right*self.zoom + size.width
             self.pan_x = allowable_pan_right
@@ -599,7 +599,7 @@ class MyGLCanvas_2D():
         restore_state() should be called whenever the gui method
         on_open() and set_monitor() is called."""
         self.init = False
-        self.update_zoom_lower_bound()
+        self._update_zoom_lower_bound()
         self.zoom = self.zoom_lower
         self.render("")
 
@@ -739,12 +739,12 @@ class MyGLCanvas_3D():
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
             x_pos = -(num_monitors - 1)*self.monitor_spacing/2
-            self.render_cycle_numbers(x_pos - self.monitor_spacing)
+            self._render_cycle_numbers(x_pos - self.monitor_spacing)
             for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
-                self.render_monitor(device_id, output_id, x_pos)
+                self._render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
 
-            self.render_cycle_numbers(x_pos)
+            self._render_cycle_numbers(x_pos)
 
 
         # We have been drawing to the back buffer, flush the graphics pipeline
@@ -863,7 +863,7 @@ class MyGLCanvas_3D():
 
         GL.glEnable(GL.GL_LIGHTING)
 
-    def render_monitor(self, device_id, output_id, x_pos):
+    def _render_monitor(self, device_id, output_id, x_pos):
         """Handle monitor name and signal trace drawing for a single monitor."""
         monitor_name = self.parent.parent.devices.get_signal_name(
             device_id, output_id)
@@ -891,7 +891,7 @@ class MyGLCanvas_3D():
         GL.glColor3f(1.0, 1.0, 1.0)  # text is white
         self.render_text(monitor_name, x_pos, 0, z_pos)
 
-    def render_cycle_numbers(self, x_pos):
+    def _render_cycle_numbers(self, x_pos):
         """Handle rendering cycle numbers over the signal traces."""
         GL.glColor3f(1.0, 1.0, 1.0)  # text is white
         cycles = self.parent.parent.cycles_completed
