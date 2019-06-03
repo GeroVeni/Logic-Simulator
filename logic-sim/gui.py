@@ -140,7 +140,7 @@ class Gui(wx.Frame):
         # Load icons
         #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
-        appIcon = wx.Icon("res/layout2d.png")
+        appIcon = wx.Icon("res/logsim.png")
         self.SetIcon(appIcon)
         openIcon = wx.Bitmap("res/open_mat.png")
         centerIcon = wx.Bitmap("res/center_mat.png")
