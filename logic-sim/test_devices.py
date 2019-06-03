@@ -96,6 +96,9 @@ def test_make_device(new_devices):
     ("(D_ID, D_ID, None)", "new_devices.BAD_DEVICE"),
     ("(CL_ID, new_devices.CLOCK, 0)", "new_devices.INVALID_QUALIFIER"),
     ("(CL_ID, new_devices.CLOCK, 10)", "new_devices.NO_ERROR"),
+    ("(SIGGEN_ID, new_devices.SIGGEN, None)", "new_devices.NO_QUALIFIER"),
+    ("(SIGGEN_ID, new_devices.SIGGEN, 3011)", "new_devices.INVALID_QUALIFIER"),
+    ("(SIGGEN_ID, new_devices.SIGGEN, 8040)", "new_devices.INVALID_QUALIFIER"),
 
     # Note: XOR device X2_ID will have been made earlier in the function
     ("(X2_ID, new_devices.XOR)", "new_devices.DEVICE_PRESENT"),
@@ -104,7 +107,8 @@ def test_make_device_gives_errors(new_devices, function_args, error):
     """Test if make_device returns the appropriate errors."""
     names = new_devices.names
     [AND1_ID, SW1_ID, CL_ID, D_ID, X1_ID,
-     X2_ID] = names.lookup(["And1", "Sw1", "Clock1", "D1", "Xor1", "Xor2"])
+     X2_ID, SIGGEN_ID] = names.lookup(["And1", "Sw1", "Clock1", "D1",
+                                       "Xor1", "Xor2", "siggen"])
 
     # Add a XOR device: X2_ID
     new_devices.make_device(X2_ID, new_devices.XOR)
