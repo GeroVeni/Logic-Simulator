@@ -749,7 +749,7 @@ class MyGLCanvas_3D():
         if num_monitors > 0:
             x_pos = -(num_monitors - 1) * self.monitor_spacing / 2
             self._render_cycle_numbers(x_pos - self.monitor_spacing)
-            self.color_scheme.reset_colors()
+            self.color_scheme.reset_color()
             for device_id, output_id in self.parent.parent.monitors.\
                     monitors_dictionary:
                 GL.glColor3fv(self.color_scheme.get_next_color())
@@ -909,16 +909,16 @@ class MyGLCanvas_3D():
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles - 1) * self.cycle_depth
         for cycle in range(1, cycles + 1):
-            self.render_text(str(cycle), x_pos, self.trace_height, z_pos)
+            self.render_text(str(cycle), x_pos, 1, z_pos)
             z_pos += self.cycle_depth
 
     def restore_state(self):
         """Restore the state of the canvas when a new circuit definition file
         is loaded using the gui, or when the number of monitors is changed in
         the gui."""
-        # This method is needed only for MyGLCanvas_2D, but is called by the
-        # GLCanvasWrapper everytime a file is opened or a monitor is added.
-        pass
+        self.init = False
+        self.render("")
+        self.recenter()
 
     def recenter(self, pan_to_end=False):
         """Restore canvas to its default pan position, zoom state and
