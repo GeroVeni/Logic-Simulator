@@ -36,6 +36,9 @@ class ColorScheme:
         self.color_list = color_list
         self.light_color_list = light_color_list
         self.medium_color_list = medium_color_list
+    
+    def reset_color(self):
+        self.next_col = 0
 
     def get_next_color(self, style=None):
         col = self.get_color(self.next_col, style)
