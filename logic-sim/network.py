@@ -51,11 +51,16 @@ class Network:
     execute_d_type(self, device_id): Simulates a D-type device and updates its
                                      output signal value.
 
-    execute_clock(self, device_id): Simulates a clock and updates its output
+    execute_clock(self, device_id): simulates a clock and updates its output
                                     signal value.
 
     update_clocks(self): If it is time to do so, sets clock signals to RISING
                          or FALLING.
+
+    execute_siggen(self, device_id): Simulate a siggen device signal specified
+                                     by the waveform attirbute.
+
+    update_siggens(self): Update all of the SIGGEN devices counter
 
     execute_network(self): Executes all the devices in the network for one
                            simulation cycle.
@@ -346,7 +351,7 @@ class Network:
             device.clock_counter += 1
 
     def execute_siggen(self, device_id):
-        """Simulate a signal specified by the waveform attirbute.
+        """Simulate a siggen device signal specified by the waveform attirbute.
 
         Return True if successful.
         """
@@ -362,6 +367,12 @@ class Network:
         return True
 
     def update_siggens(self):
+        """Update all of the SIGGEN devices counter
+
+        The period of the waveform is the length of the siggen_waveform.
+        If the counter is less than the waveform's period - 1 increase
+        by 1. If it is equal to the waveform's period - 1 set to 0.
+        """
         siggen_devices = self.devices.find_devices(self.devices.SIGGEN)
         for device_id in siggen_devices:
             device = self.devices.get_device(device_id)
@@ -388,6 +399,8 @@ class Network:
         # This sets clock signals to RISING or FALLING, where necessary
         self.update_clocks()
 
+        # This increases the siggen counters by 1 or resets them to 0
+        # if the end of the waveform is reached.
         self.update_siggens()
 
         # Number of iterations to wait for the signals to settle before
@@ -429,7 +442,7 @@ class Network:
             for device_id in xor_devices:  # execute XOR devices
                 if not self.execute_gate(device_id, None, None):
                     return False
-            for device_id in siggen_devices:
+            for device_id in siggen_devices:  # execture SIGGEN devices
                 if not self.execute_siggen(device_id):
                     return False
             if self.steady_state:

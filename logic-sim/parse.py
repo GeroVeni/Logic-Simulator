@@ -15,6 +15,9 @@ from scanner import Scanner, Symbol
 from devices import Devices
 from network import Network
 from monitors import Monitors
+import wx
+import builtins
+builtins.__dict__['_'] = wx.GetTranslation
 
 # add translation macro to builtin similar to what gettext does
 import builtins
@@ -41,6 +44,7 @@ class Parser:
     Public methods
     --------------
     parse_network(self): Parses the circuit definition file.
+
     get_error_codes(self): Return the error codes list generated while
                            running parse_network()
 
@@ -252,7 +256,7 @@ class Parser:
         """Parse a number."""
         # Only parse if recovered from an error
         if (self.symbol.type == self.scanner.NUMBER and
-            self.recovered_from_definition_error):
+           self.recovered_from_definition_error):
             self.current_number = self.symbol
             self.symbol = self.scanner.get_symbol()
         else:
@@ -302,7 +306,8 @@ class Parser:
                 # negative number will give a syntax error as - is invalid
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("CLOCK takes only values greater than 0"), None)
+                               _("CLOCK takes only values greater than 0"),
+                               None)
                     return
             # TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
@@ -314,7 +319,8 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("NAND gates can only have 1 to 16 inputs"), None)
+                               _("NAND gates can only have 1 to 16 inputs"),
+                               None)
                     return
             elif (self.current_device.id == self.scanner.AND_ID):
                 # Set default value to 2 if no value specified
@@ -325,7 +331,8 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("AND gates can only have 1 to 16 inputs"), None)
+                               _("AND gates can only have 1 to 16 inputs"),
+                               None)
                     return
             elif (self.current_device.id == self.scanner.NOR_ID):
                 # Set default value to 2 if no value specified
@@ -336,7 +343,8 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("NOR gates can only have 1 to 16 inputs"), None)
+                               _("NOR gates can only have 1 to 16 inputs"),
+                               None)
                     return
             elif (self.current_device.id == self.scanner.OR_ID):
                 # Set default value to 2 if no value specified
@@ -347,7 +355,8 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("OR gates can only have 1 to 16 inputs"), None)
+                               _("OR gates can only have 1 to 16 inputs"),
+                               None)
                     return
             elif (self.current_device.id == self.scanner.XOR_ID):
                 # XOR must have None in device_property
@@ -362,7 +371,8 @@ class Parser:
                 # as device_type wont be None
                 if (error == self.devices.QUALIFIER_PRESENT):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               _("XOR gates can only have 2 inputs"), None)
+                               _("XOR gates can only have 2 inputs"),
+                               None)
                     return
             elif (self.current_device.id == self.scanner.SIGGEN_ID):
                 error = self.devices.make_device(identifier.id,
@@ -781,6 +791,11 @@ class Parser:
                            stopping_symbol=None)
 
     def monitor_list(self):
+        """Parse a connection list.
+
+        The EBNF grammar is the following:
+        "MONITORS", ":", signal, { "," , signal }, ";", "END", ";" ;
+        """
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and

@@ -45,6 +45,7 @@ class Device:
         self.siggen_counter = None
         self.siggen_startup = None
 
+
 class Devices:
 
     """Make and store devices.
@@ -93,7 +94,10 @@ class Devices:
 
     make_d_type(self, device_id): Makes a D-type device.
 
-    cold_startup(self): Simulates cold start-up of D-types and clocks.
+    make_clock(self, device_id, waveform): Make a signal generator device with
+                                           the specified waveform.
+
+    cold_startup(self): Simulates cold start-up of D-types clocks and siggens.
 
     make_device(self, device_id, device_kind, device_property=None): Creates
                        the specified device and returns errors if unsuccessful.
@@ -119,8 +123,8 @@ class Devices:
                              self.FALLING, self.BLANK] = range(5)
         self.gate_types = [self.AND, self.OR, self.NAND, self.NOR,
                            self.XOR] = self.names.lookup(gate_strings)
-        self.device_types = [self.CLOCK, self.SWITCH,
-                             self.D_TYPE, self.SIGGEN] = self.names.lookup(device_strings)
+        self.device_types = [self.CLOCK, self.SWITCH, self.D_TYPE,
+                             self.SIGGEN] = self.names.lookup(device_strings)
         self.dtype_input_ids = [self.CLK_ID, self.SET_ID, self.CLEAR_ID,
                                 self.DATA_ID] = self.names.lookup(dtype_inputs)
         self.dtype_output_ids = [
@@ -265,8 +269,11 @@ class Devices:
     def make_siggen(self, device_id, waveform):
         """Make a signal generator device with the specified waveform.
 
-        waveform is a number in binary preceded by a 8. It is the binary
-        waveform shape.
+        waveform is a number in binary preceded by a 8 or 4. If preceded
+        by a 8 it means it is initialized to the first number of the
+        waveform. If precedeed by a 4 it is initzialized at a random point.
+        siggen_startup is either 4 ot 8 and it determines the type of
+        initzialitation. siggen_waveform is the binary waveform shape.
         """
         self.add_device(device_id, self.SIGGEN)
         device = self.get_device(device_id)
@@ -278,10 +285,11 @@ class Devices:
         self.cold_startup()
 
     def cold_startup(self):
-        """Simulate cold start-up of D-types and clocks.
+        """Simulate cold start-up of D-types, clocks and siggens.
 
         Set the memory of the D-types to a random state and make the clocks
-        begin from a random point in their cycles.
+        begin from a random point in their cycles. Set the siggen counters
+        as specificied by their parameter.
         """
         for device in self.devices_list:
             if device.device_kind == self.D_TYPE:
@@ -295,7 +303,7 @@ class Devices:
                 device.clock_counter = \
                     random.randrange(device.clock_half_period)
             elif device.device_kind == self.SIGGEN:
-                # Star at beginning of signal
+                # Start at beginning of waveform
                 if device.siggen_startup == 8:
                     # Signal of output set as the first state of waveform
                     self.add_output(device.device_id, output_id=None,
@@ -309,8 +317,6 @@ class Devices:
                     self.add_output(device.device_id, output_id=None,
                                     signal=device.siggen_waveform[counter])
                     device.siggen_counter = counter
-
-
 
     def make_device(self, device_id, device_kind, device_property=None):
         """Create the specified device.
@@ -372,12 +378,12 @@ class Devices:
             # 8 denotes siggen must be started from the first value
             # 4 denotes a cold_startup from any value
             elif (str(device_property)[0] != '8' and
-                 str(device_property)[0] != '4'):
+                  str(device_property)[0] != '4'):
                 error_type = self.INVALID_QUALIFIER
             # Check that it is a binary number
             elif (any(((i != '0') and (i != '1'))
-                 for i in str(device_property)[1:])):
-                  error_type = self.INVALID_QUALIFIER
+                  for i in str(device_property)[1:])):
+                error_type = self.INVALID_QUALIFIER
             else:
                 self.make_siggen(device_id, device_property)
                 error_type = self.NO_ERROR
@@ -385,6 +391,4 @@ class Devices:
         else:
             error_type = self.BAD_DEVICE
 
-
         return error_type
-
