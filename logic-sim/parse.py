@@ -185,8 +185,23 @@ class Parser:
                         # previously as probably missing ip from errors.
                         if ((not self.network.check_network()) and
                                 self.error_count == 0):
-                            # TODO show the input that has no input
+                            # Store all the device names in a string
+                            devices = ""
+                            # Iterate over all devices
+                            for device_id in self.devices.find_devices():
+                                device = self.devices.get_device(device_id)
+                                for input_id in device.inputs:
+                                    # Check if the input has a connection
+                                    if (self.network.get_connected_output(
+                                            device_id, input_id) is None):
+                                        # Add device to missing inputs string
+                                        devices = devices + \
+                                            self.names.get_name_string(
+                                                device_id) + " "
+                                        # Move to next device
+                                        break
                             self.error(self.MISSING_INPUTS_ERROR,
+                                       message=devices,
                                        stopping_symbol=None)
                         self.symbol = self.scanner.get_symbol()
                     else:
@@ -483,9 +498,8 @@ class Parser:
                   _(" When using simultaneous defintion the same number") +
                   _(" of inputs as the device has must be given."))
         elif (error_type == self.MISSING_INPUTS_ERROR):
-            # TODO which inputs have not been specified
-            print(_("***ValueError: Inputs have not been specificed") +
-                  _(" for all DEVICES."))
+            print(_("***ValueError: Some inputs have not been specificed") +
+                  _(" for these devices: ") + message)
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         """Use scanner to skip to stopping_symbol specificed."""
@@ -691,7 +705,6 @@ class Parser:
                                _("CLOCK takes only values greater than 0"),
                                None)
                     return
-            # TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
                 # Set default value to 2 if no value specified
                 if (self.current_number.id is None):
