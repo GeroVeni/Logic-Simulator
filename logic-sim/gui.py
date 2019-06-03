@@ -500,7 +500,7 @@ class Gui(wx.Frame):
 
         Return True if successful.
         """
-        for _ in range(cycles):
+        for i in range(cycles):
             if self.network is None:
                 self.log_message(_("Error! No file loaded."))
                 return False
