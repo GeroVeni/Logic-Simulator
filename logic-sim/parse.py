@@ -16,12 +16,10 @@ from devices import Devices
 from network import Network
 from monitors import Monitors
 import wx
-import builtins
-builtins.__dict__['_'] = wx.GetTranslation
-
 # add translation macro to builtin similar to what gettext does
 import builtins
 builtins.__dict__['_'] = wx.GetTranslation
+
 
 class Parser:
 
@@ -48,7 +46,7 @@ class Parser:
     get_error_codes(self): Return the error codes list generated while
                            running parse_network()
 
-    All other methods are considered private
+    All other methods are considered non public
     """
 
     # Static variables to define error codes for availbility for unitests
@@ -85,6 +83,312 @@ class Parser:
         self.outputs_list = []
         self.inputs_list = []
         self.monitors_list = []
+
+    def parse_network(self):
+        """ Parse the circuit definition file.
+
+        The EBNF grammar is:
+        device_list, connection_list, [ monitor_list ] ;
+        """
+        self.symbol = self.scanner.get_symbol()
+        self.device_list()
+        self.connection_list()
+        # Check for EOF inside monitors_list if MONITORS not given
+        self.monitor_list()
+        if (self.error_count == 0):
+            return True
+        else:
+            # Error message
+            print(_("Number of errors encountered:"), self.error_count)
+            return False
+
+    def device_list(self):
+        """Parse a device list.
+
+        The EBNF grammar is the following:
+        "DEVICES", ":", device_definition, { device_definition },
+        "END", ";" ;
+        """
+        # Must check that its both a KEYWORD and the correct id as for
+        # example numbers can have the same id as DEVICES_ID.
+        if (self.symbol.type == self.scanner.KEYWORD and
+                self.symbol.id == self.scanner.DEVICES_ID):
+            self.symbol = self.scanner.get_symbol()
+            if(self.symbol.type == self.scanner.COLON):
+                self.symbol = self.scanner.get_symbol()
+                # Ensure all variables and lists are empty
+                self.clear_all()
+                self.device_definition()
+                while (self.symbol.type != self.scanner.KEYWORD and
+                       self.symbol.type != self.scanner.EOF):
+                    # If it has returned to the while loop it must
+                    # have recovered from the error during device_definition.
+                    self.recovered_from_definition_error = True
+                    # Ensure all variables and lists are empty
+                    self.clear_all()
+                    self.device_definition()
+                # Recovered from error as KEYWORD or EOF found
+                self.recovered_from_definition_error = True
+                if (self.symbol.id == self.scanner.END_ID and
+                        self.symbol.type == self.scanner.KEYWORD):
+                    self.symbol = self.scanner.get_symbol()
+                    if (self.symbol.type == self.scanner.SEMICOLON):
+                        self.symbol = self.scanner.get_symbol()
+                    else:
+                        # Recover to KEYWORD so it can parse CONNECTIONS
+                        self.error(self.SYNTAX_ERROR, ";",
+                                   stopping_symbol="KEYWORD")
+                else:
+                    # Recover to KEYWORD so it can parse CONNECTIONS
+                    self.error(self.SYNTAX_ERROR, "END",
+                               stopping_symbol="KEYWORD")
+            else:
+                # Recover to END so it can parse CONNECTIONS
+                self.error(self.SYNTAX_ERROR, ":",
+                           stopping_symbol="END")
+        else:
+            # Recover to END so it can parse CONNECTIONS
+            self.error(self.SYNTAX_ERROR, "DEVICES",
+                       stopping_symbol="END")
+
+    def connection_list(self):
+        """Parse a connection list.
+
+        The EBNF grammar is the following:
+        "CONNECTIONS", ":", connection_definition,
+        { connection_definition }, "END", ";" ;
+        """
+        # Must check that its both a KEYWORD and the correct id as for
+        # example numbers can have the same id as DEVICES_ID.
+        if (self.symbol.type == self.scanner.KEYWORD and
+                self.symbol.id == self.scanner.CONNECTIONS_ID):
+            self.symbol = self.scanner.get_symbol()
+            if(self.symbol.type == self.scanner.COLON):
+                self.symbol = self.scanner.get_symbol()
+                # Ensure all variables and lists are empty
+                self.clear_all()
+                self.connection_definition()
+                while (self.symbol.type != self.scanner.KEYWORD and
+                       self.symbol.type != self.scanner.EOF):
+                    self.clear_all()
+                    # If it has returned to the while loop it must
+                    # have recovered from the error during device_definition.
+                    self.recovered_from_definition_error = True
+                    self.connection_definition()
+                # Recovered from error as KEYWORD or EOF found
+                self.recovered_from_definition_error = True
+                if (self.symbol.id == self.scanner.END_ID and
+                        self.symbol.type == self.scanner.KEYWORD):
+                    self.symbol = self.scanner.get_symbol()
+                    if (self.symbol.type == self.scanner.SEMICOLON):
+                        # Only throw missing inputs if no errors occured
+                        # previously as probably missing ip from errors.
+                        if ((not self.network.check_network()) and
+                                self.error_count == 0):
+                            # TODO show the input that has no input
+                            self.error(self.MISSING_INPUTS_ERROR,
+                                       stopping_symbol=None)
+                        self.symbol = self.scanner.get_symbol()
+                    else:
+                        # Recover to KEYWORD so it can parse MONITORS
+                        self.error(self.SYNTAX_ERROR, ";",
+                                   stopping_symbol="KEYWORD")
+                else:
+                    # Recover to KEYWORD so it can parse MONITORS
+                    self.error(self.SYNTAX_ERROR, "END",
+                               stopping_symbol="KEYWORD")
+            else:
+                # Recover to END so it can parse MONITORS
+                self.error(self.SYNTAX_ERROR, ":",
+                           stopping_symbol="END")
+        else:
+            # Recover to END so it can parse MONITORS
+            self.error(self.SYNTAX_ERROR, "CONNECITIONS",
+                       stopping_symbol="END")
+
+    def monitor_list(self):
+        """Parse a connection list.
+
+        The EBNF grammar is the following:
+        "MONITORS", ":", signal, { "," , signal }, ";", "END", ";" ;
+        """
+        # Must check that its both a KEYWORD and the correct id as for
+        # example numbers can have the same id as DEVICES_ID.
+        if (self.symbol.type == self.scanner.KEYWORD and
+                self.symbol.id == self.scanner.MONITORS_ID):
+            self.symbol = self.scanner.get_symbol()
+            if(self.symbol.type == self.scanner.COLON):
+                self.symbol = self.scanner.get_symbol()
+                # Ensure all variables and lists are empty
+                self.clear_all()
+                # The signals on monitors should be only outputs
+                self.monitors_list.append(self.signal("M"))
+                while (self.symbol.type == self.scanner.COMMA and
+                       self.recovered_from_definition_error):
+                    self.clear_vars()
+                    self.symbol = self.scanner.get_symbol()
+                    self.monitors_list.append(self.signal("M"))
+                if (self.symbol.type == self.scanner.SEMICOLON):
+                    # Only make monitors if count is zero
+                    if(self.error_count == 0):
+                        self.make_monitors()
+                    self.symbol = self.scanner.get_symbol()
+                    if (self.symbol.id == self.scanner.END_ID and
+                            self.symbol.type == self.scanner.KEYWORD):
+                        self.symbol = self.scanner.get_symbol()
+                        if (self.symbol.type == self.scanner.SEMICOLON):
+                            self.symbol = self.scanner.get_symbol()
+                            if(self.symbol.type == self.scanner.EOF):
+                                pass
+                            else:
+                                self.error(self.SYNTAX_ERROR, "EOF",
+                                           skipt_to_symbol="EOF")
+                        else:
+                            self.error(self.SYNTAX_ERROR, ";",
+                                       stopping_symbol="EOF")
+                    else:
+                        self.error(self.SYNTAX_ERROR, "END",
+                                   stopping_symbol="EOF")
+                elif(not self.recovered_from_definition_error):
+                    # Check that monitors has END; if error encountered
+                    self.recovered_from_definition_error = True
+                    if (self.symbol.id == self.scanner.END_ID and
+                            self.symbol.type == self.scanner.KEYWORD):
+                        self.symbol = self.scanner.get_symbol()
+                        if (self.symbol.type == self.scanner.SEMICOLON):
+                            self.symbol = self.scanner.get_symbol()
+                            if(self.symbol.type == self.scanner.EOF):
+                                pass
+                            else:
+                                self.error(self.SYNTAX_ERROR, "EOF",
+                                           skipt_to_symbol="EOF")
+                        else:
+                            self.error(self.SYNTAX_ERROR, ";",
+                                       stopping_symbol="EOF")
+                    else:
+                        self.error(self.SYNTAX_ERROR, "END",
+                                   stopping_symbol="EOF")
+                else:
+                    self.error(self.SYNTAX_ERROR, ";",
+                               stopping_symbol="END")
+            else:
+                self.error(self.SYNTAX_ERROR, ":",
+                           stopping_symbol="END")
+        elif(self.symbol.type == self.scanner.EOF):
+            pass
+        else:
+            self.error(self.SYNTAX_ERROR, "MONITORS OR EOF",
+                       stopping_symbol="EOF")
+
+    def device_definition(self):
+        """Parse a device defintion.
+
+        The EBNF grammar is the following:
+        identifier, { "," , identifier }, ":=",
+        device_type, [ "(" , number , ")" ], ";" ;
+        """
+        self.identifier()
+        # Throught device definition only enter if statements and while
+        # loops if we have recovered from an error. Equivalent to
+        # stop parsing device_definition if an error occurs.
+        while (self.symbol.type == self.scanner.COMMA and
+               self.recovered_from_definition_error):
+            self.symbol = self.scanner.get_symbol()
+            self.identifier()
+        if (self.symbol.type == self.scanner.DEVICE_DEF and
+                self.recovered_from_definition_error):
+            self.symbol = self.scanner.get_symbol()
+            self.device_type()
+            if (self.symbol.type == self.scanner.BRACKET_LEFT and
+                    self.recovered_from_definition_error):
+                self.symbol = self.scanner.get_symbol()
+                self.number()
+                if(self.symbol.type == self.scanner.BRACKET_RIGHT and
+                   self.recovered_from_definition_error):
+                    self.symbol = self.scanner.get_symbol()
+                else:
+                    self.error(self.SYNTAX_ERROR, ")")
+            # If the symbol is not a bracket but a number must
+            # be missing left bracket from grammar.
+            elif (self.symbol.type == self.scanner.NUMBER and
+                  self.recovered_from_definition_error):
+                self.error(self.SYNTAX_ERROR, "(")
+            else:
+                # If no number specified in file set variable current_number
+                # by default to an empty symbol.
+                self.current_number = Symbol()
+            if (self.symbol.type == self.scanner.SEMICOLON and
+                    self.recovered_from_definition_error):
+                # Making devices does not break if errors have occured
+                # previously but not during device_definition
+                self.make_devices()
+                self.symbol = self.scanner.get_symbol()
+            else:
+                self.error(self.SYNTAX_ERROR, ";")
+        # From grammar name followed by name possibly indicates mising coma
+        elif (self.symbol.type == self.scanner.NAME):
+            self.error(self.SYNTAX_ERROR, ",")
+        else:
+            self.error(self.SYNTAX_ERROR, ":=")
+
+    def connection_definition(self):
+        """Parse a connection defintion.
+
+        The EBNF grammar is the following:
+        signal, { "," , signal }, "=>", signal, { "," , signal }, ";" ;
+        """
+        # Beginning clear all variables
+        self.clear_vars()
+        # The signals on the left hand side should be outputs
+        self.outputs_list.append(self.signal("O"))
+        while (self.symbol.type == self.scanner.COMMA and
+               self.recovered_from_definition_error):
+            self.clear_vars()
+            self.symbol = self.scanner.get_symbol()
+            self.outputs_list.append(self.signal("O"))
+        if (self.symbol.type == self.scanner.CONNECTION_DEF and
+                self.recovered_from_definition_error):
+            self.symbol = self.scanner.get_symbol()
+            self.clear_vars()
+            self.inputs_list.append(self.signal("I"))
+            while (self.symbol.type == self.scanner.COMMA and
+                   self.recovered_from_definition_error):
+                self.clear_vars()
+                self.symbol = self.scanner.get_symbol()
+                # The signals on the right hand side should be inputs
+                self.inputs_list.append(self.signal("I"))
+            if (self.symbol.type == self.scanner.SEMICOLON and
+                    self.recovered_from_definition_error):
+                # Only make connection if there have been no errors
+                # or might through unexpected errors
+                if (self.error_count == 0):
+                    self.make_connection()
+                self.symbol = self.scanner.get_symbol()
+            # From grammar name followed by name possibly indicates mising coma
+            elif (self.symbol.type == self.scanner.NAME):
+                self.error(self.SYNTAX_ERROR, ",")
+            else:
+                self.error(self.SYNTAX_ERROR, ";")
+        # From grammar name followed by name possibly indicates mising coma
+        elif (self.symbol.type == self.scanner.NAME):
+            self.error(self.SYNTAX_ERROR, ",")
+        else:
+            self.error(self.SYNTAX_ERROR, "=>")
+
+    def clear_all(self):
+        """Clear all symbols and lists used during parsing."""
+        self.clear_vars()
+        self.identifier_list = []
+        self.outputs_list = []
+        self.inputs_list = []
+        self.monitors_list = []
+
+    def clear_vars(self):
+        """Clear all symbols used during parsing."""
+        self.current_device = Symbol()
+        self.current_number = Symbol()
+        self.current_name = Symbol()
+        self.current_port = Symbol()
 
     def error(self, error_type, message=None, stopping_symbol="KEYWORD or ;"):
         """Calls function to display and record error."""
@@ -211,20 +515,94 @@ class Parser:
         elif (stopping_symbol is None):
             pass
 
-    def clear_vars(self):
-        """Clear all symbols used during parsing."""
-        self.current_device = Symbol()
-        self.current_number = Symbol()
-        self.current_name = Symbol()
-        self.current_port = Symbol()
+    def make_monitors(self):
+        """Make monitors using signals in monitors_list."""
+        for monitors in self.monitors_list:
+            (identifier, port) = monitors
+            error = self.monitors.make_monitor(identifier.id,
+                                               port.id)
+            if (error == self.network.DEVICE_ABSENT):
+                self.error(self.UNDEFINED_DEVICE_ERROR, identifier,
+                           stopping_symbol=None)
+            elif (error == self.monitors.NOT_OUTPUT):
+                self.error(self.INVALID_DEVICE_OUTPUT_ERROR,
+                           identifier, stopping_symbol=None)
+            elif (error == self.monitors.MONITOR_PRESENT):
+                self.error(self.REPEATED_MONITOR_ERROR, identifier,
+                           stopping_symbol=None)
 
-    def clear_all(self):
-        """Clear all symbols and lists used during parsing."""
-        self.clear_vars()
-        self.identifier_list = []
-        self.outputs_list = []
-        self.inputs_list = []
-        self.monitors_list = []
+    def signal(self, I_O_M):
+        """ Pars a signal.
+
+        Return the signal if parsed correctly as a tuple (name, port)
+
+        Parameters
+        ----------
+        I_O_M: Denotes wether we are expecting an input
+               port or ouptut port during connection definition
+               or if it is a monitor port.
+        """
+        if (self.symbol.type == self.scanner.NAME and
+                self.recovered_from_definition_error):
+            self.current_name = self.symbol
+            self.symbol = self.scanner.get_symbol()
+            if(self.symbol.type == self.scanner.DOT):
+                self.symbol = self.scanner.get_symbol()
+                self.port(I_O_M)
+            return (self.current_name, self.current_port)
+        else:
+            self.error(self.SYNTAX_ERROR, "signal")
+
+    def port(self, I_O_M):
+        """Parse a port.
+
+        Parameter
+        ---------
+        I_O_M: Denotes wether we are expecting an input
+               port or ouptut port during connection definition
+               or if it is a monitor port.
+        """
+        # Outputs and monitors cannot be input ports
+        if (self.symbol.type == self.scanner.PORT and
+            (I_O_M == "O" or I_O_M == "M") and
+            (self.symbol.id == self.scanner.I_ID or
+             self.symbol.id == self.scanner.DATA_ID or
+             self.symbol.id == self.scanner.CLK_ID or
+             self.symbol.id == self.scanner.SET_ID or
+             self.symbol.id == self.scanner.CLEAR_ID)):
+            if (I_O_M == "O"):
+                self.error(self.CONNECTION_INPUT_ERROR)
+            elif (I_O_M == "M"):
+                self.error(self.MONITOR_INPUT_ERROR)
+        # Inputs cannot have output ports
+        elif (self.symbol.type == self.scanner.PORT and
+              I_O_M == "I" and (self.symbol.id == self.scanner.Q_ID or
+                                self.symbol.id == self.scanner.QBAR_ID)):
+            self.error(self.OUTPUT_ERROR)
+        # If its and I port save the number as the port
+        elif (self.symbol.id == self.scanner.I_ID and
+              self.symbol.type == self.scanner.PORT and
+              self.recovered_from_definition_error):
+            self.symbol = self.scanner.get_symbol()
+            self.number()
+            self.current_port = self.current_number
+        # If it is another type of port save that symbol as the port
+        elif (self.symbol.type == self.scanner.PORT and
+              self.recovered_from_definition_error):
+            self.current_port = self.symbol
+            self.symbol = self.scanner.get_symbol()
+        else:
+            self.error(self.SYNTAX_ERROR, "port")
+
+    def number(self):
+        """Parse a number."""
+        # Only parse if recovered from an error
+        if (self.symbol.type == self.scanner.NUMBER and
+           self.recovered_from_definition_error):
+            self.current_number = self.symbol
+            self.symbol = self.scanner.get_symbol()
+        else:
+            self.error(self.SYNTAX_ERROR, "number")
 
     def identifier(self):
         """Parse an identifier."""
@@ -251,16 +629,6 @@ class Parser:
             self.symbol = self.scanner.get_symbol()
         else:
             self.error(self.SYNTAX_ERROR, "device")
-
-    def number(self):
-        """Parse a number."""
-        # Only parse if recovered from an error
-        if (self.symbol.type == self.scanner.NUMBER and
-           self.recovered_from_definition_error):
-            self.current_number = self.symbol
-            self.symbol = self.scanner.get_symbol()
-        else:
-            self.error(self.SYNTAX_ERROR, "number")
 
     def make_devices(self):
         """Make specified device for each identifier in identifier_list."""
@@ -389,212 +757,6 @@ class Parser:
                                  "binary number."), None)
                     return
 
-    def device_definition(self):
-        """Parse a device defintion.
-
-        The EBNF grammar is the following:
-        identifier, { "," , identifier }, ":=",
-        device_type, [ "(" , number , ")" ], ";" ;
-        """
-        self.identifier()
-        # Throught device definition only enter if statements and while
-        # loops if we have recovered from an error. Equivalent to
-        # stop parsing device_definition if an error occurs.
-        while (self.symbol.type == self.scanner.COMMA and
-               self.recovered_from_definition_error):
-            self.symbol = self.scanner.get_symbol()
-            self.identifier()
-        if (self.symbol.type == self.scanner.DEVICE_DEF and
-                self.recovered_from_definition_error):
-            self.symbol = self.scanner.get_symbol()
-            self.device_type()
-            if (self.symbol.type == self.scanner.BRACKET_LEFT and
-                    self.recovered_from_definition_error):
-                self.symbol = self.scanner.get_symbol()
-                self.number()
-                if(self.symbol.type == self.scanner.BRACKET_RIGHT and
-                   self.recovered_from_definition_error):
-                    self.symbol = self.scanner.get_symbol()
-                else:
-                    self.error(self.SYNTAX_ERROR, ")")
-            # If the symbol is not a bracket but a number must
-            # be missing left bracket from grammar.
-            elif (self.symbol.type == self.scanner.NUMBER and
-                  self.recovered_from_definition_error):
-                self.error(self.SYNTAX_ERROR, "(")
-            else:
-                # If no number specified in file set variable current_number
-                # by default to an empty symbol.
-                self.current_number = Symbol()
-            if (self.symbol.type == self.scanner.SEMICOLON and
-                    self.recovered_from_definition_error):
-                # Making devices does not break if errors have occured
-                # previously but not during device_definition
-                self.make_devices()
-                self.symbol = self.scanner.get_symbol()
-            else:
-                self.error(self.SYNTAX_ERROR, ";")
-        # From grammar name followed by name possibly indicates mising coma
-        elif (self.symbol.type == self.scanner.NAME):
-            self.error(self.SYNTAX_ERROR, ",")
-        else:
-            self.error(self.SYNTAX_ERROR, ":=")
-
-    def device_list(self):
-        """Parse a device list.
-
-        The EBNF grammar is the following:
-        "DEVICES", ":", device_definition, { device_definition },
-        "END", ";" ;
-        """
-        # Must check that its both a KEYWORD and the correct id as for
-        # example numbers can have the same id as DEVICES_ID.
-        if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.DEVICES_ID):
-            self.symbol = self.scanner.get_symbol()
-            if(self.symbol.type == self.scanner.COLON):
-                self.symbol = self.scanner.get_symbol()
-                # Ensure all variables and lists are empty
-                self.clear_all()
-                self.device_definition()
-                while (self.symbol.type != self.scanner.KEYWORD and
-                       self.symbol.type != self.scanner.EOF):
-                    # If it has returned to the while loop it must
-                    # have recovered from the error during device_definition.
-                    self.recovered_from_definition_error = True
-                    # Ensure all variables and lists are empty
-                    self.clear_all()
-                    self.device_definition()
-                # Recovered from error as KEYWORD or EOF found
-                self.recovered_from_definition_error = True
-                if (self.symbol.id == self.scanner.END_ID and
-                        self.symbol.type == self.scanner.KEYWORD):
-                    self.symbol = self.scanner.get_symbol()
-                    if (self.symbol.type == self.scanner.SEMICOLON):
-                        self.symbol = self.scanner.get_symbol()
-                    else:
-                        # Recover to KEYWORD so it can parse CONNECTIONS
-                        self.error(self.SYNTAX_ERROR, ";",
-                                   stopping_symbol="KEYWORD")
-                else:
-                    # Recover to KEYWORD so it can parse CONNECTIONS
-                    self.error(self.SYNTAX_ERROR, "END",
-                               stopping_symbol="KEYWORD")
-            else:
-                # Recover to END so it can parse CONNECTIONS
-                self.error(self.SYNTAX_ERROR, ":",
-                           stopping_symbol="END")
-        else:
-            # Recover to END so it can parse CONNECTIONS
-            self.error(self.SYNTAX_ERROR, "DEVICES",
-                       stopping_symbol="END")
-
-    def port(self, I_O_M):
-        """Parse a port.
-
-        Parameter
-        ---------
-        I_O_M: Denotes wether we are expecting an input
-               port or ouptut port during connection definition
-               or if it is a monitor port.
-        """
-        # Outputs and monitors cannot be input ports
-        if (self.symbol.type == self.scanner.PORT and
-            (I_O_M == "O" or I_O_M == "M") and
-            (self.symbol.id == self.scanner.I_ID or
-             self.symbol.id == self.scanner.DATA_ID or
-             self.symbol.id == self.scanner.CLK_ID or
-             self.symbol.id == self.scanner.SET_ID or
-             self.symbol.id == self.scanner.CLEAR_ID)):
-            if (I_O_M == "O"):
-                self.error(self.CONNECTION_INPUT_ERROR)
-            elif (I_O_M == "M"):
-                self.error(self.MONITOR_INPUT_ERROR)
-        # Inputs cannot have output ports
-        elif (self.symbol.type == self.scanner.PORT and
-              I_O_M == "I" and (self.symbol.id == self.scanner.Q_ID or
-                                self.symbol.id == self.scanner.QBAR_ID)):
-            self.error(self.OUTPUT_ERROR)
-        # If its and I port save the number as the port
-        elif (self.symbol.id == self.scanner.I_ID and
-              self.symbol.type == self.scanner.PORT and
-              self.recovered_from_definition_error):
-            self.symbol = self.scanner.get_symbol()
-            self.number()
-            self.current_port = self.current_number
-        # If it is another type of port save that symbol as the port
-        elif (self.symbol.type == self.scanner.PORT and
-              self.recovered_from_definition_error):
-            self.current_port = self.symbol
-            self.symbol = self.scanner.get_symbol()
-        else:
-            self.error(self.SYNTAX_ERROR, "port")
-
-    def signal(self, I_O_M):
-        """ Pars a signal.
-
-        Return the signal if parsed correctly as a tuple (name, port)
-
-        Parameters
-        ----------
-        I_O_M: Denotes wether we are expecting an input
-               port or ouptut port during connection definition
-               or if it is a monitor port.
-        """
-        if (self.symbol.type == self.scanner.NAME and
-                self.recovered_from_definition_error):
-            self.current_name = self.symbol
-            self.symbol = self.scanner.get_symbol()
-            if(self.symbol.type == self.scanner.DOT):
-                self.symbol = self.scanner.get_symbol()
-                self.port(I_O_M)
-            return (self.current_name, self.current_port)
-        else:
-            self.error(self.SYNTAX_ERROR, "signal")
-
-    def get_in(self, output):
-        """Get ids for name and port of device going to inputs."""
-        # Output ports can only be None, Q or QBAR
-        # Port symbol id already specifiec with correct id
-        name, port = output
-        return name.id, port.id
-
-    def get_out(self, device_ip):
-        """Get ids for name and port of device being connected to."""
-        name, port = device_ip
-        # Input ports of the form .IX have a number symbol for the port
-        # The correct id for port .IX must be retrieved using the number
-        if (port.type == self.scanner.NUMBER):
-            input_name = "".join(["I", str(port.id)])
-            [port.id] = self.names.lookup([input_name])
-        return name.id, port.id
-
-    def check_connection_error(self, error_type):
-        """Raise the appropriate error from the error_type given."""
-        # TODO errors raised point to correct symbols
-        if (error_type == self.network.NO_ERROR):
-            pass
-        elif (error_type == self.network.DEVICE_ABSENT):
-            # TODO print the actual problem place
-            self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
-                       stopping_symbol=None)
-        elif (error_type == self.network.INPUT_CONNECTED):
-            # TODO print actual place
-            self.error(self.REPEATED_INPUT_ERROR,
-                       stopping_symbol=None)
-        elif (error_type == self.network.PORT_ABSENT):
-            # TODO specific check for I out of bounds (ValueError)
-            # compared to invalid port used like .Q by non DTYPE (TypeError)
-            # also show appropriate symbol or no ports given at all!
-            self.error(self.INVALID_PORT_ERROR,
-                       stopping_symbol=None)
-        elif(error_type == self.network.INPUT_TO_INPUT):
-            self.error(self.CONNECTION_INPUT_ERROR,
-                       stopping_symbol=None)
-        elif(error_type == self.network.OUTPUT_TO_OUTPUT):
-            self.error(self.OUTPUT_ERROR,
-                       stopping_symbol=None)
-
     def make_connection(self):
         """" Create a connection between the inputs and ouputs specified.
 
@@ -675,212 +837,48 @@ class Parser:
             self.error(self.UNMATCHED_INPUT_OUTPUT_ERROR,
                        stopping_symbol=None)
 
-    def connection_definition(self):
-        """Parse a connection defintion.
+    def get_in(self, output):
+        """Get ids for name and port of device going to inputs."""
+        # Output ports can only be None, Q or QBAR
+        # Port symbol id already specifiec with correct id
+        name, port = output
+        return name.id, port.id
 
-        The EBNF grammar is the following:
-        signal, { "," , signal }, "=>", signal, { "," , signal }, ";" ;
-        """
-        # Beginning clear all variables
-        self.clear_vars()
-        # The signals on the left hand side should be outputs
-        self.outputs_list.append(self.signal("O"))
-        while (self.symbol.type == self.scanner.COMMA and
-               self.recovered_from_definition_error):
-            self.clear_vars()
-            self.symbol = self.scanner.get_symbol()
-            self.outputs_list.append(self.signal("O"))
-        if (self.symbol.type == self.scanner.CONNECTION_DEF and
-                self.recovered_from_definition_error):
-            self.symbol = self.scanner.get_symbol()
-            self.clear_vars()
-            self.inputs_list.append(self.signal("I"))
-            while (self.symbol.type == self.scanner.COMMA and
-                   self.recovered_from_definition_error):
-                self.clear_vars()
-                self.symbol = self.scanner.get_symbol()
-                # The signals on the right hand side should be inputs
-                self.inputs_list.append(self.signal("I"))
-            if (self.symbol.type == self.scanner.SEMICOLON and
-                    self.recovered_from_definition_error):
-                # Only make connection if there have been no errors
-                # or might through unexpected errors
-                if (self.error_count == 0):
-                    self.make_connection()
-                self.symbol = self.scanner.get_symbol()
-            # From grammar name followed by name possibly indicates mising coma
-            elif (self.symbol.type == self.scanner.NAME):
-                self.error(self.SYNTAX_ERROR, ",")
-            else:
-                self.error(self.SYNTAX_ERROR, ";")
-        # From grammar name followed by name possibly indicates mising coma
-        elif (self.symbol.type == self.scanner.NAME):
-            self.error(self.SYNTAX_ERROR, ",")
-        else:
-            self.error(self.SYNTAX_ERROR, "=>")
+    def get_out(self, device_ip):
+        """Get ids for name and port of device being connected to."""
+        name, port = device_ip
+        # Input ports of the form .IX have a number symbol for the port
+        # The correct id for port .IX must be retrieved using the number
+        if (port.type == self.scanner.NUMBER):
+            input_name = "".join(["I", str(port.id)])
+            [port.id] = self.names.lookup([input_name])
+        return name.id, port.id
 
-    def connection_list(self):
-        """Parse a connection list.
-
-        The EBNF grammar is the following:
-        "CONNECTIONS", ":", connection_definition,
-        { connection_definition }, "END", ";" ;
-        """
-        # Must check that its both a KEYWORD and the correct id as for
-        # example numbers can have the same id as DEVICES_ID.
-        if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.CONNECTIONS_ID):
-            self.symbol = self.scanner.get_symbol()
-            if(self.symbol.type == self.scanner.COLON):
-                self.symbol = self.scanner.get_symbol()
-                # Ensure all variables and lists are empty
-                self.clear_all()
-                self.connection_definition()
-                while (self.symbol.type != self.scanner.KEYWORD and
-                       self.symbol.type != self.scanner.EOF):
-                    self.clear_all()
-                    # If it has returned to the while loop it must
-                    # have recovered from the error during device_definition.
-                    self.recovered_from_definition_error = True
-                    self.connection_definition()
-                # Recovered from error as KEYWORD or EOF found
-                self.recovered_from_definition_error = True
-                if (self.symbol.id == self.scanner.END_ID and
-                        self.symbol.type == self.scanner.KEYWORD):
-                    self.symbol = self.scanner.get_symbol()
-                    if (self.symbol.type == self.scanner.SEMICOLON):
-                        # Only throw missing inputs if no errors occured
-                        # previously as probably missing ip from errors.
-                        if ((not self.network.check_network()) and
-                                self.error_count == 0):
-                            # TODO show the input that has no input
-                            self.error(self.MISSING_INPUTS_ERROR,
-                                       stopping_symbol=None)
-                        self.symbol = self.scanner.get_symbol()
-                    else:
-                        # Recover to KEYWORD so it can parse MONITORS
-                        self.error(self.SYNTAX_ERROR, ";",
-                                   stopping_symbol="KEYWORD")
-                else:
-                    # Recover to KEYWORD so it can parse MONITORS
-                    self.error(self.SYNTAX_ERROR, "END",
-                               stopping_symbol="KEYWORD")
-            else:
-                # Recover to END so it can parse MONITORS
-                self.error(self.SYNTAX_ERROR, ":",
-                           stopping_symbol="END")
-        else:
-            # Recover to END so it can parse MONITORS
-            self.error(self.SYNTAX_ERROR, "CONNECITIONS",
-                       stopping_symbol="END")
-
-    def make_monitors(self):
-        """Make monitors using signals in monitors_list."""
-        for monitors in self.monitors_list:
-            (identifier, port) = monitors
-            error = self.monitors.make_monitor(identifier.id,
-                                               port.id)
-            if (error == self.network.DEVICE_ABSENT):
-                self.error(self.UNDEFINED_DEVICE_ERROR, identifier,
-                           stopping_symbol=None)
-            elif (error == self.monitors.NOT_OUTPUT):
-                self.error(self.INVALID_DEVICE_OUTPUT_ERROR,
-                           identifier, stopping_symbol=None)
-            elif (error == self.monitors.MONITOR_PRESENT):
-                self.error(self.REPEATED_MONITOR_ERROR, identifier,
-                           stopping_symbol=None)
-
-    def monitor_list(self):
-        """Parse a connection list.
-
-        The EBNF grammar is the following:
-        "MONITORS", ":", signal, { "," , signal }, ";", "END", ";" ;
-        """
-        # Must check that its both a KEYWORD and the correct id as for
-        # example numbers can have the same id as DEVICES_ID.
-        if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.MONITORS_ID):
-            self.symbol = self.scanner.get_symbol()
-            if(self.symbol.type == self.scanner.COLON):
-                self.symbol = self.scanner.get_symbol()
-                # Ensure all variables and lists are empty
-                self.clear_all()
-                # The signals on monitors should be only outputs
-                self.monitors_list.append(self.signal("M"))
-                while (self.symbol.type == self.scanner.COMMA and
-                       self.recovered_from_definition_error):
-                    self.clear_vars()
-                    self.symbol = self.scanner.get_symbol()
-                    self.monitors_list.append(self.signal("M"))
-                if (self.symbol.type == self.scanner.SEMICOLON):
-                    # Only make monitors if count is zero
-                    if(self.error_count == 0):
-                        self.make_monitors()
-                    self.symbol = self.scanner.get_symbol()
-                    if (self.symbol.id == self.scanner.END_ID and
-                            self.symbol.type == self.scanner.KEYWORD):
-                        self.symbol = self.scanner.get_symbol()
-                        if (self.symbol.type == self.scanner.SEMICOLON):
-                            self.symbol = self.scanner.get_symbol()
-                            if(self.symbol.type == self.scanner.EOF):
-                                pass
-                            else:
-                                self.error(self.SYNTAX_ERROR, "EOF",
-                                           skipt_to_symbol="EOF")
-                        else:
-                            self.error(self.SYNTAX_ERROR, ";",
-                                       stopping_symbol="EOF")
-                    else:
-                        self.error(self.SYNTAX_ERROR, "END",
-                                   stopping_symbol="EOF")
-                elif(not self.recovered_from_definition_error):
-                    # Check that monitors has END; if error encountered
-                    self.recovered_from_definition_error = True
-                    if (self.symbol.id == self.scanner.END_ID and
-                            self.symbol.type == self.scanner.KEYWORD):
-                        self.symbol = self.scanner.get_symbol()
-                        if (self.symbol.type == self.scanner.SEMICOLON):
-                            self.symbol = self.scanner.get_symbol()
-                            if(self.symbol.type == self.scanner.EOF):
-                                pass
-                            else:
-                                self.error(self.SYNTAX_ERROR, "EOF",
-                                           skipt_to_symbol="EOF")
-                        else:
-                            self.error(self.SYNTAX_ERROR, ";",
-                                       stopping_symbol="EOF")
-                    else:
-                        self.error(self.SYNTAX_ERROR, "END",
-                                   stopping_symbol="EOF")
-                else:
-                    self.error(self.SYNTAX_ERROR, ";",
-                               stopping_symbol="END")
-            else:
-                self.error(self.SYNTAX_ERROR, ":",
-                           stopping_symbol="END")
-        elif(self.symbol.type == self.scanner.EOF):
+    def check_connection_error(self, error_type):
+        """Raise the appropriate error from the error_type given."""
+        # TODO errors raised point to correct symbols
+        if (error_type == self.network.NO_ERROR):
             pass
-        else:
-            self.error(self.SYNTAX_ERROR, "MONITORS OR EOF",
-                       stopping_symbol="EOF")
-
-    def parse_network(self):
-        """ Parse the circuit definition file.
-
-        The EBNF grammar is:
-        device_list, connection_list, [ monitor_list ] ;
-        """
-        self.symbol = self.scanner.get_symbol()
-        self.device_list()
-        self.connection_list()
-        # Check for EOF inside monitors_list if MONITORS not given
-        self.monitor_list()
-        if (self.error_count == 0):
-            return True
-        else:
-            # Error message
-            print(_("Number of errors encountered:"), self.error_count)
-            return False
+        elif (error_type == self.network.DEVICE_ABSENT):
+            # TODO print the actual problem place
+            self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
+                       stopping_symbol=None)
+        elif (error_type == self.network.INPUT_CONNECTED):
+            # TODO print actual place
+            self.error(self.REPEATED_INPUT_ERROR,
+                       stopping_symbol=None)
+        elif (error_type == self.network.PORT_ABSENT):
+            # TODO specific check for I out of bounds (ValueError)
+            # compared to invalid port used like .Q by non DTYPE (TypeError)
+            # also show appropriate symbol or no ports given at all!
+            self.error(self.INVALID_PORT_ERROR,
+                       stopping_symbol=None)
+        elif(error_type == self.network.INPUT_TO_INPUT):
+            self.error(self.CONNECTION_INPUT_ERROR,
+                       stopping_symbol=None)
+        elif(error_type == self.network.OUTPUT_TO_OUTPUT):
+            self.error(self.OUTPUT_ERROR,
+                       stopping_symbol=None)
 
     def get_error_codes(self):
         """Return the error codes list generated while running
