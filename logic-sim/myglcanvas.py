@@ -199,7 +199,8 @@ class MyGLCanvas_2D():
         self.parent.SetCurrent(self.parent.context)
         GL.glDrawBuffer(GL.GL_BACK)
         GL.glClearColor(1.0, 1.0, 1.0, 0.0)
-        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+        GL.glViewport(self.margin_left, 0, size.width-self.margin_left,
+                size.height)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         GL.glOrtho(0, size.width, 0, size.height, -1, 1)
@@ -226,7 +227,7 @@ class MyGLCanvas_2D():
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         # Enable line below only when debugging the canvas
-        # self.render_text(text, 200, 10)
+        # self.render_text(text, 10, 10)
 
         # Set the left margin for the canvas
         if self.parent.parent.monitors.get_margin() is not None:
@@ -245,8 +246,8 @@ class MyGLCanvas_2D():
         if num_monitors > 0:
             y_pos = self.border_bottom + self.margin_bottom + \
                 (num_monitors - 1) * self.monitor_spacing
-
-            for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
+            for device_id, output_id in self.parent.parent.monitors.\
+                monitors_dictionary:
                 self.render_monitor(
                     device_id,
                     output_id,
@@ -256,10 +257,11 @@ class MyGLCanvas_2D():
                 y_pos -= self.monitor_spacing
 
         # Render ruler components
-        # Ruler background rendered across the whole width of the canvas
+        # Render ruler background across the whole width of the canvas
         GL.glViewport(0, 0, size.width, size.height)
         self.render_ruler_background(size)
-        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+        GL.glViewport(self.margin_left, 0, size.width-self.margin_left,
+                size.height)
         self.render_cycle_numbers(size)
         self.render_grid(size, render_only_on_ruler=True)
 
@@ -334,6 +336,7 @@ class MyGLCanvas_2D():
     def bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.parent.GetClientSize()
+        # Calculate allowable pan values
         allowable_pan_right = -self.border_right*self.zoom + size.width
         allowable_pan_left = self.border_left
         allowable_pan_bottom = self.border_bottom
@@ -350,7 +353,8 @@ class MyGLCanvas_2D():
         if self.pan_x > allowable_pan_left:
             self.pan_x = allowable_pan_left
 
-        if allowable_pan_top < 0: # if true, some monitors are hidden (y dir)
+        # if true, some monitors are hidden (y dir)
+        if allowable_pan_top < 0:
             if self.pan_y < allowable_pan_top:
                 self.pan_y = allowable_pan_top
         else:
@@ -373,7 +377,8 @@ class MyGLCanvas_2D():
         size = self.parent.GetClientSize()
 
         # Allow a max number of 7 monitors to be displayed at once
-        num_monitors = min(7, len(self.parent.parent.monitors.monitors_dictionary))
+        num_monitors = min(7, len(self.parent.parent.monitors.\
+                                  monitors_dictionary))
 
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + \
@@ -387,12 +392,12 @@ class MyGLCanvas_2D():
         """Update the borders of the canvas depending on the number of monitors
         and the number of cycles to be simulated."""
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
-        # self.border_top depends only on the number of monitors
+        # border_top depends only on the number of monitors
         self.border_top = self.border_bottom + self.margin_bottom + \
             num_monitors * self.monitor_spacing + self.ruler_height / self.zoom
-        # self.border_right depends only on the number of cycles to be
-        # simulated
-        self.border_right = self.parent.parent.cycles_completed * self.cycle_width
+        # border_right depends only on the number of cycles to be simulated
+        self.border_right = self.parent.parent.cycles_completed * \
+            self.cycle_width
 
     def render_text(self, text, x_pos, y_pos):
         """Handle text drawing operations."""
@@ -421,15 +426,18 @@ class MyGLCanvas_2D():
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
-        GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+        GL.glViewport(self.margin_left, 0, size.width - self.margin_left, \
+            size.height)
 
         # Draw rectangles underneath HIGH signals for more clarlity
         x_pos = 0
         fill_color = [103 / 255, 218 / 255, 255 / 255]
         GL.glColor3fv(fill_color)
         for signal in signal_list:
-            if (signal == self.parent.parent.devices.HIGH) or (signal == self.parent.parent.devices.RISING):
-                self.render_rectangle((x_pos, y_min), (x_pos + self.cycle_width, y_max))
+            if (signal == self.parent.parent.devices.HIGH) \
+                or (signal == self.parent.parent.devices.RISING):
+                self.render_rectangle((x_pos, y_min), \
+                                      (x_pos + self.cycle_width, y_max))
                 GL.glBegin(GL.GL_LINE_STRIP)
                 GL.glVertex2f(x_pos, y_min)
                 GL.glVertex2f(x_pos + self.cycle_width, y_min)
@@ -490,7 +498,7 @@ class MyGLCanvas_2D():
         GL.glEnd()
 
     def render_rectangle(self, bottom_left_point, top_right_point):
-        """Render a rectangle on the canvas, with the given points."""
+        """Render a rectangle on the canvas, with the given end points."""
         # check validity of arguments
         if not (
             isinstance(
@@ -520,7 +528,7 @@ class MyGLCanvas_2D():
         for cycle in range(self.parent.parent.cycles_completed):
             # count number of digits in number
             num_digits = len(str(cycle + 1))
-            # print cycle number
+            # draw cycle number
             text_x_pos = - 0.5 * num_digits * self.character_width/self.zoom +\
                 (cycle + 0.5) * self.cycle_width
             text_y_pos = (size.height - self.pan_y -
@@ -567,10 +575,12 @@ class MyGLCanvas_2D():
                              (line_x_pos, line_y_pos_end))
 
     def recenter(self, pan_to_end = False):
-        """Restore canvas to its default pan position and zoom state."""
+        """Restore canvas to its default pan position and zoom state. If
+        pan_to_end argument is true, the canvas is panned to the end of the
+        signal traces."""
         self.zoom = self.zoom_lower
         self.pan_y = self.border_bottom
-        if pan_to_end:
+        if pan_to_end: # if true pan to the end of the signal trace
             self.update_borders()
             size = self.parent.GetClientSize()
             allowable_pan_right = -self.border_right*self.zoom + size.width
@@ -883,7 +893,7 @@ class MyGLCanvas_3D():
 
     def render_cycle_numbers(self, x_pos):
         """Handle rendering cycle numbers over the signal traces."""
-        GL.glColor3f(0.0, 0.0, 1.0)  # text is white
+        GL.glColor3f(1.0, 1.0, 1.0)  # text is white
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles-1) * self.cycle_depth
         for cycle in range(1, cycles + 1):
