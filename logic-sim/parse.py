@@ -215,7 +215,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.MONITORS_ID):
+           self.symbol.id == self.scanner.MONITORS_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -417,11 +417,11 @@ class Parser:
             print(_("***NameError: Keywords, devices and ports names ") +
                   _("are reserved and cannot be used as identifiers."))
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
-            print("Line: {}".format(self.mesage.line))
+            print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
         # TODO display correct carret
         # TODO display the other identifier using id in lookup names
-        # TODO display name with forma 
+        # TODO display name with forma
             print(_("***NameError: An identifier was repeated. ") +
                   _("All identifiers must have unique names."))
         elif (error_type == self.CONNECTION_INPUT_ERROR):
@@ -444,11 +444,11 @@ class Parser:
             print(_("***NameError: A monitor was repeated. ") +
                   _("All monitors must be unique."))
         elif (error_type == self.INVALID_DEVICE_OUTPUT_ERROR):
-            print("Line: {}".format(self.message.line))
+            print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
             print(_("***TypeError: The device has no such output."))
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
-            print("Line: {}".format(self.message.line))
+            print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
             print(_("***NameError: The device has not been previously") +
                   _(" defined in DEVICES."))
@@ -874,7 +874,7 @@ class Parser:
         if (error_type == self.network.NO_ERROR):
             pass
         elif (error_type == self.network.DEVICE_ABSENT):
-            # TODO print the actual problem place
+            # TODO print the actual problem place MUSTDO!!!
             self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
                        stopping_symbol=None)
         elif (error_type == self.network.INPUT_CONNECTED):
