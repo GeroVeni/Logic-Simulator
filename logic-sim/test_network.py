@@ -334,6 +334,33 @@ def test_execute_non_gates(new_network):
                 HIGH, LOW, HIGH, HIGH, LOW, HIGH]
 
 
+@pytest.mark.parametrize("waveform", [
+    ("8001101"),
+    ("8110100011101010110110101010001"),
+    ("800011010001110110001010011011"),
+    ("8111111111110111111110111111111110111111111110111111110111"),
+    ("80000000000000111110000000000000111000000000110000001000"),
+])
+def test_execute_siggen(new_network, waveform):
+    """Test if execute_network returns correct output for siggen devices."""
+    network = new_network
+    devices = network.devices
+    names = devices.names
+
+    LOW = devices.LOW
+    HIGH = devices.HIGH
+
+    # Make siggen devices
+    devices.make_device("siggen", devices.SIGGEN, waveform)
+
+    # Execute the network and check in each cycle that
+    # the correct output is given
+    for i in range(len(str(waveform)[1:])):
+        network.execute_network()
+        assert (network.get_output_signal("siggen", None) ==
+                int(str(waveform)[i+1]))
+
+
 def test_oscillating_network(new_network):
     """Test if the execute_network returns False for oscillating networks."""
     network = new_network
