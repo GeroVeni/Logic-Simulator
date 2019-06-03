@@ -75,7 +75,7 @@ class Scanner:
         if not isinstance(names, Names):
             raise TypeError('names must be an instance of Names class')
         # open file
-        self.fileIn = self.open_file(path)
+        self.fileIn = self._open_file(path)
 
         self.names = names
 
@@ -107,10 +107,10 @@ class Scanner:
         self.current_line = 1
         self.current_character = None
         self.line_pos_record = {}
-        self.update_line_pos_record()
-        self.advance()  # place first character in current_character
+        self._update_line_pos_record()
+        self._advance()  # place first character in current_character
 
-    def open_file(self, path):
+    def _open_file(self, path):
         """Open and return the file specified by path."""
         try:
             file = open(path)
@@ -119,30 +119,30 @@ class Scanner:
             sys.exit()
         return file
 
-    def advance(self):
+    def _advance(self):
         """Update current_character, and line position record."""
         if self.current_character == "\n":
             self.current_character = self.fileIn.read(1)
             self.current_line += 1
             self.current_line_pos = self.fileIn.tell() - 1
-            self.update_line_pos_record()
+            self._update_line_pos_record()
         else:
             self.current_character = self.fileIn.read(1)
 
-    def update_line_pos_record(self):
+    def _update_line_pos_record(self):
         """Update the record containing the beginning position of each line in
         the input file."""
         if self.current_line not in self.line_pos_record:
             self.line_pos_record[self.current_line] = self.current_line_pos
 
-    def get_line_pos(self, line_no):
+    def _get_line_pos(self, line_no):
         """Return the beginning position of the line in the input file."""
         if line_no not in self.line_pos_record:
             raise ValueError("The line requested from the definition file has\
                     not been encountered.")
         return self.line_pos_record[line_no]
 
-    def look_ahead(self):
+    def _look_ahead(self):
         """Return the next character in the definition file, without updating
         current_character and without incrementing the current position within
         the file."""
@@ -150,58 +150,58 @@ class Scanner:
         self.fileIn.seek(self.fileIn.tell()-1, 0)
         return ch
 
-    def skip_spaces(self):
-        """Advance current position in input file until the first non
+    def _skip_spaces(self):
+        """_advance current position in input file until the first non
         whitespace character."""
         while self.current_character != '' \
                 and self.current_character.isspace():
-            self.advance()
+            self._advance()
 
-    def skip_line(self):
+    def _skip_line(self):
         """Skip the rest of the current line in the input file."""
-        self.advance()
+        self._advance()
         while self.current_character != '' and self.current_character != "\n":
-            self.advance()
+            self._advance()
 
-    def get_name(self):
+    def _get_name(self):
         """Return the name string that starts at the current_character, and
-        advance to the next character after the name string.
+        _advance to the next character after the name string.
 
         This method assumes that the current_character is already a letter."""
         name = self.current_character
-        self.advance()
+        self._advance()
         while (self.current_character.isalnum() or
                 self.current_character == "_") \
                 and self.current_character != '':
             name += self.current_character
-            self.advance()
+            self._advance()
         return name
 
-    def get_number(self):
-        """Return the number that starts at the current_character, and advance
+    def _get_number(self):
+        """Return the number that starts at the current_character, and _advance
         to the next character after the number.
 
         This method assumes that the current_character is already a digit."""
         numList = self.current_character
-        self.advance()
+        self._advance()
         while self.current_character != '' \
                 and self.current_character.isdigit():
             numList += self.current_character
-            self.advance()
+            self._advance()
 
         return int(numList)
 
     def get_symbol(self):
         """Translate the next sequence of characters into a symbol."""
         symbol = Symbol()
-        self.skip_spaces()  # current character now not whitespace
+        self._skip_spaces()  # current character now not whitespace
 
         symbol.line = self.current_line
         symbol.column = self.fileIn.tell() - self.current_line_pos
 
         # handle names, keywords, devices, ports
         if self.current_character.isalpha():
-            name_string = self.get_name()
+            name_string = self._get_name()
             if name_string in self.keywords_list:
                 symbol.type = self.KEYWORD
             elif name_string in self.devices_list:
@@ -224,53 +224,53 @@ class Scanner:
         # handle numbers
         elif self.current_character.isdigit():
             # NOTE that here the symbol.id is the number itself
-            symbol.id = self.get_number()
+            symbol.id = self._get_number()
             symbol.type = self.NUMBER
         # handle punctuation
         elif self.current_character == ":":  # handle ":", ":="
-            if (self.look_ahead() == "="):
+            if (self._look_ahead() == "="):
                 symbol.type = self.DEVICE_DEF
-                self.advance()
+                self._advance()
             else:
                 symbol.type = self.COLON
-            self.advance()
+            self._advance()
         elif self.current_character == ";":
             symbol.type = self.SEMICOLON
-            self.advance()
+            self._advance()
         elif self.current_character == ",":
             symbol.type = self.COMMA
-            self.advance()
+            self._advance()
         elif self.current_character == "(":
             symbol.type = self.BRACKET_LEFT
-            self.advance()
+            self._advance()
         elif self.current_character == ")":
             symbol.type = self.BRACKET_RIGHT
-            self.advance()
+            self._advance()
         elif self.current_character == "=":  # handle special case "=>"
-            if (self.look_ahead() == ">"):
+            if (self._look_ahead() == ">"):
                 symbol.type = self.CONNECTION_DEF
-                self.advance()
+                self._advance()
             else:
                 symbol.type = self.INVALID_SYMBOL
-            self.advance()
+            self._advance()
         elif self.current_character == ".":
             symbol.type = self.DOT
-            self.advance()
+            self._advance()
         elif self.current_character == "/":  # handle comments
-            if (self.look_ahead() == "/"):
-                self.advance()
-                self.skip_line()
+            if (self._look_ahead() == "/"):
+                self._advance()
+                self._skip_line()
                 # return next symbol right after the comment or any
                 # immediately following comments
                 symbol = self.get_symbol()
             else:
                 symbol.type = self.INVALID_SYMBOL
-                self.skip_line()
+                self._skip_line()
         elif self.current_character == "":  # end of file
             symbol.type = self.EOF
         else:  # not a valid character
             symbol.type = self.INVALID_SYMBOL
-            self.advance()
+            self._advance()
 
         return symbol
 
@@ -288,13 +288,13 @@ class Scanner:
         line_record = self.line_pos_record.copy()
 
         # go to start of the line of the requested symbol
-        symbol_line_pos = self.get_line_pos(symbol.line)
+        symbol_line_pos = self._get_line_pos(symbol.line)
         self.fileIn.seek(symbol_line_pos, 0)
-        self.current_character = self.advance()
+        self.current_character = self._advance()
 
         # count line length
         if self.current_character != "\n":
-            self.skip_line()
+            self._skip_line()
         line_length = self.fileIn.tell() - symbol_line_pos - 1
 
         # get contents of line in the circuit definition file
