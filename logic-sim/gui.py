@@ -847,7 +847,6 @@ class Gui(wx.Frame):
         self.GetToolBar().SetToolNormalBitmap(self.ID_LANG, flagIcon)
 
         # Update right panel
-        print(self.locale.GetCanonicalName())
         self.notebook.SetPageText(0, _("Monitors"))
         self.notebook.SetPageText(1, _("Switches"))
         self.monitor_tab.update_texts()
