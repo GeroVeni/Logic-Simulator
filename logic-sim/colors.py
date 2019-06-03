@@ -7,6 +7,7 @@ ColorScheme - The class that determines the color corresponding to an id and
               a style
 """
 
+
 class ColorScheme:
     """The class that determines the color corresponding to an id and a
     style.
@@ -22,6 +23,7 @@ class ColorScheme:
     get_color(self, color_id, style): Returns the corresponding color
     get_default(): (static) Return the default colorscheme
     """
+
     def __init__(self, color_list=[], light_color_list=[],
                  medium_color_list=[]):
         """Creates the colorscheme and assigns a list of colors."""
@@ -36,11 +38,15 @@ class ColorScheme:
         self.color_list = color_list
         self.light_color_list = light_color_list
         self.medium_color_list = medium_color_list
-    
+
     def reset_color(self):
+        """Reset the color counter and starting getting colors from the
+        start.
+        """
         self.next_col = 0
 
     def get_next_color(self, style=None):
+        """Get the next color in the given style."""
         col = self.get_color(self.next_col, style)
         self.next_col += 1
         return col
@@ -48,7 +54,8 @@ class ColorScheme:
     def get_color(self, color_id, style=None):
         """Gets a color from the colorscheme."""
         if style == 'medium':
-            return self.medium_color_list[color_id % len(self.medium_color_list)]
+            return self.medium_color_list[
+                    color_id % len(self.medium_color_list)]
         elif style == 'light':
             return self.light_color_list[color_id % len(self.light_color_list)]
         else:
@@ -56,7 +63,7 @@ class ColorScheme:
 
     @staticmethod
     def get_default():
-        """Returns the default ColorScheme."""
+        """Returns the default ColorScheme. See Tableau 10"""
         norm = [[31, 119, 180], [255, 127, 14],
                 [44, 160, 44], [214, 39, 40],
                 [148, 103, 189], [140, 86, 75],

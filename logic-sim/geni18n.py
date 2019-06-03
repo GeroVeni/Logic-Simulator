@@ -20,24 +20,21 @@ catalog.
 
 import app_const as appC
 
-# we remove English as source code strings are in English
-supportedLang = []
-for l in appC.supLang:
-    if l != u"en":
-        supportedLang.append(l)
-
 import os
 import sys
 import subprocess
+
+# we remove English as source code strings are in English
+supportedLang = []
+for lang in appC.supLang:
+    if lang != u"en":
+        supportedLang.append(l)
 
 appFolder = os.getcwd()
 
 # setup some stuff to get at Python I18N tools/utilities
 
 pyExe = '/usr/bin/python'
-#pyFolder = os.path.split(pyExe)[0]
-#pyToolsFolder = '~/gf2/i18n/cpython/Tools/'
-#pyI18nFolder = os.path.join(pyToolsFolder, 'i18n')
 pyGettext = '/usr/bin/pygettext.py'
 pyMsgfmt = '/usr/bin/msgfmt'
 outFolder = os.path.join(appFolder, 'locale')
@@ -48,10 +45,10 @@ tCmd = pyExe + ' ' + pyGettext + ' ' + (gtOptions % (appC.langDomain,
                                                      appC.langDomain,
                                                      outFolder,
                                                      appFolder))
-print ("Generating the .pot file")
-print ("cmd: %s" % tCmd)
+print("Generating the .pot file")
+print("cmd: %s" % tCmd)
 rCode = os.system(tCmd)
-print ("return code: %s\n\n" % rCode)
+print("return code: %s\n\n" % rCode)
 
 for tLang in supportedLang:
     # build command for msgfmt
@@ -59,8 +56,8 @@ for tLang in supportedLang:
     poFile = os.path.join(langDir, appC.langDomain + '.po')
     moFile = os.path.join(langDir, appC.langDomain + '.mo')
     tCmd = pyMsgfmt + ' ' + poFile + ' -o ' + moFile
-    
-    print ("Generating the .mo file")
-    print ("cmd: %s" % tCmd)
+
+    print("Generating the .mo file")
+    print("cmd: %s" % tCmd)
     rCode = os.system(tCmd)
-    print ("return code: %s\n\n" % rCode)
+    print("return code: %s\n\n" % rCode)
