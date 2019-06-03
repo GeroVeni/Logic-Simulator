@@ -365,11 +365,13 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.NO_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "SIGGEN requires a parameter to be specified.", None)
+                               "SIGGEN requires a parameter to be specified.",
+                               None)
                     return
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "SIGGEN requiress a 8 followed by a binary number", None)
+                               "SIGGEN requires a 4 or 8 followed by a binary"
+                               " number.", None)
                     return
 
     def device_definition(self):
