@@ -628,11 +628,18 @@ class MyGLCanvas_3D():
 
     render_text(self, text, x_pos, y_pos, z_pos): Handles text drawing
                                                   operations.
+
+    restore_state(self): Restore the state of the canvas when a new circuit
+                         definition file is loaded using the gui, or when the
+                         number of monitors is changed in the gui.
+
+    recenter(self, pan_to_end = False): Restore canvas to its default pan
+                                position, zoom state and orientation.
     """
 
     def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
-
+        # keep reference to parent
         self.parent = parent
 
         self.init = False
@@ -735,12 +742,13 @@ class MyGLCanvas_3D():
         # Clear everything
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        # Draw signal traces
+        # Draw monitors' signal traces and cycle numbers
         num_monitors = len(self.parent.parent.monitors.monitors_dictionary)
         if num_monitors > 0:
             x_pos = -(num_monitors - 1)*self.monitor_spacing/2
             self._render_cycle_numbers(x_pos - self.monitor_spacing)
-            for device_id, output_id in self.parent.parent.monitors.monitors_dictionary:
+            for device_id, output_id in self.parent.parent.monitors.\
+                monitors_dictionary:
                 self._render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
 
@@ -752,7 +760,7 @@ class MyGLCanvas_3D():
         GL.glFlush()
         self.parent.SwapBuffers()
 
-    def draw_cuboid(self, x_pos, z_pos, half_width, half_depth, height):
+    def _draw_cuboid(self, x_pos, z_pos, half_width, half_depth, height):
         """Draw a cuboid.
 
         Draw a cuboid at the specified position, with the specified
@@ -864,16 +872,17 @@ class MyGLCanvas_3D():
         GL.glEnable(GL.GL_LIGHTING)
 
     def _render_monitor(self, device_id, output_id, x_pos):
-        """Handle monitor name and signal trace drawing for a single monitor."""
+        """Handle monitor name and signal trace drawing for a single
+        monitor."""
         monitor_name = self.parent.parent.devices.get_signal_name(
             device_id, output_id)
         signal_list = self.parent.parent.monitors.monitors_dictionary[(
             device_id, output_id)]
 
+        # Draw signal traces
         GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles - 1) * self.cycle_depth
-
         for signal in signal_list:
             if signal != self.parent.parent.devices.BLANK:
                 if signal == self.parent.parent.devices.HIGH:
@@ -884,7 +893,8 @@ class MyGLCanvas_3D():
                     height = self.trace_height
                 elif signal == self.parent.parent.devices.FALLING:
                     height = 0
-                self.draw_cuboid(x_pos, z_pos, self.trace_width/2, self.cycle_depth/2, height + 1)
+                self._draw_cuboid(x_pos, z_pos, self.trace_width/2,
+                    self.cycle_depth/2, height + 1)
             z_pos += self.cycle_depth
 
         # Draw monitor name
@@ -905,12 +915,13 @@ class MyGLCanvas_3D():
         """Restore the state of the canvas when a new circuit definition file
         is loaded using the gui, or when the number of monitors is changed in
         the gui."""
-        # This method is not needed for MyGLCanvas_3D, but is called by the
+        # This method is needed only for MyGLCanvas_2D, but is called by the
         # GLCanvasWrapper everytime a file is opened or a monitor is added.
         pass
 
     def recenter(self, pan_to_end = False):
-        """Restore canvas to its default pan position and zoom state."""
+        """Restore canvas to its default pan position, zoom state and
+        orientation."""
         self.pan_x = 0
         self.pan_y = 0
         self.zoom = 1
