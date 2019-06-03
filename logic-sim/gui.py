@@ -1193,6 +1193,7 @@ class Gui(wx.Frame):
     def on_size(self, event):
         """Handle the event when the window resizes."""
         self.Refresh()
+        event.Skip()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
