@@ -119,10 +119,10 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
         MyGLCanvas_3D."""
         self.current_mode.restore_state()
 
-    def recenter(self):
+    def recenter(self, pan_to_end = False):
         """Interface method for the recenter() fn in MyGLCanvas_2D and
         MyGLCanvas_3D."""
-        self.current_mode.recenter()
+        self.current_mode.recenter(pan_to_end)
 
 
 class MyGLCanvas_2D():
@@ -335,7 +335,6 @@ class MyGLCanvas_2D():
     def bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.parent.GetClientSize()
-        # allowable_pan_right = -(self.border_right - size.width / self.zoom)
         allowable_pan_right = -self.border_right*self.zoom + size.width
         allowable_pan_left = self.border_left
         allowable_pan_bottom = self.border_bottom
@@ -568,11 +567,18 @@ class MyGLCanvas_2D():
             self.render_line((line_x_pos, line_y_pos_start),
                              (line_x_pos, line_y_pos_end))
 
-    def recenter(self):
+    def recenter(self, pan_to_end = False):
         """Restore canvas to its default pan position and zoom state."""
-        self.pan_x = self.border_left
-        self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
+        self.pan_y = self.border_bottom
+        if pan_to_end:
+            self.update_borders()
+            size = self.parent.GetClientSize()
+            allowable_pan_right = -self.border_right*self.zoom + size.width
+            self.pan_x = allowable_pan_right
+        else:
+            self.pan_x = self.border_left
+
         self.init = False
         self.render("Recenter canvas")
 
@@ -1064,6 +1070,7 @@ class Gui(wx.Frame):
         """Run the continue_command when run button pressed."""
         self.continue_command()
         self.canvas.render(_("Continue"))
+        self.canvas.recenter(pan_to_end = True)
 
     ####################
     # author: Dimitris #
