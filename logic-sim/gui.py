@@ -678,11 +678,13 @@ class Gui(wx.Frame):
         # Load icons
         #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
-        openIcon = wx.Bitmap("res/run.png")
-        centerIcon = wx.Bitmap("res/run.png")
+        appIcon = wx.Icon("res/layout2d.png")
+        self.SetIcon(appIcon)
+        openIcon = wx.Bitmap("res/open_mat.png")
+        centerIcon = wx.Bitmap("res/center_mat.png")
         runIcon = wx.Bitmap("res/run.png")
-        continueIcon = wx.Bitmap("res/continue.png")
-        infoIcon = wx.Bitmap("res/info.png")
+        continueIcon = wx.Bitmap("res/continue_mat.png")
+        infoIcon = wx.Bitmap("res/info_mat_outline.png")
         self.layout2dIcon = wx.Bitmap("res/layout2d.png")
         self.layout3dIcon = wx.Bitmap("res/layout3d.png")
         flagIcon = langlc.GetLanguageFlag(self.locale.GetLanguage())
@@ -1000,7 +1002,7 @@ class Gui(wx.Frame):
             self,
             _("Open"),
             wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST )
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
             file_path = openFileDialog.GetPath()
