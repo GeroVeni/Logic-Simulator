@@ -712,7 +712,7 @@ class MyGLCanvas_3D():
                         self.mat_diffuse)
         GL.glColorMaterial(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE)
 
-        GL.glClearColor(0.2, 0.2, 0.2, 0.0)
+        GL.glClearColor(0.0, 0.0, 0.0, 0.0)
         GL.glDepthFunc(GL.GL_LEQUAL)
         GL.glShadeModel(GL.GL_SMOOTH)
         GL.glDrawBuffer(GL.GL_BACK)
@@ -749,6 +749,7 @@ class MyGLCanvas_3D():
         if num_monitors > 0:
             x_pos = -(num_monitors - 1) * self.monitor_spacing / 2
             self._render_cycle_numbers(x_pos - self.monitor_spacing)
+            self.color_scheme.reset_colors()
             for device_id, output_id in self.parent.parent.monitors.\
                     monitors_dictionary:
                 GL.glColor3fv(self.color_scheme.get_next_color())
