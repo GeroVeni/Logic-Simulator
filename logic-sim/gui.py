@@ -588,8 +588,8 @@ class Gui(wx.Frame):
         # Add locale path and update the language 
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
-        #self.updateLanguage(self.appConfig.Read(u"Language"))
-        self.updateLanguage(u"el")
+        #self.update_language(self.appConfig.Read(u"Language"))
+        self.update_language(u"el")
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -642,8 +642,8 @@ class Gui(wx.Frame):
         runIcon = wx.Bitmap("res/run.png")
         continueIcon = wx.Bitmap("res/continue.png")
         infoIcon = wx.Bitmap("res/info.png")
-        self.layout2dIcon = wx.Bitmap("res/layout2d-01.png")
-        self.layout3dIcon = wx.Bitmap("res/layout3d-01.png")
+        self.layout2dIcon = wx.Bitmap("res/layout2d.png")
+        self.layout3dIcon = wx.Bitmap("res/layout3d.png")
         flagIcon = langlc.GetLanguageFlag(wx.LANGUAGE_ENGLISH)
 
         # Configure toolbar
@@ -679,6 +679,7 @@ class Gui(wx.Frame):
             wx.ID_ANY,
             _("Ready. Please load a file."),
             style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.activity_log_label = wx.StaticText(self, label=_("Activity Log"))
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
@@ -689,7 +690,7 @@ class Gui(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
 
         left_sizer.Add(self.canvas, 3, wx.EXPAND | wx.ALL, 5)
-        left_sizer.Add(wx.StaticText(self, label=_("Activity Log")),
+        left_sizer.Add(self.activity_log_label,
                        0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -707,21 +708,21 @@ class Gui(wx.Frame):
         right_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create the notebook to hold tabs
-        nb = wx.Notebook(self, size=(200, -1))
+        self.notebook = wx.Notebook(self, size=(200, -1))
 
         # Create the tabs
-        self.monitor_tab = CustomTab(nb)
-        self.switch_tab = CustomTab(nb)
+        self.monitor_tab = CustomTab(self.notebook)
+        self.switch_tab = CustomTab(self.notebook)
         self.monitor_tab.set_on_item_selected_listener(self.set_monitor)
         self.switch_tab.set_on_item_selected_listener(self.set_switch)
 
-        nb.AddPage(self.monitor_tab, _("Monitors"))
-        nb.AddPage(self.switch_tab, _("Switches"))
+        self.notebook.AddPage(self.monitor_tab, _("Monitors"))
+        self.notebook.AddPage(self.switch_tab, _("Switches"))
 
-        right_sizer.Add(nb, 1, wx.EXPAND | wx.ALL, 5)
+        right_sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 5)
         return right_sizer
 
-    def updateLanguage(self, lang):
+    def update_language(self, lang):
         """
         Update the language to the requested one.
         
@@ -750,6 +751,51 @@ class Gui(wx.Frame):
             self.locale.AddCatalog(appC.langDomain)
         else:
             self.locale = None
+    
+    def update_texts(self):
+        """Updates the text fields around the application after a change
+        of locale.
+        """
+
+        # Update menu items
+        # WARNING: This update assumes a certain order of menus
+        # Does NOT scale; Consider refactoring for robustness
+        # 0 -> files
+        # 1 -> view
+        # 2 -> simulation
+        # 3 -> help
+        menuBar = self.GetMenuBar()
+        menuBar.SetMenuLabel(0, _("&File"))
+        menuBar.SetMenuLabel(1, _("&View"))
+        menuBar.SetMenuLabel(2, _("&Simulation"))
+        menuBar.SetMenuLabel(3, _("&Help"))
+
+        # Update menu subitems
+        menuBar.SetLabel(self.ID_OPEN, _("&Open") + "\tCtrl+O")
+        menuBar.SetLabel(wx.ID_EXIT, _("&Exit"))
+
+        menuBar.SetLabel(self.ID_CENTER, _("&Center") + "\tCtrl+E")
+        menuBar.SetLabel(self.ID_TOGGLE_3D, _("&Toggle 2D/3D vew") + "\tCtrl+T")
+        menuBar.SetLabel(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
+        menuBar.SetLabel(self.ID_LANG, _("Change &Language"))
+
+        menuBar.SetLabel(self.ID_RUN, _("&Run") + "\tCtrl+R")
+        menuBar.SetLabel(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
+
+        menuBar.SetLabel(self.ID_HELP, _("&Help") + "\tCtrl+H")
+        menuBar.SetLabel(wx.ID_ABOUT, _("&About"))
+        
+        # Update toolbar tooltips
+        # TODO
+
+        # Update right panel
+        self.notebook.SetPageText(0, _("Monitors"))
+        self.notebook.SetPageText(1, _("Switches"))
+        self.monitor_tab.update_texts()
+        self.switch_tab.update_texts()
+
+        # Update static texts
+        self.activity_log_label.SetLabel(_("Activity Log"))
             
     def update_tabs(self):
         """Update the tabs with new values."""
@@ -1025,7 +1071,6 @@ class Gui(wx.Frame):
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
 
-
     def  on_toggle_3d_vew(self):
         """Toggle 3D view."""
         if self.canvas_mode == '2d':
@@ -1039,6 +1084,26 @@ class Gui(wx.Frame):
     ##################
     # author: George #
     ##################
+
+    def on_lang_change(self):
+        """Show dialog for language change."""
+        dlg = LangDialog(self, -1, _("Pick your language"),
+                         self.locale.GetLanguage(), size=(350, 200),
+                         style=wx.DEFAULT_DIALOG_STYLE,
+                         )
+
+        # This does not return until the dialog is closed.
+        val = dlg.ShowModal()
+
+        sel_lang = dlg.GetLangSelected()
+        self.log_message(wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
+        if val == wx.ID_OK:
+            # User pressed OK
+            self.log_message("You pressed OK\n")
+            self.update_language(wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
+            self.update_texts()
+
+        dlg.Destroy()
 
 
     def on_menu(self, event):
@@ -1086,8 +1151,17 @@ class CustomTab(wx.Panel):
 
     Public methods
     --------------
+    def append(self, name_list): Appends the name_list in the item list.
 
-    TODO
+    def clear(self): Clears the item list.
+
+    def update_texts(self): Updates the strings during a locale change.
+
+    def on_item_selected(self, event): Event handler for when an item is
+                                       selected.
+
+    def set_on_item_selected_listener(self, listener):
+        Setter function for external listener to the on_item_selected event.
     """
 
     def __init__(self, parent):
@@ -1124,7 +1198,7 @@ class CustomTab(wx.Panel):
         self.on_item_selected_listener = listener
 
     def on_item_selected(self, event):
-        """Handle the event when the user changes the state of a monitor."""
+        """Handle the event when the user changes the state of an item."""
         if self.on_item_selected_listener is None:
             return
         row = self.item_list.ItemToRow(event.GetItem())
@@ -1132,11 +1206,19 @@ class CustomTab(wx.Panel):
         state = self.item_list.GetToggleValue(row, self.TOGGLE_COLUMN)
         self.on_item_selected_listener(name, state)
 
+    def update_texts(self):
+        """Updates the text fields around the application after a change
+        of locale.
+        """
+        self.item_list.GetColumn(0).SetTitle(_("Names"))
+        self.item_list.GetColumn(1).SetTitle(_("Status"))
+
     def clear(self):
         """Clears the items in the list."""
         self.item_list.DeleteAllItems()
 
     def append(self, name_list):
+        """Appends the name_list in the item list."""
         # ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
@@ -1144,3 +1226,83 @@ class CustomTab(wx.Panel):
             i, val = name_list[cnt]
             it = dv.DataViewIconText("" + i)
             self.item_list.AppendItem([it, val])
+
+
+class LangDialog(wx.Dialog):
+    """Dialog for change of locale.
+
+    This class inherits from the wx.Dialog class to create a dialog for
+    selecting a locale by the user.
+
+    Parameters
+    ----------
+    parent: parent of the dialog. (see wx.Dialog)
+    id: id of the dialog. (see wx.Dialog)
+    title: title of the dialog. (see wx.Dialog)
+    sel_lang: initially selected language.
+    size: size of the dialog. (see wx.Dialog)
+    pos: position of the dialog. (see wx.Dialog)
+    style: style of the dialog. (see wx.Dialog)
+    name: name of the dialog. (see wx.Dialog)
+
+    Public methods
+    --------------
+    onItemSelected(self, event): Event handler for when the user selects an
+                                 item
+
+    onItemActivated(self, event): Event handler for when the user activates an
+                                  item (double click or ENTER)
+
+    GetLangSelected(self): Getter function for lang_selected property
+    """
+
+    def __init__(
+            self, parent, id, title, sel_lang, size=wx.DefaultSize, pos=wx.DefaultPosition,
+            style=wx.DEFAULT_DIALOG_STYLE, name='dialog'
+            ):
+        """Create language dialog to allow the user to change locale."""
+
+        # Create the dialog
+        wx.Dialog.__init__(self)
+        self.Create(parent, id, title, pos, size, style, name)
+
+        # Now continue with the normal construction of the dialog
+        # contents
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.lang_selected = sel_lang
+        self.lang_listctrl = langlc.LanguageListCtrl(self, size=(0,-1), filter=langlc.LC_AVAILABLE, only=[wx.LANGUAGE_ENGLISH, wx.LANGUAGE_GREEK], select=self.lang_selected)
+        sizer.Add(self.lang_listctrl, 0, wx.EXPAND, 0)
+
+        # Add dialog buttons
+        btnsizer = wx.StdDialogButtonSizer()
+
+        btn = wx.Button(self, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+        # Bind event listeners
+        self.lang_listctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onItemSelected)
+        self.lang_listctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
+
+    def onItemSelected(self, event):
+        """Method called when user selects another language."""
+        self.lang_selected = self.lang_listctrl.GetLanguage()
+
+    def onItemActivated(self, event):
+        """Method called when item is double clicked or ENTER is pressed."""
+        self.lang_selected = self.lang_listctrl.GetLanguage()
+        self.EndModal(wx.ID_OK)
+
+    def GetLangSelected(self):
+        """Getter method for self.lang_selected."""
+        return self.lang_selected
