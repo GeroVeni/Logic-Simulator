@@ -320,7 +320,7 @@ class MyGLCanvas_3D():
         # GLCanvasWrapper everytime a file is opened or a monitor is added.
         pass
 
-    def recenter(self):
+    def recenter(self, pan_to_end = False):
         """Restore canvas to its default pan position and zoom state."""
         self.pan_x = 0
         self.pan_y = 0
