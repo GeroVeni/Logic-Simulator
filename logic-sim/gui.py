@@ -111,7 +111,7 @@ class Gui(wx.Frame):
         fileMenu = wx.Menu()
         viewMenu = wx.Menu()
         runMenu = wx.Menu()
-        #optionsMenu = wx.Menu()
+        optionsMenu = wx.Menu()
         helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
 
@@ -121,12 +121,11 @@ class Gui(wx.Frame):
         viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
         viewMenu.Append(self.ID_TOGGLE_3D, _("&Toggle 2D/3D vew") + "\tCtrl+T")
         viewMenu.Append(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
-        viewMenu.Append(self.ID_LANG, _("Change &Language"))
 
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
 
-        #optionsMenu.Append(self.ID_LANG, _("Change &Language"))
+        optionsMenu.Append(self.ID_LANG, _("Change &Language"))
 
         helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, _("&About"))
@@ -134,13 +133,14 @@ class Gui(wx.Frame):
         menuBar.Append(fileMenu, _("&File"))
         menuBar.Append(viewMenu, _("&View"))
         menuBar.Append(runMenu, _("&Simulation"))
+        menuBar.Append(optionsMenu, _("O&ptions"))
         menuBar.Append(helpMenu, _("&Help"))
         self.SetMenuBar(menuBar)
 
         # Load icons
         #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
         #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
-        appIcon = wx.Icon("res/layout2d.png")
+        appIcon = wx.Icon("res/cylinder.png")
         self.SetIcon(appIcon)
         openIcon = wx.Bitmap("res/open_mat.png")
         centerIcon = wx.Bitmap("res/center_mat.png")
@@ -269,12 +269,14 @@ class Gui(wx.Frame):
         # 0 -> files
         # 1 -> view
         # 2 -> simulation
-        # 3 -> help
+        # 3 -> options
+        # 4 -> help
         menuBar = self.GetMenuBar()
         menuBar.SetMenuLabel(0, _("&File"))
         menuBar.SetMenuLabel(1, _("&View"))
         menuBar.SetMenuLabel(2, _("&Simulation"))
-        menuBar.SetMenuLabel(3, _("&Help"))
+        menuBar.SetMenuLabel(3, _("O&ptions"))
+        menuBar.SetMenuLabel(4, _("&Help"))
 
         # Update menu subitems
         menuBar.SetLabel(self.ID_OPEN, _("&Open") + "\tCtrl+O")
@@ -424,6 +426,8 @@ class Gui(wx.Frame):
         """Add message to the error log."""
         if style is not None:
             self.activity_log.SetDefaultStyle(style)
+        else:
+            self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
         self.activity_log.AppendText("\n" + str(text))
         self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
         self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
