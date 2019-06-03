@@ -1,12 +1,13 @@
-"""Implement the graphical user interface for the Logic Simulator.
+"""Display the monitoring signals on a wx.glcanvas.
 
-Used in the Logic Simulator project to enable the user to run the simulation
-or adjust the network properties.
+Used in the Logic Simulator project to display the monitoring signals of the
+simulated circuit, using OpenGL.
 
 Classes:
 --------
-MyGLCanvas_3D - handles all canvas drawing operations.
-Gui - configures the main window and all the widgets.
+MyGLCanvasWrapper - toggles between 2D and 3D drawing mode.
+MyGLCanvas_2D - handles all 2D canvas drawing operations.
+MyGLCanvas_3D - handles all 3D canvas drawing operations.
 """
 import wx
 import wx.glcanvas as wxcanvas
@@ -16,6 +17,32 @@ from OpenGL import GL, GLU, GLUT
 
 
 class MyGLCanvasWrapper(wxcanvas.GLCanvas):
+    """Handle toggling between 2D and 3D drawing mode.
+
+    This class manages drawing onto the canvas and toggles between 2D and  3D
+    drawing mode. It acts as an interface of the Gui class with the
+    MyGLCanvas_2D and MyGLCanvas_3D classes.
+
+    Parameters
+    ----------
+    parent: parent window.
+
+    Public methods
+    --------------
+    toggle_drawing_mode(self): Toggles between 2D and 3D drawing mode.
+
+    render(self, text): Calls the appropriate method for 2D or 3D mode, that
+                        handles all drawing operations.
+
+    recenter(self, pan_to_end): Calls the appropriate method for 2D or 3D mode,
+                        that restores canvas to its default pan position and
+                        zoom state.
+
+    restore_state(self): Calls the appropriate method for 2D or 3D mode, that
+                         restores the state of the canvas when a new circuit
+                         definition file is loaded using the gui, or when the
+                         number of monitors is changed in the gui.
+    """
     def __init__(self, parent):
         """Initialise canvas properties and useful variables."""
         super().__init__(parent, -1,
@@ -28,9 +55,11 @@ class MyGLCanvasWrapper(wxcanvas.GLCanvas):
         # keep reference to parent
         self.parent = parent
 
+        # set up drawing modes
         self.draw_2D = MyGLCanvas_2D(self) # default mode
         self.draw_3D = MyGLCanvas_3D(self)
 
+        # start in 2D mode
         self.current_mode = self.draw_2D
 
         # Bind events to the canvas
@@ -41,11 +70,11 @@ class MyGLCanvasWrapper(wxcanvas.GLCanvas):
     def toggle_drawing_mode(self):
         """Toggles between 2D and 3D drawing mode."""
         # Unbind events from the canvas
-        # TODO handle cases when they cannot unbind events from the canvas
         self.Unbind(wx.EVT_PAINT)
         self.Unbind(wx.EVT_SIZE)
         self.Unbind(wx.EVT_MOUSE_EVENTS)
 
+        # Togge drawing mode
         if isinstance(self.current_mode, MyGLCanvas_2D):
             self.current_mode = self.draw_3D
         else:
@@ -57,6 +86,7 @@ class MyGLCanvasWrapper(wxcanvas.GLCanvas):
             GL.glDisable(GL.GL_LIGHT0)
             GL.glDisable(GL.GL_LIGHT1)
             GL.glDisable(GL.GL_NORMALIZE)
+
             self.current_mode = self.draw_2D
 
         # Bind events to the canvas
@@ -72,28 +102,29 @@ class MyGLCanvasWrapper(wxcanvas.GLCanvas):
         self.current_mode.last_mouse_x = 0  # previous mouse x position
         self.current_mode.last_mouse_y = 0  # previous mouse y position
 
+        # Initialise variables for zooming
         self.current_mode.zoom = 1
 
         self.recenter()
 
     def render(self, text):
-        """Interface method for the render() fn in MyGLCanvas_2D and
+        """Interface method for the render() method in MyGLCanvas_2D and
         MyGLCanvas_3D."""
         self.current_mode.render(text)
 
-    def restore_state(self):
-        """Interface method for the restore_state() fn in MyGLCanvas_2D and
-        MyGLCanvas_3D."""
-        self.current_mode.restore_state()
-
     def recenter(self, pan_to_end = False):
-        """Interface method for the recenter() fn in MyGLCanvas_2D and
+        """Interface method for the recenter() method in MyGLCanvas_2D and
         MyGLCanvas_3D."""
         self.current_mode.recenter(pan_to_end)
 
+    def restore_state(self):
+        """Interface method for the restore_state() method in MyGLCanvas_2D and
+        MyGLCanvas_3D."""
+        self.current_mode.restore_state()
+
 
 class MyGLCanvas_2D():
-    """Handle all drawing operations.
+    """Handle all 2D drawing operations.
 
     This class contains functions for drawing onto the canvas. It
     also contains handlers for events relating to the canvas.
@@ -564,7 +595,7 @@ class MyGLCanvas_2D():
 
 
 class MyGLCanvas_3D():
-    """Handle all drawing operations.
+    """Handle all 3D drawing operations.
 
     This class contains functions for drawing onto the canvas. It
     also contains handlers for events relating to the canvas.
