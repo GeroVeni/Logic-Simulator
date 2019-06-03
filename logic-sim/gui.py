@@ -106,6 +106,7 @@ class Gui(wx.Frame):
         self.ID_CLEAR = 1007
         self.ID_TOGGLE_3D = 1008
         self.ID_LANG = 1009
+        self.ID_RELOAD = 1010;
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -116,13 +117,14 @@ class Gui(wx.Frame):
         menuBar = wx.MenuBar()
 
         fileMenu.Append(self.ID_OPEN, _("&Open") + "\tCtrl+O")
+        fileMenu.Append(self.ID_RELOAD, _("&Reload") + "\tCtrl+R")
         fileMenu.Append(wx.ID_EXIT, _("&Exit"))
 
         viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
-        viewMenu.Append(self.ID_TOGGLE_3D, _("&Toggle 2D/3D vew") + "\tCtrl+T")
+        viewMenu.Append(self.ID_TOGGLE_3D, _("&Toggle 2D/3D view") + "\tCtrl+T")
         viewMenu.Append(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
 
-        runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
+        runMenu.Append(self.ID_RUN, _("R&un") + "\tCtrl+Shift+R")
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
 
         optionsMenu.Append(self.ID_LANG, _("Change &Language"))
@@ -143,6 +145,7 @@ class Gui(wx.Frame):
         appIcon = wx.Icon("res/cylinder.png")
         self.SetIcon(appIcon)
         openIcon = wx.Bitmap("res/open_mat.png")
+        reloadIcon = wx.Bitmap("res/reload_mat.png")
         centerIcon = wx.Bitmap("res/center_mat.png")
         runIcon = wx.Bitmap("res/run.png")
         continueIcon = wx.Bitmap("res/continue_mat.png")
@@ -160,21 +163,26 @@ class Gui(wx.Frame):
         # with shortcuts
         self.spin = wx.SpinCtrl(self.toolBar, value='10')
         self.toolBar.AddTool(self.ID_OPEN, "Tool2", openIcon)
+        self.toolBar.AddTool(self.ID_RELOAD, "Tool8", reloadIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_CENTER, "Tool3", centerIcon)
+        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout3dIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
         self.toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
         self.toolBar.AddControl(self.spin, "SpinCtrl")
-        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout3dIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_LANG, "Tool7", flagIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon, shortHelp=_("Help"))
         self.SetToolBar(self.toolBar)
 
+        # State variables
+        # set current file path
+        self.current_file_path = None
         self.canvas_mode = '2d' # current display mode of canvas
         self.cycles_completed = 0  # number of simulation cycles completed
+
         # Canvas for drawing signals
         self.canvas = MyGLCanvasWrapper(self)
 
@@ -280,6 +288,7 @@ class Gui(wx.Frame):
 
         # Update menu subitems
         menuBar.SetLabel(self.ID_OPEN, _("&Open") + "\tCtrl+O")
+        menuBar.SetLabel(self.ID_RELOAD, _("&Reload") + "\tCtrl+R")
         menuBar.SetLabel(wx.ID_EXIT, _("&Exit"))
 
         menuBar.SetLabel(self.ID_CENTER, _("&Center") + "\tCtrl+E")
@@ -287,7 +296,7 @@ class Gui(wx.Frame):
         menuBar.SetLabel(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
         menuBar.SetLabel(self.ID_LANG, _("Change &Language"))
 
-        menuBar.SetLabel(self.ID_RUN, _("&Run") + "\tCtrl+R")
+        menuBar.SetLabel(self.ID_RUN, _("&Run") + "\tCtrl+Shift+R")
         menuBar.SetLabel(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
 
         menuBar.SetLabel(self.ID_HELP, _("&Help") + "\tCtrl+H")
@@ -422,13 +431,14 @@ class Gui(wx.Frame):
         """Clear the error log."""
         self.activity_log.Clear()
 
-    def log_message(self, text, style=None):
+    def log_message(self, text, style=None, no_new_line = False):
         """Add message to the error log."""
         if style is not None:
             self.activity_log.SetDefaultStyle(style)
+        if no_new_line:
+            self.activity_log.AppendText(str(text))
         else:
-            self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
-        self.activity_log.AppendText("\n" + str(text))
+            self.activity_log.AppendText("\n" + str(text))
         self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
         self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
 
@@ -461,6 +471,12 @@ class Gui(wx.Frame):
                 self.log_message(captured_stdout.getvalue(),
                                  self.MONOSPACE_FONT)
 
+    def load_file(self, file_path):
+        """Load a file for parsing and running."""
+        self.run_parser(file_path)
+        self.canvas.restore_state()
+        self.update_tabs()
+
     def on_open(self):
         """Open the file browser and parse the file chosen."""
         text = _("Open file dialog.")
@@ -471,11 +487,12 @@ class Gui(wx.Frame):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
-            file_path = openFileDialog.GetPath()
-            self.log_message(_("File opened: {}").format(file_path))
-            self.run_parser(file_path)
-            self.canvas.restore_state()
-            self.update_tabs()
+            self.current_file_path = openFileDialog.GetPath()
+            self.clear_log()
+            self.log_message(_("File opened: {}")
+                             .format(self.current_file_path),
+                             no_new_line = True)
+            self.load_file(self.current_file_path)
             self.canvas.render(_("Opened file"))
 
     def run_network(self, cycles):
@@ -619,6 +636,16 @@ class Gui(wx.Frame):
 
         dlg.Destroy()
 
+    def on_reload(self):
+        """Handle the event when the user reloads the file."""
+        if self.current_file_path is None:
+            # No file has been loaded
+            self.log_message(_("No file loaded. Please load a file."))
+            return
+        self.clear_log()
+        self.log_message(_("File reloaded: {}").format(self.current_file_path),
+                         no_new_line=True)
+        self.load_file(self.current_file_path)
 
     def on_menu(self, event):
         """Handle the event when the user selects a menu item."""
@@ -644,6 +671,8 @@ class Gui(wx.Frame):
             self.on_toggle_3d_vew()
         elif Id == self.ID_LANG:
             self.on_lang_change()
+        elif Id == self.ID_RELOAD:
+            self.on_reload()
 
     def on_size(self, event):
         """Handle the event when the window resizes."""
