@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-06-03 10:48+BST\n"
+"POT-Creation-Date: 2019-06-03 18:37+BST\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,557 +15,586 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:623
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:778
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:119
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:290
 msgid "&Open"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:624
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:779
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:120
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:291
+msgid "&Reload"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:121
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:292
 msgid "&Exit"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:626
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:781
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:123
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:294
 msgid "&Center"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:627
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:782
-msgid "&Toggle 2D/3D vew"
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:124
+msgid "&Toggle 2D/3D view"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:628
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:783
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:125
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:296
 msgid "&Clear Activity Log"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:629
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:784
-msgid "Change &Language"
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:127
+msgid "R&un"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:631
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:786
-msgid "&Run"
-msgstr ""
-
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:632
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:787
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:128
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:300
 msgid "&Continue"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:634
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:640
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:775
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:789
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:130
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:297
+msgid "Change &Language"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:132
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:139
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:287
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:302
 msgid "&Help"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:635
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:790
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:133
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:303
 msgid "&About"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:637
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:772
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:135
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:283
 msgid "&File"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:638
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:773
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:136
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:284
 msgid "&View"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:639
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:774
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:137
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:285
 msgid "&Simulation"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:672
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:138
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:286
+msgid "O&ptions"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:177
 msgid "Help"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:684
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:193
 msgid "Ready. Please load a file."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:686
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:806
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:195
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:319
 msgid "Activity Log"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:723
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:800
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:233
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:313
 msgid "Monitors"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:724
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:801
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:234
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:314
 msgid "Switches"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:858
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:900
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:295
+msgid "&Toggle 2D/3D vew"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:299
+msgid "&Run"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:371
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:413
 msgid "Error: Monitor {} not found."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:862
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:375
 msgid "activated"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:867
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:380
 msgid "Monitor {} was {}."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:873
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:386
 msgid "deactivated"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:882
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:395
 msgid "Monitor changed"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:905
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:418
 msgid "ON"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:908
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:421
 msgid "OFF"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:911
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:424
 msgid "Switch {} was switched {}"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:951
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:467
 msgid "Succesfully parsed network."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:953
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:469
 msgid "Failed to parse network."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:960
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:482
 msgid "Open file dialog."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:963
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:485
 msgid "Open"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:969
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:492
 msgid "File opened: {}"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:973
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:496
 msgid "Opened file"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:982
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:505
 msgid "Error! No file loaded."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:987
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:510
 msgid "Error! Network oscillating."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:998
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:521
 msgid "Running for {} cycles"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1007
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:530
 msgid "RUN"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1014
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:537
 msgid "Error! Nothing to continue. Run first."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1017
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:540
 msgid "Continuing for {} cycles. Total: {}"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1022
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:545
 msgid "Continue"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1030
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:554
 msgid "Center canvas."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1035
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:559
 msgid "Help - Program controls "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1038
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:562
 msgid ""
 "Shortcuts: \n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1039
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:563
 msgid ""
 "Ctrl + O: Open file\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1040
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:564
 msgid ""
 "Ctrl + H: Help\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1041
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:565
 msgid ""
 "Ctrl + R: Run\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1042
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:566
 msgid ""
 "Ctrl + Shift + C: Continue\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1043
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:567
 msgid ""
 "Ctrl + E: Center canvas\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1044
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:568
+msgid ""
+"Ctrl + T: Toggle 2D/3D view\n"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:569
 msgid ""
 "Ctrl + L: Clear activity log\n"
 "\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1045
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:570
 msgid ""
 "User Instructions:\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1046
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:571
 msgid "Use the Open file button to select "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1047
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:572
 msgid "the desired circuit defnition file."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1048
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:573
 msgid "If the file contains no errors the activity"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1049
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:574
 msgid " log at the bottom of the window"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1050
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:575
 msgid "will read \"Succesfully parsed network\". "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1051
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:576
 msgid "If there are errors, the error log"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1052
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:577
 msgid ""
 "will read \"Failed to parse network\".\n"
 "\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1053
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:578
 msgid "If the network was parsed correctly it can be ran. "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1054
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:579
 msgid "Use the plus and minus on the"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1055
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:580
 msgid "cycle selector to select the desired number"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1056
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:581
 msgid " of cycles for the simulation or"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1057
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:582
 msgid "type in th desired number. Press the Run "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1058
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:583
 msgid "button to run the simulator for the number"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1059
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:584
 msgid "of cycles selected and display the waveforms "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1060
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:585
 msgid "at the current monitor points (from a"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1061
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:586
 msgid "cold-startup of the circuit). Press the "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1062
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:587
 msgid "Continue button to run the simulator"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1063
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:588
 msgid "for an additional number of cycles as selected "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1064
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:589
 msgid "in the cycle selector and"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1065
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:590
 msgid ""
 "display the waveforms at the current monitor points.\n"
 "\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1066
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:591
 msgid "The canvas can be restored to its default state "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1067
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:592
 msgid "of position and zoomby"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1068
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:593
 msgid ""
 "selecting the center button.\n"
 "\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1069
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:594
 msgid "Different monitor points can be set "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1070
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:595
 msgid "and zapped by first selecting the"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1071
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:596
 msgid "Monitors tab on the right panel, and then "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1072
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:597
 msgid "selecting the desired monitor"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1073
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:598
 msgid ""
 "point from the list.\n"
 "\n"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1074
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:599
 msgid "Switches can be operated by first selecting "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1075
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:600
 msgid "the Switches tab on the right"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1076
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:601
 msgid "panel, and then selecting the desired switches."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1098
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:623
 msgid "Pick your language"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1121
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:643
+msgid "No file loaded. Please load a file."
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:646
+msgid "File reloaded: {}"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:656
 msgid ""
 "Logic Simulator\n"
 "Created by Psylinders\n"
 "2019"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1122
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:657
 msgid "About Logsim"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1144
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:686
 msgid "New text box value: "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1192
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1219
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:734
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:761
 msgid "Names"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1194
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:1220
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:736
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/gui.py:762
 msgid "Status"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:97
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:102
+msgid "Number of errors encountered:"
+msgstr ""
+
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:409
 msgid "***SyntaxError: invalid syntax. Expected"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:100
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:413
 msgid "***ValueError:"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:103
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:417
 msgid "***NameError: Keywords, devices and ports names "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:104
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:418
 msgid "are reserved and cannot be used as identifiers."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:109
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:425
 msgid "***NameError: An identifier was repeated. "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:110
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:426
 msgid "All identifiers must have unique names."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:113
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:430
 msgid "***TypeError: Inputs must be on the right"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:114
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:118
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:431
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:436
 msgid " hand side of the connection definition"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:117
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:435
 msgid "***TypeError: Outputs must be on the left"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:121
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:440
 msgid "***TypeError: Monitors can only be outputs."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:124
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:444
 msgid "***NameError: A monitor was repeated. "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:125
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:445
 msgid "All monitors must be unique."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:128
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:449
 msgid "***TypeError: The device has no such output."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:131
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:453
 msgid "***NameError: The device has not been previously"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:132
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:454
 msgid " defined in DEVICES."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:135
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:458
 msgid "***TypeError: The number of inputs and outputs "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:136
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:459
 msgid "must match unless you are specifying one output to"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:137
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:460
 msgid " many inputs or all the inputs of a device at once"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:140
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:464
 msgid "***ValueError: The input has already been "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:141
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:465
 msgid "specified previously. Repeated assignment of "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:142
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:466
 msgid "inputs is not allowed."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:145
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:470
 msgid "***ValueError: The port specified does not exist "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:146
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:471
 msgid "for such device or is out of bounds"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:149
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:475
 msgid "***TypeError: Only gates can have simultaneous "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:150
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:476
 msgid "assignment of all of its inputs."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:154
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:481
 msgid "***TypeError: Too many or too few inputs "
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:155
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:482
 msgid "have been assigned simultaneously to the device."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:156
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:483
 msgid " When using simultaneous defintion the same number"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:157
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:484
 msgid " of inputs as the device has must be given."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:160
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:487
 msgid "***ValueError: Inputs have not been specificed"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:161
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:488
 msgid " for all DEVICES."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:274
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:665
 msgid "DTYPE takes no number"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:287
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:678
 msgid "SWITCH takes only 0 or 1"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:300
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:691
 msgid "CLOCK takes only values greater than 0"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:312
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:704
 msgid "NAND gates can only have 1 to 16 inputs"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:323
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:716
 msgid "AND gates can only have 1 to 16 inputs"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:334
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:728
 msgid "NOR gates can only have 1 to 16 inputs"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:345
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:740
 msgid "OR gates can only have 1 to 16 inputs"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:360
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:756
 msgid "XOR gates can only have 2 inputs"
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:368
-msgid "SIGGEN requires a parameter to be specified."
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:765
+msgid "SIGGEN requires a parameter to bespecified."
 msgstr ""
 
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:372
-msgid "SIGGEN requiress a 8 followed by a binary number"
-msgstr ""
-
-#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:860
-msgid "Number of errors encountered:"
+#: /homes/gv281/gf2/Logic-Simulator/logic-sim/parse.py:770
+msgid "SIGGEN requires a 4 or 8 followed by a binary number."
 msgstr ""
 
