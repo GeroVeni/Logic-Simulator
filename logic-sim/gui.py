@@ -119,10 +119,10 @@ class GLCanvasWrapper(wxcanvas.GLCanvas):
         MyGLCanvas_3D."""
         self.current_mode.restore_state()
 
-    def recenter(self):
+    def recenter(self, pan_to_end = False):
         """Interface method for the recenter() fn in MyGLCanvas_2D and
         MyGLCanvas_3D."""
-        self.current_mode.recenter()
+        self.current_mode.recenter(pan_to_end)
 
 
 class MyGLCanvas_2D():
@@ -335,7 +335,6 @@ class MyGLCanvas_2D():
     def bound_panning(self):
         """Bound pan_x, pan_y variables with respect to the signal traces."""
         size = self.parent.GetClientSize()
-        # allowable_pan_right = -(self.border_right - size.width / self.zoom)
         allowable_pan_right = -self.border_right*self.zoom + size.width
         allowable_pan_left = self.border_left
         allowable_pan_bottom = self.border_bottom
@@ -423,15 +422,27 @@ class MyGLCanvas_2D():
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
-        self.render_line((text_x_pos, y_min),(text_x_pos + size.width/self.zoom, y_min))
-        self.render_line((text_x_pos, y_max),(text_x_pos + size.width/self.zoom, y_max))
         GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+
+        # Draw rectangles underneath HIGH signals for more clarlity
+        x_pos = 0
+        fill_color = [103 / 255, 218 / 255, 255 / 255]
+        GL.glColor3fv(fill_color)
+        for signal in signal_list:
+            if (signal == self.parent.parent.devices.HIGH) or (signal == self.parent.parent.devices.RISING):
+                self.render_rectangle((x_pos, y_min), (x_pos + self.cycle_width, y_max))
+                GL.glBegin(GL.GL_LINE_STRIP)
+                GL.glVertex2f(x_pos, y_min)
+                GL.glVertex2f(x_pos + self.cycle_width, y_min)
+                GL.glEnd()
+            x_pos += self.cycle_width
 
         # Draw signal trace
         x_pos = 0
         currently_drawing = False
-        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
-        GL.glLineWidth(1)
+        trace_color = [0 / 255, 122 / 255, 193 / 255]
+        GL.glColor3fv(trace_color)  # signal trace is blue
+        GL.glLineWidth(1.5)
         for signal in signal_list:
             if signal == self.parent.parent.devices.BLANK:
                 if currently_drawing:
@@ -473,11 +484,33 @@ class MyGLCanvas_2D():
             raise ValueError("start_point and end_point arguments must be \
                             tuples of length 2")
         # draw line
-        GL.glColor3f(0.9, 0.9, 0.9)  # light grey color
         GL.glLineWidth(1)
         GL.glBegin(GL.GL_LINE_STRIP)
         GL.glVertex2f(start_point[0], start_point[1])
         GL.glVertex2f(end_point[0], end_point[1])
+        GL.glEnd()
+
+    def render_rectangle(self, bottom_left_point, top_right_point):
+        """Render a rectangle on the canvas, with the given points."""
+        # check validity of arguments
+        if not (
+            isinstance(
+                bottom_left_point,
+                tuple) and isinstance(
+                top_right_point,
+                tuple)):
+            raise TypeError("bottom_left_point and top_right_point arguments \
+                            must be of Type tuple")
+        if (len(bottom_left_point) != 2 or len(top_right_point) != 2):
+            raise ValueError("bottom_left_point and top_right_point arguments \
+                             must be tuples of length 2")
+        # draw rectangle
+        GL.glLineWidth(1)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glVertex2f(bottom_left_point[0], bottom_left_point[1])
+        GL.glVertex2f(top_right_point[0], bottom_left_point[1])
+        GL.glVertex2f(top_right_point[0], top_right_point[1])
+        GL.glVertex2f(bottom_left_point[0], top_right_point[1])
         GL.glEnd()
 
     def render_cycle_numbers(self, size):
@@ -525,6 +558,7 @@ class MyGLCanvas_2D():
             line_y_pos_start = self.border_bottom - self.pan_y / self.zoom
 
         # render vertical lines
+        GL.glColor3f(0.9, 0.9, 0.9)  # light grey color
         line_x_pos = 0
         self.render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
@@ -533,11 +567,18 @@ class MyGLCanvas_2D():
             self.render_line((line_x_pos, line_y_pos_start),
                              (line_x_pos, line_y_pos_end))
 
-    def recenter(self):
+    def recenter(self, pan_to_end = False):
         """Restore canvas to its default pan position and zoom state."""
-        self.pan_x = self.border_left
-        self.pan_y = self.border_bottom
         self.zoom = self.zoom_lower
+        self.pan_y = self.border_bottom
+        if pan_to_end:
+            self.update_borders()
+            size = self.parent.GetClientSize()
+            allowable_pan_right = -self.border_right*self.zoom + size.width
+            self.pan_x = allowable_pan_right
+        else:
+            self.pan_x = self.border_left
+
         self.init = False
         self.render("Recenter canvas")
 
@@ -591,7 +632,6 @@ class Gui(wx.Frame):
         # Add locale path and update the language
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
-        #self.update_language(self.appConfig.Read(u"Language"))
         sys_lang = wx.Locale.GetSystemLanguage()
         lang_name = wx.Locale.GetLanguageCanonicalName(sys_lang)
         self.update_language(lang_name[:2])
@@ -618,6 +658,7 @@ class Gui(wx.Frame):
         fileMenu = wx.Menu()
         viewMenu = wx.Menu()
         runMenu = wx.Menu()
+        #optionsMenu = wx.Menu()
         helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
 
@@ -632,6 +673,8 @@ class Gui(wx.Frame):
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
 
+        #optionsMenu.Append(self.ID_LANG, _("Change &Language"))
+
         helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, _("&About"))
 
@@ -642,11 +685,15 @@ class Gui(wx.Frame):
         self.SetMenuBar(menuBar)
 
         # Load icons
-        openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
+        #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
+        appIcon = wx.Icon("res/layout2d.png")
+        self.SetIcon(appIcon)
+        openIcon = wx.Bitmap("res/open_mat.png")
+        centerIcon = wx.Bitmap("res/center_mat.png")
         runIcon = wx.Bitmap("res/run.png")
-        continueIcon = wx.Bitmap("res/continue.png")
-        infoIcon = wx.Bitmap("res/info.png")
+        continueIcon = wx.Bitmap("res/continue_mat.png")
+        infoIcon = wx.Bitmap("res/info_mat_outline.png")
         self.layout2dIcon = wx.Bitmap("res/layout2d.png")
         self.layout3dIcon = wx.Bitmap("res/layout3d.png")
         flagIcon = langlc.GetLanguageFlag(self.locale.GetLanguage())
@@ -666,7 +713,7 @@ class Gui(wx.Frame):
         self.toolBar.AddTool(self.ID_RUN, "Tool4", runIcon)
         self.toolBar.AddTool(self.ID_CONTINUE, "Tool5", continueIcon)
         self.toolBar.AddControl(self.spin, "SpinCtrl")
-        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout2dIcon)
+        self.toolBar.AddTool(self.ID_TOGGLE_3D, "Tool6", self.layout3dIcon)
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_LANG, "Tool7", flagIcon)
         self.toolBar.AddSeparator()
@@ -688,6 +735,7 @@ class Gui(wx.Frame):
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
+        self.Bind(wx.EVT_SIZE, self.on_size)
 
         # Configure sizers for layout
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -798,6 +846,7 @@ class Gui(wx.Frame):
         self.GetToolBar().SetToolNormalBitmap(self.ID_LANG, flagIcon)
 
         # Update right panel
+        print(self.locale.GetCanonicalName())
         self.notebook.SetPageText(0, _("Monitors"))
         self.notebook.SetPageText(1, _("Switches"))
         self.monitor_tab.update_texts()
@@ -963,7 +1012,7 @@ class Gui(wx.Frame):
             self,
             _("Open"),
             wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR)
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
             file_path = openFileDialog.GetPath()
@@ -1021,6 +1070,7 @@ class Gui(wx.Frame):
         """Run the continue_command when run button pressed."""
         self.continue_command()
         self.canvas.render(_("Continue"))
+        self.canvas.recenter(pan_to_end = True)
 
     ####################
     # author: Dimitris #
@@ -1084,10 +1134,10 @@ class Gui(wx.Frame):
         """Toggle 3D view."""
         if self.canvas_mode == '2d':
             self.canvas_mode = '3d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
         else:
             self.canvas_mode = '2d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
+            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
         self.canvas.toggle_drawing_mode()
 
     ##################
@@ -1137,6 +1187,10 @@ class Gui(wx.Frame):
             self.on_toggle_3d_vew()
         elif Id == self.ID_LANG:
             self.on_lang_change()
+
+    def on_size(self, event):
+        """Handle the event when the window resizes."""
+        self.Refresh()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""

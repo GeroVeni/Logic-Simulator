@@ -72,11 +72,11 @@ msgstr "Λίστα ενεργειών"
 
 #: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:698
 msgid "Monitors"
-msgstr "Ελεγκτές"
+msgstr "Έλεγχος"
 
 #: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:699
 msgid "Switches"
-msgstr "Διακόπτες"
+msgstr "Πηγές"
 
 #: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:784
 #: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:826
@@ -372,4 +372,4 @@ msgstr "Όνομα"
 
 #: /home/george/gf2/Logic-Simulator/logic-sim/gui.py:1072
 msgid "Status"
-msgstr "Κατάσταση"
+msgstr "Κατ."

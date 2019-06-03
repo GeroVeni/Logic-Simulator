@@ -8,6 +8,8 @@ Classes
 -------
 Parser - parses the definition file and builds the logic network.
 """
+import wx
+
 from names import Names
 from scanner import Scanner, Symbol
 from devices import Devices
@@ -17,6 +19,9 @@ import wx
 import builtins
 builtins.__dict__['_'] = wx.GetTranslation
 
+# add translation macro to builtin similar to what gettext does
+import builtins
+builtins.__dict__['_'] = wx.GetTranslation
 
 class Parser:
 
