@@ -209,6 +209,9 @@ class Gui(wx.Frame):
         self.SetSizeHints(1200, 800)
         self.SetSizer(main_sizer)
 
+        # set current file path
+        self.current_file_path = None
+
     def make_right_sizer(self):
         """Helper function that creates the right sizer"""
         right_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -421,11 +424,14 @@ class Gui(wx.Frame):
         """Clear the error log."""
         self.activity_log.Clear()
 
-    def log_message(self, text, style=None):
+    def log_message(self, text, style=None, no_new_line = False):
         """Add message to the error log."""
         if style is not None:
             self.activity_log.SetDefaultStyle(style)
-        self.activity_log.AppendText("\n" + str(text))
+        if no_new_line:
+            self.activity_log.AppendText(str(text))
+        else:
+            self.activity_log.AppendText("\n" + str(text))
         self.activity_log.ShowPosition(self.activity_log.GetLastPosition())
         self.activity_log.SetDefaultStyle(self.NORMAL_FONT)
 
@@ -468,9 +474,12 @@ class Gui(wx.Frame):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
-            file_path = openFileDialog.GetPath()
-            self.log_message(_("File opened: {}").format(file_path))
-            self.run_parser(file_path)
+            self.current_file_path = openFileDialog.GetPath()
+            self.clear_log()
+            self.log_message(_("File opened: {}")
+                             .format(self.current_file_path),
+                             no_new_line = True)
+            self.run_parser(self.current_file_path)
             self.canvas.restore_state()
             self.update_tabs()
             self.canvas.render(_("Opened file"))
