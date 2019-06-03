@@ -94,71 +94,71 @@ class Parser:
         # TODO Make sure caret prints at correct points
         if (error_type == self.SYNTAX_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***SyntaxError: invalid syntax. Expected", message)
+            print(_("***SyntaxError: invalid syntax. Expected"), message)
         elif (error_type == self.DEVICE_VALUE_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***ValueError:", message)
+            print(_("***ValueError:"), message)
         elif (error_type == self.KEYWORD_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***NameError: Keywords, devices and ports names "
-                  "are reserved and cannot be used as identifiers.")
+            print(_("***NameError: Keywords, devices and ports names ") +
+                  _("are reserved and cannot be used as identifiers."))
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             self.scanner.get_error_line(message)
         # TODO display correct carret
         # TODO display the other identifier using id in lookup names
-            print("***NameError: An identifier was repeated. "
-                  "All identifiers must have unique names.")
+            print(_("***NameError: An identifier was repeated. ") +
+                  _("All identifiers must have unique names."))
         elif (error_type == self.CONNECTION_INPUT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***TypeError: Inputs must be on the right"
-                  " hand side of the connection definition")
+            print(_("***TypeError: Inputs must be on the right") +
+                  _(" hand side of the connection definition"))
         elif (error_type == self.OUTPUT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***TypeError: Outputs must be on the left"
-                  " hand side of the connection definition")
+            print(_("***TypeError: Outputs must be on the left") +
+                  _(" hand side of the connection definition"))
         elif (error_type == self.MONITOR_INPUT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***TypeError: Monitors can only be outputs.")
+            print(_("***TypeError: Monitors can only be outputs."))
         elif (error_type == self.REPEATED_MONITOR_ERROR):
             self.scanner.get_error_line(message)
-            print("***NameError: A monitor was repeated. "
-                  "All monitors must be unique.")
+            print(_("***NameError: A monitor was repeated. ") +
+                  _("All monitors must be unique."))
         elif (error_type == self.INVALID_DEVICE_OUTPUT_ERROR):
             self.scanner.get_error_line(message)
-            print("***TypeError: The device has no such output.")
+            print(_("***TypeError: The device has no such output."))
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
             self.scanner.get_error_line(message)
-            print("***NameError: The device has not been previously"
-                  " defined in DEVICES.")
+            print(_("***NameError: The device has not been previously") +
+                  _(" defined in DEVICES."))
         elif (error_type == self.UNMATCHED_INPUT_OUTPUT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***TypeError: The number of inputs and outputs "
-                  "must match unless you are specifying one output to"
-                  " many inputs or all the inputs of a device at once")
+            print(_("***TypeError: The number of inputs and outputs ") +
+                  _("must match unless you are specifying one output to") +
+                  _(" many inputs or all the inputs of a device at once"))
         elif (error_type == self.REPEATED_INPUT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***ValueError: The input has already been "
-                  "specified previously. Repeated assignment of "
-                  "inputs is not allowed.")
+            print(_("***ValueError: The input has already been ") +
+                  _("specified previously. Repeated assignment of ") +
+                  _("inputs is not allowed."))
         elif (error_type == self.INVALID_PORT_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***ValueError: The port specified does not exist "
-                  "for such device or is out of bounds")
+            print(_("***ValueError: The port specified does not exist ") +
+                  _("for such device or is out of bounds"))
         elif (error_type == self.NOT_GATE_ERROR):
             self.scanner.get_error_line(self.symbol)
-            print("***TypeError: Only gates can have simultaneous "
-                  "assignment of all of its inputs.")
+            print(_("***TypeError: Only gates can have simultaneous ") +
+                  _("assignment of all of its inputs."))
         elif (error_type == self.OUT_OF_BOUND_INPUTS_ERROR):
             self.scanner.get_error_line(self.symbol)
             # TODO specify  too many or too few
-            print("***TypeError: Too many or too few inputs "
-                  "have been assigned simultaneously to the device."
-                  " When using simultaneous defintion the same number"
-                  " of inputs as the device has must be given.")
+            print(_("***TypeError: Too many or too few inputs ") +
+                  _("have been assigned simultaneously to the device.") +
+                  _(" When using simultaneous defintion the same number") +
+                  _(" of inputs as the device has must be given."))
         elif (error_type == self.MISSING_INPUTS_ERROR):
             # TODO which inputs have not been specified
-            print("***ValueError: Inputs have not been specificed"
-                  " for all DEVICES.")
+            print(_("***ValueError: Inputs have not been specificed") +
+                  _(" for all DEVICES."))
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         """Use scanner to skip to stopping_symbol specificed."""
@@ -271,7 +271,7 @@ class Parser:
                 # so not checked for in any of the devices below
                 if (error == self.devices.QUALIFIER_PRESENT):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "DTYPE takes no number", None)
+                               _("DTYPE takes no number"), None)
                     # Exit make_devices if error occured as devices
                     # creation not valid for any of the identifiers
                     return
@@ -284,7 +284,7 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "SWITCH takes only 0 or 1", None)
+                               _("SWITCH takes only 0 or 1"), None)
                     return
             elif (self.current_device.id == self.scanner.CLOCK_ID):
                 # Set default value to 1 if no value specified
@@ -297,7 +297,7 @@ class Parser:
                 # negative number will give a syntax error as - is invalid
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "CLOCK takes only values greater than 0", None)
+                               _("CLOCK takes only values greater than 0"), None)
                     return
             # TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
@@ -309,7 +309,7 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "NAND gates can only have 1 to 16 inputs", None)
+                               _("NAND gates can only have 1 to 16 inputs"), None)
                     return
             elif (self.current_device.id == self.scanner.AND_ID):
                 # Set default value to 2 if no value specified
@@ -320,7 +320,7 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "AND gates can only have 1 to 16 inputs", None)
+                               _("AND gates can only have 1 to 16 inputs"), None)
                     return
             elif (self.current_device.id == self.scanner.NOR_ID):
                 # Set default value to 2 if no value specified
@@ -331,7 +331,7 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "NOR gates can only have 1 to 16 inputs", None)
+                               _("NOR gates can only have 1 to 16 inputs"), None)
                     return
             elif (self.current_device.id == self.scanner.OR_ID):
                 # Set default value to 2 if no value specified
@@ -342,7 +342,7 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "OR gates can only have 1 to 16 inputs", None)
+                               _("OR gates can only have 1 to 16 inputs"), None)
                     return
             elif (self.current_device.id == self.scanner.XOR_ID):
                 # XOR must have None in device_property
@@ -357,7 +357,7 @@ class Parser:
                 # as device_type wont be None
                 if (error == self.devices.QUALIFIER_PRESENT):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "XOR gates can only have 2 inputs", None)
+                               _("XOR gates can only have 2 inputs"), None)
                     return
             elif (self.current_device.id == self.scanner.SIGGEN_ID):
                 error = self.devices.make_device(identifier.id,
@@ -365,11 +365,11 @@ class Parser:
                                                  self.current_number.id)
                 if (error == self.devices.NO_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "SIGGEN requires a parameter to be specified.", None)
+                               _("SIGGEN requires a parameter to be specified."), None)
                     return
                 if (error == self.devices.INVALID_QUALIFIER):
                     self.error(self.DEVICE_VALUE_ERROR,
-                               "SIGGEN requiress a 8 followed by a binary number", None)
+                               _("SIGGEN requiress a 8 followed by a binary number"), None)
                     return
 
     def device_definition(self):
@@ -857,7 +857,7 @@ class Parser:
             return True
         else:
             # Error message
-            print("Number of errors encountered:", self.error_count)
+            print(_("Number of errors encountered:"), self.error_count)
             return False
 
     def get_error_codes(self):

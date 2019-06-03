@@ -584,7 +584,7 @@ class Gui(wx.Frame):
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
         #self.updateLanguage(self.appConfig.Read(u"Language"))
-        self.updateLanguage(u"el")
+        self.updateLanguage(u"en")
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -1109,6 +1109,7 @@ class CustomTab(wx.Panel):
         self.item_list.DeleteAllItems()
 
     def append(self, name_list):
+        """Appends a list of items in the list."""
         # ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
