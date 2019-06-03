@@ -14,6 +14,7 @@ import wx.glcanvas as wxcanvas
 import numpy as np
 import math
 from OpenGL import GL, GLU, GLUT
+from colors import ColorScheme
 
 
 class MyGLCanvasWrapper(wxcanvas.GLCanvas):
@@ -642,6 +643,7 @@ class MyGLCanvas_3D():
         """Initialise canvas properties and useful variables."""
         # keep reference to parent
         self.parent = parent
+        self.color_scheme = ColorScheme.get_default()
 
         self.init = False
 
@@ -749,6 +751,7 @@ class MyGLCanvas_3D():
             self._render_cycle_numbers(x_pos - self.monitor_spacing)
             for device_id, output_id in self.parent.parent.monitors.\
                     monitors_dictionary:
+                GL.glColor3fv(self.color_scheme.get_next_color())
                 self._render_monitor(device_id, output_id, x_pos)
                 x_pos += self.monitor_spacing
 
@@ -879,7 +882,6 @@ class MyGLCanvas_3D():
             device_id, output_id)]
 
         # Draw signal traces
-        GL.glColor3f(1.0, 0.7, 0.5)  # signal trace is beige
         cycles = self.parent.parent.cycles_completed
         z_pos = -0.5 * (cycles - 1) * self.cycle_depth
         for signal in signal_list:
