@@ -589,7 +589,9 @@ class Gui(wx.Frame):
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
         #self.update_language(self.appConfig.Read(u"Language"))
-        self.update_language(u"el")
+        sys_lang = wx.Locale.GetSystemLanguage()
+        lang_name = wx.Locale.GetLanguageCanonicalName(sys_lang)
+        self.update_language(lang_name[:2])
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
@@ -644,7 +646,7 @@ class Gui(wx.Frame):
         infoIcon = wx.Bitmap("res/info.png")
         self.layout2dIcon = wx.Bitmap("res/layout2d.png")
         self.layout3dIcon = wx.Bitmap("res/layout3d.png")
-        flagIcon = langlc.GetLanguageFlag(wx.LANGUAGE_ENGLISH)
+        flagIcon = langlc.GetLanguageFlag(self.locale.GetLanguage())
 
         # Configure toolbar
         # Keep a reference to the toolBar to update its icons
@@ -787,6 +789,10 @@ class Gui(wx.Frame):
         
         # Update toolbar tooltips
         # TODO
+
+        # Update flag icon
+        flagIcon = langlc.GetLanguageFlag(self.locale.GetLanguage())
+        self.GetToolBar().SetToolNormalBitmap(self.ID_LANG, flagIcon)
 
         # Update right panel
         self.notebook.SetPageText(0, _("Monitors"))
@@ -1096,10 +1102,8 @@ class Gui(wx.Frame):
         val = dlg.ShowModal()
 
         sel_lang = dlg.GetLangSelected()
-        self.log_message(wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
         if val == wx.ID_OK:
             # User pressed OK
-            self.log_message("You pressed OK\n")
             self.update_language(wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
             self.update_texts()
 
@@ -1271,7 +1275,7 @@ class LangDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.lang_selected = sel_lang
-        self.lang_listctrl = langlc.LanguageListCtrl(self, size=(0,-1), filter=langlc.LC_AVAILABLE, only=[wx.LANGUAGE_ENGLISH, wx.LANGUAGE_GREEK], select=self.lang_selected)
+        self.lang_listctrl = langlc.LanguageListCtrl(self, size=(0,-1), filter=langlc.LC_ONLY, only=[wx.LANGUAGE_ENGLISH, wx.LANGUAGE_GREEK], select=self.lang_selected)
         sizer.Add(self.lang_listctrl, 0, wx.EXPAND, 0)
 
         # Add dialog buttons
