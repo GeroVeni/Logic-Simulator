@@ -480,9 +480,14 @@ class Gui(wx.Frame):
     def on_open(self):
         """Open the file browser and parse the file chosen."""
         text = _("Open file dialog.")
+        dirName = ""
+        path = ""
+        if self.current_file_path is not None:
+            dirName, path = os.path.split(self.current_file_path)
         openFileDialog = wx.FileDialog(
-            self,
-            _("Open"),
+            self, _("Open"),
+            defaultDir=dirName,
+            defaultFile=path,
             wildcard="Circuit Definition files (*.txt;*.lcdf)|*.txt;*.lcdf",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         res = openFileDialog.ShowModal()
