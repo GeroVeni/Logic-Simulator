@@ -43,6 +43,7 @@ class Device:
         self.dtype_memory = None
         self.siggen_waveform = None
         self.siggen_counter = None
+        self.siggen_startup = None
 
 class Devices:
 
@@ -268,14 +269,13 @@ class Devices:
         waveform shape.
         """
         self.add_device(device_id, self.SIGGEN)
-        # TODO add signal to output not default is from first element waveform or from cold_startup
-        self.add_output(device_id, output_id=None)
         device = self.get_device(device_id)
+        # Set wheter siggen is startup random or from start
+        device.siggen_startup = int(str(waveform)[0])
         # Remove 8 to give binary waveform
         device.siggen_waveform = [self.HIGH if d == '1' else self.LOW
                                   for d in str(waveform)[1:]]
-        # Start siggen at 0 for counter
-        device.siggen_counter = 0
+        self.cold_startup()
 
     def cold_startup(self):
         """Simulate cold start-up of D-types and clocks.
@@ -294,6 +294,23 @@ class Devices:
                 # Initialise it to a random point in its cycle.
                 device.clock_counter = \
                     random.randrange(device.clock_half_period)
+            elif device.device_kind == self.SIGGEN:
+                # Star at beginning of signal
+                if device.siggen_startup == 8:
+                    # Signal of output set as the first state of waveform
+                    self.add_output(device.device_id, output_id=None,
+                                    signal=device.siggen_waveform[0])
+                    # Start siggen at end of waveform so on first execution it
+                    # starts at the beginnig as it first updates the waveform
+                    device.siggen_counter = len(device.siggen_waveform)-1
+                # Randomise
+                else:
+                    counter = random.choice(range(len(device.siggen_waveform)))
+                    self.add_output(device.device_id, output_id=None,
+                                    signal=device.siggen_waveform[counter])
+                    device.siggen_counter = counter
+
+
 
     def make_device(self, device_id, device_kind, device_property=None):
         """Create the specified device.
@@ -351,8 +368,11 @@ class Devices:
         elif device_kind == self.SIGGEN:
             if device_property is None:
                 error_type = self.NO_QUALIFIER
-            # Must be proceded by a 8 to catch waveforms starting with 0
-            elif (str(device_property)[0] != '8'):
+            # Must be proceded by a 8 or 4 to catch waveforms starting with 0
+            # 8 denotes siggen must be started from the first value
+            # 4 denotes a cold_startup from any value
+            elif (str(device_property)[0] != '8' and
+                 str(device_property)[0] != '4'):
                 error_type = self.INVALID_QUALIFIER
             # Check that it is a binary number
             elif (any(((i != '0') and (i != '1'))

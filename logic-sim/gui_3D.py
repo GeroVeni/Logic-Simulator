@@ -313,6 +313,11 @@ class MyGLCanvas_3D():
 
 
     def restore_state(self):
+        """Restore the state of the canvas when a new circuit definition file
+        is loaded using the gui, or when the number of monitors is changed in
+        the gui."""
+        # This method is not needed for MyGLCanvas_3D, but is called by the
+        # GLCanvasWrapper everytime a file is opened or a monitor is added.
         pass
 
     def recenter(self):

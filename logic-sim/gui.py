@@ -423,15 +423,27 @@ class MyGLCanvas_2D():
         text_y_pos = (y_min + y_max) / 2 - \
             self.character_height / (2 * self.zoom)
         self.render_text(monitor_name, text_x_pos, text_y_pos)
-        self.render_line((text_x_pos, y_min),(text_x_pos + size.width/self.zoom, y_min))
-        self.render_line((text_x_pos, y_max),(text_x_pos + size.width/self.zoom, y_max))
         GL.glViewport(self.margin_left, 0, size.width-self.margin_left, size.height)
+
+        # Draw rectangles underneath HIGH signals for more clarlity
+        x_pos = 0
+        fill_color = [103 / 255, 218 / 255, 255 / 255]
+        GL.glColor3fv(fill_color)
+        for signal in signal_list:
+            if (signal == self.parent.parent.devices.HIGH) or (signal == self.parent.parent.devices.RISING):
+                self.render_rectangle((x_pos, y_min), (x_pos + self.cycle_width, y_max))
+                GL.glBegin(GL.GL_LINE_STRIP)
+                GL.glVertex2f(x_pos, y_min)
+                GL.glVertex2f(x_pos + self.cycle_width, y_min)
+                GL.glEnd()
+            x_pos += self.cycle_width
 
         # Draw signal trace
         x_pos = 0
         currently_drawing = False
-        GL.glColor3f(0.0, 0.0, 1.0)  # signal trace is blue
-        GL.glLineWidth(1)
+        trace_color = [0 / 255, 122 / 255, 193 / 255]
+        GL.glColor3fv(trace_color)  # signal trace is blue
+        GL.glLineWidth(1.5)
         for signal in signal_list:
             if signal == self.parent.parent.devices.BLANK:
                 if currently_drawing:
@@ -473,11 +485,33 @@ class MyGLCanvas_2D():
             raise ValueError("start_point and end_point arguments must be \
                             tuples of length 2")
         # draw line
-        GL.glColor3f(0.9, 0.9, 0.9)  # light grey color
         GL.glLineWidth(1)
         GL.glBegin(GL.GL_LINE_STRIP)
         GL.glVertex2f(start_point[0], start_point[1])
         GL.glVertex2f(end_point[0], end_point[1])
+        GL.glEnd()
+
+    def render_rectangle(self, bottom_left_point, top_right_point):
+        """Render a rectangle on the canvas, with the given points."""
+        # check validity of arguments
+        if not (
+            isinstance(
+                bottom_left_point,
+                tuple) and isinstance(
+                top_right_point,
+                tuple)):
+            raise TypeError("bottom_left_point and top_right_point arguments \
+                            must be of Type tuple")
+        if (len(bottom_left_point) != 2 or len(top_right_point) != 2):
+            raise ValueError("bottom_left_point and top_right_point arguments \
+                             must be tuples of length 2")
+        # draw rectangle
+        GL.glLineWidth(1)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glVertex2f(bottom_left_point[0], bottom_left_point[1])
+        GL.glVertex2f(top_right_point[0], bottom_left_point[1])
+        GL.glVertex2f(top_right_point[0], top_right_point[1])
+        GL.glVertex2f(bottom_left_point[0], top_right_point[1])
         GL.glEnd()
 
     def render_cycle_numbers(self, size):
@@ -525,6 +559,7 @@ class MyGLCanvas_2D():
             line_y_pos_start = self.border_bottom - self.pan_y / self.zoom
 
         # render vertical lines
+        GL.glColor3f(0.9, 0.9, 0.9)  # light grey color
         line_x_pos = 0
         self.render_line((line_x_pos, line_y_pos_start),
                          (line_x_pos, line_y_pos_end))
