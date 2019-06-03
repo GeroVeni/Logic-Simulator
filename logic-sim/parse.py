@@ -465,8 +465,9 @@ class Parser:
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-            print(_("***NameError: The device has not been previously") +
-                  _(" defined in DEVICES."))
+            print(_("***NameError: The device ") +
+                  self.names.get_name_string(message.id) +
+                  _(" has not been previously defined in DEVICES."))
         elif (error_type == self.UNMATCHED_INPUT_OUTPUT_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -819,7 +820,7 @@ class Parser:
                                                           in_port_id,
                                                           out_device_id,
                                                           out_port_id)
-                self.check_connection_error(error_type)
+                self.check_connection_error(error_type, device_ip, output)
         # Many to one
         elif (len(self.inputs_list) == 1):
             # Device to connect all the inputs
@@ -842,7 +843,9 @@ class Parser:
                         error_type = self.network.make_connection(
                             in_device_id, in_port_id,
                             out_device_id, out_port_id)
-                        self.check_connection_error(error_type)
+                        self.check_connection_error(error_type,
+                                                    device_input,
+                                                    output)
                 else:
                     self.error(self.OUT_OF_BOUND_INPUTS_ERROR,
                                stopping_symbol=None)
@@ -857,7 +860,9 @@ class Parser:
                 error_type = self.network.make_connection(
                     in_device_id, in_port_id, out_device_id,
                     out_port_id)
-                self.check_connection_error(error_type)
+                self.check_connection_error(error_type,
+                                            device_ip,
+                                            output)
         # If the lengths dont match and the ip and op are not one
         # the nº of ip and nº ops dont match
         else:
@@ -881,15 +886,23 @@ class Parser:
             [port.id] = self.names.lookup([input_name])
         return name.id, port.id
 
-    def check_connection_error(self, error_type):
+    def check_connection_error(self, error_type, out_device, in_device):
         """Raise the appropriate error from the error_type given."""
         # TODO errors raised point to correct symbols
+        # Decouple tuples into 4 symbols
+        out_dev, out_port = out_device
+        in_dev, in_port = in_device
         if (error_type == self.network.NO_ERROR):
             pass
         elif (error_type == self.network.DEVICE_ABSENT):
-            # TODO print the actual problem place MUSTDO!!!
-            self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
-                       stopping_symbol=None)
+            if self.devices.get_device(out_dev.id) is None:
+                self.error(self.UNDEFINED_DEVICE_ERROR,
+                           message=out_dev,
+                           stopping_symbol=None)
+            if self.devices.get_device(in_dev.id) is None:
+                self.error(self.UNDEFINED_DEVICE_ERROR,
+                           message=in_dev,
+                           stopping_symbol=None)
         elif (error_type == self.network.INPUT_CONNECTED):
             # TODO print actual place
             self.error(self.REPEATED_INPUT_ERROR,
