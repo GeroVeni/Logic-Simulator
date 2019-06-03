@@ -290,7 +290,8 @@ class MyGLCanvas_2D():
         self.init = False
         self.update_zoom_lower_bound()
         self.zoom = self.zoom_lower
-        self.render("")
+        self.update_borders()
+        self.bound_panning()
 
     def on_mouse(self, event):
         """Handle mouse events."""
@@ -373,8 +374,8 @@ class MyGLCanvas_2D():
         monitors changes."""
         size = self.parent.GetClientSize()
 
-        # Allow a max number of 9 monitors to be displayed at once
-        num_monitors = min(9, len(self.parent.parent.monitors.monitors_dictionary))
+        # Allow a max number of 7 monitors to be displayed at once
+        num_monitors = min(7, len(self.parent.parent.monitors.monitors_dictionary))
 
         # Adjust zoom bounds depending on number of monitors
         visible_objects_height = self.margin_bottom + \
@@ -1088,6 +1089,7 @@ class Gui(wx.Frame):
             _("Ctrl + R: Run\n") +
             _("Ctrl + Shift + C: Continue\n") +
             _("Ctrl + E: Center canvas\n") +
+            _("Ctrl + T: Toggle 2D/3D view\n") +
             _("Ctrl + L: Clear activity log\n\n") +
             _("User Instructions:\n") +
             _("Use the Open file button to select ") +
