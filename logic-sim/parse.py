@@ -475,11 +475,12 @@ class Parser:
                   _("must match unless you are specifying one output to") +
                   _(" many inputs or all the inputs of a device at once"))
         elif (error_type == self.REPEATED_INPUT_ERROR):
-            print("Line: {}".format(self.symbol.line))
-            self.scanner.get_error_line(self.symbol)
-            print(_("***ValueError: The input has already been ") +
-                  _("specified previously. Repeated assignment of ") +
-                  _("inputs is not allowed."))
+            print("Line: {}".format(message.line))
+            self.scanner.get_error_line(message)
+            print(_("***ValueError: The input ") +
+                  self.names.get_name_string(message.id) +
+                  _(" has already been specified previously. Repeated ") +
+                  _(" assignment of inputs is not allowed."))
         elif (error_type == self.INVALID_PORT_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -827,8 +828,6 @@ class Parser:
             [device_input] = self.inputs_list
             [out_device_id, out_port] = self.get_out(device_input)
             device = self.devices.get_device(out_device_id)
-            # TODO add many to one for DTYPE and make sure keys sorted as
-            # the .SET .CLEAR .DATA, .CLOCK ids assigned in specific order
             # Only works for gates
             if (device.device_kind not in self.devices.gate_types):
                 self.error(self.NOT_GATE_ERROR, stopping_symbol=None)
@@ -904,8 +903,8 @@ class Parser:
                            message=in_dev,
                            stopping_symbol=None)
         elif (error_type == self.network.INPUT_CONNECTED):
-            # TODO print actual place
             self.error(self.REPEATED_INPUT_ERROR,
+                       message=out_port,
                        stopping_symbol=None)
         elif (error_type == self.network.PORT_ABSENT):
             # TODO specific check for I out of bounds (ValueError)
