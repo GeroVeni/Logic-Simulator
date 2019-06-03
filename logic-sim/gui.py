@@ -626,10 +626,15 @@ class Gui(wx.Frame):
         # Add locale path and update the language
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
+<<<<<<< HEAD
+        #self.updateLanguage(self.appConfig.Read(u"Language"))
+        self.updateLanguage(u"en")
+=======
         #self.update_language(self.appConfig.Read(u"Language"))
         sys_lang = wx.Locale.GetSystemLanguage()
         lang_name = wx.Locale.GetLanguageCanonicalName(sys_lang)
         self.update_language(lang_name[:2])
+>>>>>>> 0dde7b9f6a3db841d3b2cba71584cc58704fed27
 
         # Add fonts
         self.NORMAL_FONT = wx.TextAttr()
