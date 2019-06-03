@@ -31,9 +31,16 @@ class ColorScheme:
             raise ValueError("light_color_list should be a list of colors")
         if not isinstance(medium_color_list, list):
             raise ValueError("medium_color_list should be a list of colors")
+        # TODO Check that lists have the same size
+        self.next_col = 0
         self.color_list = color_list
         self.light_color_list = light_color_list
         self.medium_color_list = medium_color_list
+
+    def get_next_color(self, style=None):
+        col = self.get_color(self.next_col, style)
+        self.next_col += 1
+        return col
 
     def get_color(self, color_id, style=None):
         """Gets a color from the colorscheme."""
@@ -47,22 +54,26 @@ class ColorScheme:
     @staticmethod
     def get_default():
         """Returns the default ColorScheme."""
-        norm = [(31, 119, 180), (255, 127, 14),
-                (44, 160, 44), (214, 39, 40),
-                (148, 103, 189), (140, 86, 75),
-                (227, 119, 194), (127, 127, 127),
-                (188, 189, 34), (23, 190, 207)]
+        norm = [[31, 119, 180], [255, 127, 14],
+                [44, 160, 44], [214, 39, 40],
+                [148, 103, 189], [140, 86, 75],
+                [227, 119, 194], [127, 127, 127],
+                [188, 189, 34], [23, 190, 207]]
 
-        light = [(174, 199, 232), (255, 187, 120),
-                 (152, 223, 138), (255, 152, 150),
-                 (197, 176, 213), (196, 156, 148),
-                 (247, 182, 210), (199, 199, 199),
-                 (219, 219, 141), (158, 218, 229)]
+        light = [[174, 199, 232], [255, 187, 120],
+                 [152, 223, 138], [255, 152, 150],
+                 [197, 176, 213], [196, 156, 148],
+                 [247, 182, 210], [199, 199, 199],
+                 [219, 219, 141], [158, 218, 229]]
 
-        medium = [(114, 199, 232), (255, 158, 74),
-                  (103, 191, 92), (237, 102, 93),
-                  (173, 139, 201), (168, 120, 110),
-                  (237, 151, 202), (162, 162, 162),
-                  (205, 204, 93), (109, 204, 218)]
+        medium = [[114, 199, 232], [255, 158, 74],
+                  [103, 191, 92], [237, 102, 93],
+                  [173, 139, 201], [168, 120, 110],
+                  [237, 151, 202], [162, 162, 162],
+                  [205, 204, 93], [109, 204, 218]]
+
+        norm = [[col_com / 255 for col_com in col] for col in norm]
+        light = [[col_com / 255 for col_com in col] for col in light]
+        medium = [[col_com / 255 for col_com in col] for col in medium]
 
         return ColorScheme(norm, light, medium)
