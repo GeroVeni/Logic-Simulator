@@ -401,67 +401,81 @@ class Parser:
 
     def display_error(self, error_type, message):
         """Display specific error depending on error_type."""
-        # TODO change how I use message parameter
         # TODO change names of errors raised (NameError) e.g ConnectionError
-        # TODO add line and column number print message in parser errors
         # TODO Make sure caret prints at correct points
         if (error_type == self.SYNTAX_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***SyntaxError: invalid syntax. Expected"), message)
         elif (error_type == self.DEVICE_VALUE_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***ValueError:"), message)
         elif (error_type == self.KEYWORD_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***NameError: Keywords, devices and ports names ") +
                   _("are reserved and cannot be used as identifiers."))
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
+            print("Line: {}".format(self.mesage.line))
             self.scanner.get_error_line(message)
         # TODO display correct carret
         # TODO display the other identifier using id in lookup names
+        # TODO display name with forma 
             print(_("***NameError: An identifier was repeated. ") +
                   _("All identifiers must have unique names."))
         elif (error_type == self.CONNECTION_INPUT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: Inputs must be on the right") +
                   _(" hand side of the connection definition"))
         elif (error_type == self.OUTPUT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: Outputs must be on the left") +
                   _(" hand side of the connection definition"))
         elif (error_type == self.MONITOR_INPUT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: Monitors can only be outputs."))
         elif (error_type == self.REPEATED_MONITOR_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(message)
             print(_("***NameError: A monitor was repeated. ") +
                   _("All monitors must be unique."))
         elif (error_type == self.INVALID_DEVICE_OUTPUT_ERROR):
+            print("Line: {}".format(self.message.line))
             self.scanner.get_error_line(message)
             print(_("***TypeError: The device has no such output."))
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
+            print("Line: {}".format(self.message.line))
             self.scanner.get_error_line(message)
             print(_("***NameError: The device has not been previously") +
                   _(" defined in DEVICES."))
         elif (error_type == self.UNMATCHED_INPUT_OUTPUT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: The number of inputs and outputs ") +
                   _("must match unless you are specifying one output to") +
                   _(" many inputs or all the inputs of a device at once"))
         elif (error_type == self.REPEATED_INPUT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***ValueError: The input has already been ") +
                   _("specified previously. Repeated assignment of ") +
                   _("inputs is not allowed."))
         elif (error_type == self.INVALID_PORT_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***ValueError: The port specified does not exist ") +
                   _("for such device or is out of bounds"))
         elif (error_type == self.NOT_GATE_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: Only gates can have simultaneous ") +
                   _("assignment of all of its inputs."))
         elif (error_type == self.OUT_OF_BOUND_INPUTS_ERROR):
+            print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
             # TODO specify  too many or too few
             print(_("***TypeError: Too many or too few inputs ") +
