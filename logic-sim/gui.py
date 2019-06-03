@@ -652,6 +652,7 @@ class Gui(wx.Frame):
         fileMenu = wx.Menu()
         viewMenu = wx.Menu()
         runMenu = wx.Menu()
+        #optionsMenu = wx.Menu()
         helpMenu = wx.Menu()
         menuBar = wx.MenuBar()
 
@@ -665,6 +666,8 @@ class Gui(wx.Frame):
 
         runMenu.Append(self.ID_RUN, _("&Run") + "\tCtrl+R")
         runMenu.Append(self.ID_CONTINUE, _("&Continue") + "\tCtrl+Shift+C")
+
+        #optionsMenu.Append(self.ID_LANG, _("Change &Language"))
 
         helpMenu.Append(self.ID_HELP, _("&Help") + "\tCtrl+H")
         helpMenu.Append(wx.ID_ABOUT, _("&About"))
@@ -726,6 +729,7 @@ class Gui(wx.Frame):
 
         # Bind events to widgets
         self.Bind(wx.EVT_MENU, self.on_menu)
+        self.Bind(wx.EVT_SIZE, self.on_size)
 
         # Configure sizers for layout
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1176,6 +1180,10 @@ class Gui(wx.Frame):
             self.on_toggle_3d_vew()
         elif Id == self.ID_LANG:
             self.on_lang_change()
+
+    def on_size(self, event):
+        """Handle the event when the window resizes."""
+        self.Refresh()
 
     def on_text_box(self, event):
         """Handle the event when the user enters text."""
