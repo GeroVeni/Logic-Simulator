@@ -82,6 +82,20 @@ class Gui(wx.Frame):
         # work around for Python stealing "_"
         sys.displayhook = _displayHook
 
+        # Add user config file
+        app_name = "LogicSimulator"
+        config_path = wx.StandardPaths.Get().GetUserConfigDir()
+        config_path = os.path.join(config_path, ".config")
+        print(config_path)
+        if not os.path.exists(config_path):
+            os.mkdir(config_path)
+        config_path = os.path.join(config_path, app_name)
+        if not os.path.exists(config_path):
+            os.mkdir(config_path)
+        config_path = os.path.join(config_path, "app_config") 
+        self.app_config = wx.Config(appName=app_name,
+                               localFilename=config_path)
+
         # Add locale path and update the language
         self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix('locale')
@@ -180,6 +194,8 @@ class Gui(wx.Frame):
         # State variables
         # set current file path
         self.current_file_path = None
+        if self.app_config.HasEntry(u'LastPath'):
+            self.current_file_path = self.app_config.Read(u'LastPath')
         self.canvas_mode = '2d' # current display mode of canvas
         self.cycles_completed = 0  # number of simulation cycles completed
 
@@ -493,6 +509,8 @@ class Gui(wx.Frame):
         res = openFileDialog.ShowModal()
         if res == wx.ID_OK:  # user selected a file
             self.current_file_path = openFileDialog.GetPath()
+            self.app_config.Write(u'LastPath', self.current_file_path)
+            #self.app_config.Flush()
             self.clear_log()
             self.log_message(_("File opened: {}")
                              .format(self.current_file_path),
