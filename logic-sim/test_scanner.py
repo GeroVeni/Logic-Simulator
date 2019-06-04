@@ -78,11 +78,18 @@ def test_get_error_line_raises_exception(new_Scanner, new_file, new_symbol):
 ###################
 
 
-def test_get_symbol_emptyfile(new_Scanner, new_names):
+def test_get_symbol_emptyfile(new_Scanner, new_file):
     """ Test if get_symbol returns EOF for empty files or whitespace only."""
-    scanner = new_Scanner("testfiles/scanner/test_empty_file.txt")
+    empty = new_file("")
+    scanner = new_Scanner(empty)
     assert scanner.get_symbol().type == scanner.EOF
-    scanner = new_Scanner("testfiles/scanner/test_only_white_space.txt")
+    # Assert that if it reaches EOF it keeps returning EOF
+    assert scanner.get_symbol().type == scanner.EOF
+    assert scanner.get_symbol().type == scanner.EOF
+    assert scanner.get_symbol().type == scanner.EOF
+
+    white_spaces = new_file("    \n \n          \n\n\n \t \n \t\t       \n \n")
+    scanner = new_Scanner(white_spaces)
     assert scanner.get_symbol().type == scanner.EOF
 
 
@@ -166,7 +173,6 @@ def test_get_symbol_comments(new_Scanner, new_file):
     ("Lets()try:again", 6),
     ("DEVICES:=just,I.N&case", 9),
 ])
-# TODO append what symbol you expect not only length
 def test_get_symbol_no_spaces(
         new_Scanner,
         new_file,
@@ -183,9 +189,20 @@ def test_get_symbol_no_spaces(
     assert len(symbol_list) == number_symbols
 
 
-def test_get_symbol_ignore_white_spaces(new_Scanner):
+def test_get_symbol_ignore_white_spaces(new_Scanner, new_file):
     """ Test if get_symbol ignores all types of whitespaces."""
-    scanner = new_Scanner("testfiles/scanner/test_ignore_white_spaces.txt")
+    white_space = new_file("DOES                IT"
+                           " "
+                           "    \n     "
+                           "      \n \t "
+                           "\n\n    \t"
+                           "   \t IGNORE \n  \n"
+                           "\t\t\t\t"
+                           "ALL    TYPES"
+                           "       "
+                           "\n\n\n"
+                           "OF                  WHITESPACES")
+    scanner = new_Scanner(white_space)
     symbol_list = []
     current_symbol = scanner.get_symbol()
     while current_symbol.type != scanner.EOF:
@@ -194,9 +211,10 @@ def test_get_symbol_ignore_white_spaces(new_Scanner):
     assert len(symbol_list) == 7
 
 
-def test_get_symbol_one_per_line(new_Scanner):
+def test_get_symbol_one_per_line(new_Scanner, new_file):
     """Test if get symbol works with each symbol in a new line."""
-    scanner = new_Scanner("testfiles/scanner/test_one_symbol_per_line.txt")
+    lines = new_file("AND\nCONNECTIONS\n:\n,\n \n;\n,\n12345\nasdf")
+    scanner = new_Scanner(lines)
     symbol_list = []
     current_symbol = scanner.get_symbol()
     while current_symbol.type != scanner.EOF:

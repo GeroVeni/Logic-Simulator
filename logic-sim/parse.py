@@ -185,8 +185,23 @@ class Parser:
                         # previously as probably missing ip from errors.
                         if ((not self.network.check_network()) and
                                 self.error_count == 0):
-                            # TODO show the input that has no input
+                            # Store all the device names in a string
+                            devices = ""
+                            # Iterate over all devices
+                            for device_id in self.devices.find_devices():
+                                device = self.devices.get_device(device_id)
+                                for input_id in device.inputs:
+                                    # Check if the input has a connection
+                                    if (self.network.get_connected_output(
+                                            device_id, input_id) is None):
+                                        # Add device to missing inputs string
+                                        devices = devices + \
+                                            self.names.get_name_string(
+                                                device_id) + " "
+                                        # Move to next device
+                                        break
                             self.error(self.MISSING_INPUTS_ERROR,
+                                       message=devices,
                                        stopping_symbol=None)
                         self.symbol = self.scanner.get_symbol()
                     else:
@@ -402,7 +417,6 @@ class Parser:
     def display_error(self, error_type, message):
         """Display specific error depending on error_type."""
         # TODO change names of errors raised (NameError) e.g ConnectionError
-        # TODO Make sure caret prints at correct points
         if (error_type == self.SYNTAX_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -419,11 +433,9 @@ class Parser:
         elif (error_type == self.REPEATED_IDENTIFIER_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-        # TODO display correct carret
-        # TODO display the other identifier using id in lookup names
-        # TODO display name with forma
-            print(_("***NameError: An identifier was repeated. ") +
-                  _("All identifiers must have unique names."))
+            print(_("***NameError: The identifier ") +
+                  self.names.get_name_string(message.id) +
+                  _(" was repeated. All identifiers must have unique names."))
         elif (error_type == self.CONNECTION_INPUT_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -450,8 +462,9 @@ class Parser:
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-            print(_("***NameError: The device has not been previously") +
-                  _(" defined in DEVICES."))
+            print(_("***NameError: The device ") +
+                  self.names.get_name_string(message.id) +
+                  _(" has not been previously defined in DEVICES."))
         elif (error_type == self.UNMATCHED_INPUT_OUTPUT_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -459,16 +472,19 @@ class Parser:
                   _("must match unless you are specifying one output to") +
                   _(" many inputs or all the inputs of a device at once"))
         elif (error_type == self.REPEATED_INPUT_ERROR):
-            print("Line: {}".format(self.symbol.line))
-            self.scanner.get_error_line(self.symbol)
-            print(_("***ValueError: The input has already been ") +
-                  _("specified previously. Repeated assignment of ") +
-                  _("inputs is not allowed."))
+            print("Line: {}".format(message.line))
+            self.scanner.get_error_line(message)
+            print(_("***ValueError: The input ") +
+                  self.names.get_name_string(message.id) +
+                  _(" has already been specified previously. Repeated ") +
+                  _(" assignment of inputs is not allowed."))
         elif (error_type == self.INVALID_PORT_ERROR):
-            print("Line: {}".format(self.symbol.line))
-            self.scanner.get_error_line(self.symbol)
-            print(_("***ValueError: The port specified does not exist ") +
-                  _("for such device or is out of bounds"))
+            print("Line: {}".format(message.line))
+            self.scanner.get_error_line(message)
+            print(_("***ValueError: The port ") +
+                  self.names.get_name_string(message.id) +
+                  _(" specified does not exist for such device or ") +
+                  _("is out of bounds"))
         elif (error_type == self.NOT_GATE_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -477,15 +493,13 @@ class Parser:
         elif (error_type == self.OUT_OF_BOUND_INPUTS_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
-            # TODO specify  too many or too few
             print(_("***TypeError: Too many or too few inputs ") +
                   _("have been assigned simultaneously to the device.") +
                   _(" When using simultaneous defintion the same number") +
                   _(" of inputs as the device has must be given."))
         elif (error_type == self.MISSING_INPUTS_ERROR):
-            # TODO which inputs have not been specified
-            print(_("***ValueError: Inputs have not been specificed") +
-                  _(" for all DEVICES."))
+            print(_("***ValueError: Some inputs have not been specificed") +
+                  _(" for these devices: ") + message)
 
     def skip_to_stopping_symbol(self, stopping_symbol):
         """Use scanner to skip to stopping_symbol specificed."""
@@ -691,7 +705,6 @@ class Parser:
                                _("CLOCK takes only values greater than 0"),
                                None)
                     return
-            # TODO tidy up this so is one single elif
             elif (self.current_device.id == self.scanner.NAND_ID):
                 # Set default value to 2 if no value specified
                 if (self.current_number.id is None):
@@ -806,15 +819,13 @@ class Parser:
                                                           in_port_id,
                                                           out_device_id,
                                                           out_port_id)
-                self.check_connection_error(error_type)
+                self.check_connection_error(error_type, device_ip, output)
         # Many to one
         elif (len(self.inputs_list) == 1):
             # Device to connect all the inputs
             [device_input] = self.inputs_list
             [out_device_id, out_port] = self.get_out(device_input)
             device = self.devices.get_device(out_device_id)
-            # TODO add many to one for DTYPE and make sure keys sorted as
-            # the .SET .CLEAR .DATA, .CLOCK ids assigned in specific order
             # Only works for gates
             if (device.device_kind not in self.devices.gate_types):
                 self.error(self.NOT_GATE_ERROR, stopping_symbol=None)
@@ -829,7 +840,13 @@ class Parser:
                         error_type = self.network.make_connection(
                             in_device_id, in_port_id,
                             out_device_id, out_port_id)
-                        self.check_connection_error(error_type)
+                        self.check_connection_error(error_type,
+                                                    device_input,
+                                                    output)
+                        # Break from for loop to avoid same error bein
+                        # being reported multiple times
+                        if error_type != self.network.NO_ERROR:
+                            break
                 else:
                     self.error(self.OUT_OF_BOUND_INPUTS_ERROR,
                                stopping_symbol=None)
@@ -844,7 +861,13 @@ class Parser:
                 error_type = self.network.make_connection(
                     in_device_id, in_port_id, out_device_id,
                     out_port_id)
-                self.check_connection_error(error_type)
+                self.check_connection_error(error_type,
+                                            device_ip,
+                                            output)
+                # Break from for loop to avoid same error bein
+                # being reported multiple times
+                if error_type != self.network.NO_ERROR:
+                    break
         # If the lengths dont match and the ip and op are not one
         # the nº of ip and nº ops dont match
         else:
@@ -868,25 +891,35 @@ class Parser:
             [port.id] = self.names.lookup([input_name])
         return name.id, port.id
 
-    def check_connection_error(self, error_type):
+    def check_connection_error(self, error_type, out_device, in_device):
         """Raise the appropriate error from the error_type given."""
-        # TODO errors raised point to correct symbols
+        # Decouple tuples into 4 symbols
+        out_dev, out_port = out_device
+        in_dev, in_port = in_device
         if (error_type == self.network.NO_ERROR):
             pass
         elif (error_type == self.network.DEVICE_ABSENT):
-            # TODO print the actual problem place MUSTDO!!!
-            self.error(self.UNDEFINED_DEVICE_ERROR, self.symbol,
-                       stopping_symbol=None)
+            if self.devices.get_device(out_dev.id) is None:
+                self.error(self.UNDEFINED_DEVICE_ERROR,
+                           message=out_dev,
+                           stopping_symbol=None)
+            if self.devices.get_device(in_dev.id) is None:
+                self.error(self.UNDEFINED_DEVICE_ERROR,
+                           message=in_dev,
+                           stopping_symbol=None)
         elif (error_type == self.network.INPUT_CONNECTED):
-            # TODO print actual place
             self.error(self.REPEATED_INPUT_ERROR,
+                       message=out_port,
                        stopping_symbol=None)
         elif (error_type == self.network.PORT_ABSENT):
-            # TODO specific check for I out of bounds (ValueError)
-            # compared to invalid port used like .Q by non DTYPE (TypeError)
-            # also show appropriate symbol or no ports given at all!
-            self.error(self.INVALID_PORT_ERROR,
-                       stopping_symbol=None)
+            if out_port.id not in self.devices.get_device(out_dev.id).inputs:
+                self.error(self.INVALID_PORT_ERROR,
+                           message=out_port,
+                           stopping_symbol=None)
+            if in_port.id not in self.devices.get_device(in_dev.id).outputs:
+                self.error(self.INVALID_PORT_ERROR,
+                           message=in_port,
+                           stopping_symbol=None)
         elif(error_type == self.network.INPUT_TO_INPUT):
             self.error(self.CONNECTION_INPUT_ERROR,
                        stopping_symbol=None)

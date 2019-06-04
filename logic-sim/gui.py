@@ -33,18 +33,19 @@ import io
 
 # Constants for internationalization
 import app_const as appC
+import builtins
+
 
 # Install a custom displayhook to keep Python from setting the global
 # _ (underscore) to the value of the last evaluated expression.  If
 # we don't do this, our mapping of _ to gettext can get overwritten.
 # This is useful/needed in interactive debugging with PyShell.
-
 def _displayHook(obj):
     if obj is not None:
-        print (repr(obj))
+        print(repr(obj))
+
 
 # add translation macro to builtin similar to what gettext does
-import builtins
 builtins.__dict__['_'] = wx.GetTranslation
 
 
@@ -62,13 +63,54 @@ class Gui(wx.Frame):
     --------------
     on_menu(self, event): Event handler for the file menu.
 
-    on_spin(self, event): Event handler for when the user changes the spin
-                           control value.
+    on_size(self, event): Event handler for window resizing.
 
-    on_run_button(self, event): Event handler for when the user clicks the run
-                                button.
+    on_reload(self): Handle the event when the user reloads the file.
 
-    on_text_box(self, event): Event handler for when the user enters text.
+    on_lang_change(self): Show dialog for language change.
+
+    on_toggle_3d_vew(self): Toggle 3D view.
+
+    on_help(self): Shows a help window with user instructions.
+
+    on_center(self): Centers the canvas to its default state of zoom and
+                     panning.
+
+    on_continue(self): Run the continue_command when continue button pressed.
+
+    continue_command(self): Continue a previously run simulation.
+
+    on_run(self): Run the run_command when run button pressed.
+
+    run_command(self): Run the simulation from scratch.
+
+    run_network(self, cycles): Run the network for the specified number of
+                               simulation cycles.
+
+    on_open(self): Open the file browser and parse the file chosen.
+
+    load_file(self, file_path): Load a file for parsing and running.
+
+    run_parser(self, file_path): Reset modules and call parse_network.
+
+    clear_log(self): Clear the activity log.
+
+    log_message(self, text, style, no_new_line): Add message to the activity
+                                                 log.
+
+    set_switch(self, switch_name, is_on): Turn a swtich on and off.
+
+    set_monitor(self, monitor_name, is_active): Activate or deactivate a
+                                                monitor.
+
+    update_tabs(self): Update the right panel tabs with new values.
+
+    update_texts(self): Updates the text fields of the application after
+                        a change of locale.
+
+    make_right_sizer(self): Helper function that creates the right panel sizer.
+
+    def update_language(self, lang): Update the language to the requested one.
     """
 
     def __init__(self, title):
@@ -120,7 +162,7 @@ class Gui(wx.Frame):
         self.ID_CLEAR = 1007
         self.ID_TOGGLE_3D = 1008
         self.ID_LANG = 1009
-        self.ID_RELOAD = 1010;
+        self.ID_RELOAD = 1010
 
         # Configure the file menu
         fileMenu = wx.Menu()
@@ -135,7 +177,8 @@ class Gui(wx.Frame):
         fileMenu.Append(wx.ID_EXIT, _("&Exit"))
 
         viewMenu.Append(self.ID_CENTER, _("&Center") + "\tCtrl+E")
-        viewMenu.Append(self.ID_TOGGLE_3D, _("&Toggle 2D/3D view") + "\tCtrl+T")
+        viewMenu.Append(self.ID_TOGGLE_3D, _(
+            "&Toggle 2D/3D view") + "\tCtrl+T")
         viewMenu.Append(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
 
         runMenu.Append(self.ID_RUN, _("R&un") + "\tCtrl+Shift+R")
@@ -154,8 +197,6 @@ class Gui(wx.Frame):
         self.SetMenuBar(menuBar)
 
         # Load icons
-        #openIcon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        #centerIcon = wx.ArtProvider.GetBitmap(wx.ART_FIND, wx.ART_TOOLBAR)
         appIcon = wx.Icon("res/cylinder.png")
         self.SetIcon(appIcon)
         openIcon = wx.Bitmap("res/open_mat.png")
@@ -188,15 +229,16 @@ class Gui(wx.Frame):
         self.toolBar.AddSeparator()
         self.toolBar.AddTool(self.ID_LANG, "Tool7", flagIcon)
         self.toolBar.AddSeparator()
-        self.toolBar.AddTool(self.ID_HELP, "Tool1", infoIcon, shortHelp=_("Help"))
+        self.toolBar.AddTool(self.ID_HELP, "Tool1",
+                             infoIcon, shortHelp=_("Help"))
         self.SetToolBar(self.toolBar)
 
         # State variables
-        # set current file path
-        self.current_file_path = None
+        self.current_file_path = None # set current file path
         if self.app_config.HasEntry(u'LastPath'):
             self.current_file_path = self.app_config.Read(u'LastPath')
-        self.canvas_mode = '2d' # current display mode of canvas
+        self.parse_success = False # prevents run and continue if parse fails
+        self.canvas_mode = '2d'  # current display mode of canvas
         self.cycles_completed = 0  # number of simulation cycles completed
 
         # Canvas for drawing signals
@@ -224,7 +266,6 @@ class Gui(wx.Frame):
                        0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
-        # right_sizer.Add(self.spin, 0, wx.ALL, 5)
         right_sizer = self.make_right_sizer()
 
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
@@ -308,7 +349,8 @@ class Gui(wx.Frame):
         menuBar.SetLabel(wx.ID_EXIT, _("&Exit"))
 
         menuBar.SetLabel(self.ID_CENTER, _("&Center") + "\tCtrl+E")
-        menuBar.SetLabel(self.ID_TOGGLE_3D, _("&Toggle 2D/3D vew") + "\tCtrl+T")
+        menuBar.SetLabel(self.ID_TOGGLE_3D, _(
+            "&Toggle 2D/3D vew") + "\tCtrl+T")
         menuBar.SetLabel(self.ID_CLEAR, _("&Clear Activity Log") + "\tCtrl+L")
         menuBar.SetLabel(self.ID_LANG, _("Change &Language"))
 
@@ -444,11 +486,11 @@ class Gui(wx.Frame):
             return
 
     def clear_log(self):
-        """Clear the error log."""
+        """Clear the activity log."""
         self.activity_log.Clear()
 
-    def log_message(self, text, style=None, no_new_line = False):
-        """Add message to the error log."""
+    def log_message(self, text, style=None, no_new_line=False):
+        """Add message to the activity log."""
         if style is not None:
             self.activity_log.SetDefaultStyle(style)
         if no_new_line:
@@ -463,7 +505,7 @@ class Gui(wx.Frame):
     #################
 
     def run_parser(self, file_path):
-        """Call parse_network() from path specified
+        """Call parse_network() from path specified.
 
         To do so first reinitzialize all modules and cycles_completed.
         """
@@ -480,8 +522,10 @@ class Gui(wx.Frame):
         captured_stdout = io.StringIO()
         with redirect_stdout(captured_stdout):
             if self.parser.parse_network():
+                self.parse_success = True
                 self.log_message(_("Succesfully parsed network."))
             else:
+                self.parse_success = False
                 self.log_message(_("Failed to parse network."))
                 # Show error messages captured in activity log
                 self.log_message(captured_stdout.getvalue(),
@@ -514,7 +558,7 @@ class Gui(wx.Frame):
             self.clear_log()
             self.log_message(_("File opened: {}")
                              .format(self.current_file_path),
-                             no_new_line = True)
+                             no_new_line=True)
             self.load_file(self.current_file_path)
             self.canvas.render(_("Opened file"))
 
@@ -523,7 +567,7 @@ class Gui(wx.Frame):
 
         Return True if successful.
         """
-        for _ in range(cycles):
+        for i in range(cycles):
             if self.network is None:
                 self.log_message(_("Error! No file loaded."))
                 return False
@@ -536,6 +580,9 @@ class Gui(wx.Frame):
 
     def run_command(self):
         """Run the simulation from scratch."""
+        if not self.parse_success:
+            self.log_message(_("Error! Nothing to run. Parsing failed."))
+            return
         self.cycles_completed = 0
         cycles = self.spin.GetValue()  # this must get input from other box
 
@@ -554,19 +601,24 @@ class Gui(wx.Frame):
 
     def continue_command(self):
         """Continue a previously run simulation."""
+        if not self.parse_success:
+            self.log_message(_("Error! Nothing to continue. Parsing failed."))
+            return
         cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
                 self.log_message(_("Error! Nothing to continue. Run first."))
             elif self.run_network(cycles):
                 self.cycles_completed += cycles
-                self.log_message(_("Continuing for {} cycles. Total: {}").format(cycles, self.cycles_completed))
+                self.log_message(_(
+                    "Continuing for {} cycles. Total: {}").format(
+                    cycles, self.cycles_completed))
 
     def on_continue(self):
         """Run the continue_command when run button pressed."""
         self.continue_command()
         self.canvas.render(_("Continue"))
-        self.canvas.recenter(pan_to_end = True)
+        self.canvas.recenter(pan_to_end=True)
 
     ####################
     # author: Dimitris #
@@ -582,59 +634,63 @@ class Gui(wx.Frame):
         help_title = _("Help - Program controls ")
         # TODO Find a more elegant way to provide localisation for this text
         help_content = ("" +
-            _("Shortcuts: \n") +
-            _("Ctrl + O: Open file\n") +
-            _("Ctrl + H: Help\n") +
-            _("Ctrl + R: Run\n") +
-            _("Ctrl + Shift + C: Continue\n") +
-            _("Ctrl + E: Center canvas\n") +
-            _("Ctrl + T: Toggle 2D/3D view\n") +
-            _("Ctrl + L: Clear activity log\n\n") +
-            _("User Instructions:\n") +
-            _("Use the Open file button to select ") +
-            _("the desired circuit defnition file.") +
-            _("If the file contains no errors the activity") +
-            _(" log at the bottom of the window") +
-            _("will read \"Succesfully parsed network\". ") +
-            _("If there are errors, the error log") +
-            _("will read \"Failed to parse network\".\n\n") +
-            _("If the network was parsed correctly it can be ran. ") +
-            _("Use the plus and minus on the") +
-            _("cycle selector to select the desired number") +
-            _(" of cycles for the simulation or") +
-            _("type in th desired number. Press the Run ") +
-            _("button to run the simulator for the number") +
-            _("of cycles selected and display the waveforms ") +
-            _("at the current monitor points (from a") +
-            _("cold-startup of the circuit). Press the ") +
-            _("Continue button to run the simulator") +
-            _("for an additional number of cycles as selected ") +
-            _("in the cycle selector and") +
-            _("display the waveforms at the current monitor points.\n\n") +
-            _("The canvas can be restored to its default state ") +
-            _("of position and zoomby") +
-            _("selecting the center button.\n\n") +
-            _("Different monitor points can be set ") +
-            _("and zapped by first selecting the") +
-            _("Monitors tab on the right panel, and then ") +
-            _("selecting the desired monitor") +
-            _("point from the list.\n\n") +
-            _("Switches can be operated by first selecting ") +
-            _("the Switches tab on the right") +
-            _("panel, and then selecting the desired switches.")
-        )
+                        _("Shortcuts: \n") +
+                        _("Ctrl + O: Open file\n") +
+                        _("Ctrl + H: Help\n") +
+                        _("Ctrl + R: Run\n") +
+                        _("Ctrl + Shift + C: Continue\n") +
+                        _("Ctrl + E: Center canvas\n") +
+                        _("Ctrl + T: Toggle 2D/3D view\n") +
+                        _("Ctrl + L: Clear activity log\n\n") +
+                        _("User Instructions:\n") +
+                        _("Use the Open file button to select ") +
+                        _("the desired circuit defnition file.") +
+                        _("If the file contains no errors the activity") +
+                        _(" log at the bottom of the window") +
+                        _("will read \"Succesfully parsed network\". ") +
+                        _("If there are errors, the activity log") +
+                        _("will read \"Failed to parse network\".\n\n") +
+                        _("If the network was parsed correctly it can be"
+                            "ran. ") +
+                        _("Use the plus and minus on the") +
+                        _("cycle selector to select the desired number") +
+                        _(" of cycles for the simulation or") +
+                        _("type in th desired number. Press the Run ") +
+                        _("button to run the simulator for the number") +
+                        _("of cycles selected and display the waveforms ") +
+                        _("at the current monitor points (from a") +
+                        _("cold-startup of the circuit). Press the ") +
+                        _("Continue button to run the simulator") +
+                        _("for an additional number of cycles as selected ") +
+                        _("in the cycle selector and") +
+                        _("display the waveforms at the current monitor "
+                            "points.\n\n") +
+                        _("The canvas can be restored to its default state ") +
+                        _("of position and zoomby") +
+                        _("selecting the center button.\n\n") +
+                        _("Different monitor points can be set ") +
+                        _("and zapped by first selecting the") +
+                        _("Monitors tab on the right panel, and then ") +
+                        _("selecting the desired monitor") +
+                        _("point from the list.\n\n") +
+                        _("Switches can be operated by first selecting ") +
+                        _("the Switches tab on the right") +
+                        _("panel, and then selecting the desired switches.")
+                        )
 
         wx.MessageBox(help_content,
                       help_title, wx.ICON_INFORMATION | wx.OK)
 
-    def  on_toggle_3d_vew(self):
+    def on_toggle_3d_vew(self):
         """Toggle 3D view."""
         if self.canvas_mode == '2d':
             self.canvas_mode = '3d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout2dIcon)
+            self.toolBar.SetToolNormalBitmap(
+                self.ID_TOGGLE_3D, self.layout2dIcon)
         else:
             self.canvas_mode = '2d'
-            self.toolBar.SetToolNormalBitmap(self.ID_TOGGLE_3D, self.layout3dIcon)
+            self.toolBar.SetToolNormalBitmap(
+                self.ID_TOGGLE_3D, self.layout3dIcon)
         self.canvas.toggle_drawing_mode()
 
     ##################
@@ -654,7 +710,8 @@ class Gui(wx.Frame):
         sel_lang = dlg.GetLangSelected()
         if val == wx.ID_OK:
             # User pressed OK
-            self.update_language(wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
+            self.update_language(
+                wx.Locale.GetLanguageCanonicalName(sel_lang)[:2])
             self.update_texts()
 
         dlg.Destroy()
@@ -690,7 +747,7 @@ class Gui(wx.Frame):
             self.on_help()
         elif Id == self.ID_CLEAR:  # help button
             self.clear_log()
-        elif Id == self.ID_TOGGLE_3D: # togge 3D view button
+        elif Id == self.ID_TOGGLE_3D:  # togge 3D view button
             self.on_toggle_3d_vew()
         elif Id == self.ID_LANG:
             self.on_lang_change()
@@ -701,13 +758,6 @@ class Gui(wx.Frame):
         """Handle the event when the window resizes."""
         self.Refresh()
         event.Skip()
-
-    def on_text_box(self, event):
-        """Handle the event when the user enters text."""
-        # TODO Remove ?
-        text_box_value = self.text_box.GetValue()
-        text = "".join([_("New text box value: "), text_box_value])
-        self.canvas.render(text)
 
 
 class CustomTab(wx.Panel):
@@ -790,7 +840,6 @@ class CustomTab(wx.Panel):
 
     def append(self, name_list):
         """Appends the name_list in the item list."""
-        # ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
@@ -828,9 +877,10 @@ class LangDialog(wx.Dialog):
     """
 
     def __init__(
-            self, parent, id, title, sel_lang, size=wx.DefaultSize, pos=wx.DefaultPosition,
-            style=wx.DEFAULT_DIALOG_STYLE, name='dialog'
-            ):
+            self, parent, id, title, sel_lang, size=wx.DefaultSize,
+            pos=wx.DefaultPosition, style=wx.DEFAULT_DIALOG_STYLE,
+            name='dialog'
+    ):
         """Create language dialog to allow the user to change locale."""
 
         # Create the dialog
@@ -842,7 +892,11 @@ class LangDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.lang_selected = sel_lang
-        self.lang_listctrl = langlc.LanguageListCtrl(self, size=(0,-1), filter=langlc.LC_ONLY, only=[wx.LANGUAGE_ENGLISH, wx.LANGUAGE_GREEK], select=self.lang_selected)
+        self.lang_listctrl = langlc.LanguageListCtrl(
+                self, size=(0, -1),
+                filter=langlc.LC_ONLY,
+                only=[wx.LANGUAGE_ENGLISH, wx.LANGUAGE_GREEK],
+                select=self.lang_selected)
         sizer.Add(self.lang_listctrl, 0, wx.EXPAND, 0)
 
         # Add dialog buttons
@@ -856,14 +910,15 @@ class LangDialog(wx.Dialog):
         btnsizer.AddButton(btn)
         btnsizer.Realize()
 
-        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
         self.SetSizer(sizer)
         sizer.Fit(self)
 
         # Bind event listeners
         self.lang_listctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onItemSelected)
-        self.lang_listctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
+        self.lang_listctrl.Bind(
+            wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
 
     def onItemSelected(self, event):
         """Method called when user selects another language."""
