@@ -220,8 +220,8 @@ class Gui(wx.Frame):
         self.SetToolBar(self.toolBar)
 
         # State variables
-        # set current file path
-        self.current_file_path = None
+        self.current_file_path = None # set current file path
+        self.parse_success = False # prevents run and continue if parse fails
         self.canvas_mode = '2d'  # current display mode of canvas
         self.cycles_completed = 0  # number of simulation cycles completed
 
@@ -506,8 +506,10 @@ class Gui(wx.Frame):
         captured_stdout = io.StringIO()
         with redirect_stdout(captured_stdout):
             if self.parser.parse_network():
+                self.parse_success = True
                 self.log_message(_("Succesfully parsed network."))
             else:
+                self.parse_success = False
                 self.log_message(_("Failed to parse network."))
                 # Show error messages captured in activity log
                 self.log_message(captured_stdout.getvalue(),
@@ -555,6 +557,9 @@ class Gui(wx.Frame):
 
     def run_command(self):
         """Run the simulation from scratch."""
+        if not self.parse_success:
+            self.log_message(_("Error! Nothing to run. Parsing failed."))
+            return
         self.cycles_completed = 0
         cycles = self.spin.GetValue()  # this must get input from other box
 
@@ -573,6 +578,9 @@ class Gui(wx.Frame):
 
     def continue_command(self):
         """Continue a previously run simulation."""
+        if not self.parse_success:
+            self.log_message(_("Error! Nothing to continue. Parsing failed."))
+            return
         cycles = self.spin.GetValue()
         if cycles is not None:  # if the number of cycles provided is valid
             if self.cycles_completed == 0:
