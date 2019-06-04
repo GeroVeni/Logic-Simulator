@@ -112,7 +112,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.DEVICES_ID):
+           self.symbol.id == self.scanner.DEVICES_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -161,7 +161,7 @@ class Parser:
         # Must check that its both a KEYWORD and the correct id as for
         # example numbers can have the same id as DEVICES_ID.
         if (self.symbol.type == self.scanner.KEYWORD and
-                self.symbol.id == self.scanner.CONNECTIONS_ID):
+           self.symbol.id == self.scanner.CONNECTIONS_ID):
             self.symbol = self.scanner.get_symbol()
             if(self.symbol.type == self.scanner.COLON):
                 self.symbol = self.scanner.get_symbol()
@@ -416,7 +416,6 @@ class Parser:
 
     def display_error(self, error_type, message):
         """Display specific error depending on error_type."""
-        # TODO change names of errors raised (NameError) e.g ConnectionError
         if (error_type == self.SYNTAX_ERROR):
             print("Line: {}".format(self.symbol.line))
             self.scanner.get_error_line(self.symbol)
@@ -451,14 +450,15 @@ class Parser:
             self.scanner.get_error_line(self.symbol)
             print(_("***TypeError: Monitors can only be outputs."))
         elif (error_type == self.REPEATED_MONITOR_ERROR):
-            print("Line: {}".format(self.symbol.line))
+            print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-            print(_("***NameError: A monitor was repeated. ") +
-                  _("All monitors must be unique."))
+            print(_("***NameError: The monitor ") +
+                  self.names.get_name_string(message.id) +
+                  _(" was repeated. All monitors must be unique."))
         elif (error_type == self.INVALID_DEVICE_OUTPUT_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-            print(_("***TypeError: The device has no such output."))
+            print(_("***AttributeError: The device has no such output."))
         elif (error_type == self.UNDEFINED_DEVICE_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
@@ -481,7 +481,7 @@ class Parser:
         elif (error_type == self.INVALID_PORT_ERROR):
             print("Line: {}".format(message.line))
             self.scanner.get_error_line(message)
-            print(_("***ValueError: The port ") +
+            print(_("***AttributeError: The port ") +
                   self.names.get_name_string(message.id) +
                   _(" specified does not exist for such device or ") +
                   _("is out of bounds"))
@@ -498,7 +498,7 @@ class Parser:
                   _(" When using simultaneous defintion the same number") +
                   _(" of inputs as the device has must be given."))
         elif (error_type == self.MISSING_INPUTS_ERROR):
-            print(_("***ValueError: Some inputs have not been specificed") +
+            print(_("***SystemError: Some inputs have not been specificed") +
                   _(" for these devices: ") + message)
 
     def skip_to_stopping_symbol(self, stopping_symbol):
@@ -560,7 +560,7 @@ class Parser:
                            stopping_symbol=None)
 
     def signal(self, I_O_M):
-        """ Pars a signal.
+        """Parse a signal.
 
         Return the signal if parsed correctly as a tuple (name, port)
 
