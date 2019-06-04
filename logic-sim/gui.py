@@ -250,7 +250,6 @@ class Gui(wx.Frame):
                        0.2, wx.EXPAND | wx.ALL, 5)
         left_sizer.Add(self.activity_log, 1, wx.EXPAND | wx.ALL, 5)
 
-        # right_sizer.Add(self.spin, 0, wx.ALL, 5)
         right_sizer = self.make_right_sizer()
 
         main_sizer.Add(left_sizer, 5, wx.EXPAND | wx.ALL, 5)
@@ -810,7 +809,6 @@ class CustomTab(wx.Panel):
 
     def append(self, name_list):
         """Appends the name_list in the item list."""
-        # ic = wx.Icon(wx.Bitmap(16, 16))
         CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
         ic = wx.Icon(CURRENT_PATH + '/res/empty_circle_w1.png')
         for cnt in range(len(name_list)):
