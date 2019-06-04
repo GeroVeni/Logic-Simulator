@@ -8,4 +8,4 @@ langDomain = "I18Nwxapp"
 # languages you want to support
 supLang = {u"en": wx.LANGUAGE_ENGLISH,
            u"el": wx.LANGUAGE_GREEK,
-          }
+           }
