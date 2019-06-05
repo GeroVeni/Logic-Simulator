@@ -21,6 +21,8 @@ class ColorScheme:
     Public methods:
     ---------------
     get_color(self, color_id, style): Returns the corresponding color
+    get_next_color(self): Returns the next color
+    reset_color(self): Resets the color pointer to the first color
     get_default(): (static) Return the default colorscheme
     """
 
