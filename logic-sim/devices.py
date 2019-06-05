@@ -94,7 +94,7 @@ class Devices:
 
     make_d_type(self, device_id): Makes a D-type device.
 
-    make_clock(self, device_id, waveform): Make a signal generator device with
+    make_siggen(self, device_id, waveform): Make a signal generator device with
                                            the specified waveform.
 
     cold_startup(self): Simulates cold start-up of D-types clocks and siggens.
