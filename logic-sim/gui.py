@@ -128,7 +128,6 @@ class Gui(wx.Frame):
         app_name = "LogicSimulator"
         config_path = wx.StandardPaths.Get().GetUserConfigDir()
         config_path = os.path.join(config_path, ".config")
-        print(config_path)
         if not os.path.exists(config_path):
             os.mkdir(config_path)
         config_path = os.path.join(config_path, app_name)
